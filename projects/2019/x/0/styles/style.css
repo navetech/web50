@@ -1,0 +1,97 @@
+.page-title
+{
+    font-family: 'Aclonica';font-size: 22px;
+}
+
+a
+{
+    background-color: beige;
+}
+
+.current-page
+{
+    color: chocolate;
+}
+
+.page-text
+{
+    font-family: 'Sofia';
+}
+
+#text-format
+{
+    margin: 15px;
+    background-image: radial-gradient(red 5%, yellow 15%, green 60%);
+}
+
+#code
+{
+    border-style: outset;
+    border-color: yellow;
+    border-width: 20px;
+}
+
+iframe
+{
+    width: 100%;
+    border-style: dashed;
+}
+
+.phone-pad
+{
+    margin-top: 100px;
+    margin-bottom: 100px;
+    background-color: lightslategray;
+    color: white;
+    border: 2px solid dimgray;
+
+}
+
+.phone-pad tr
+{
+    height: 50px;
+}
+
+.phone-pad tr td
+{
+    text-align: center;
+    width: 50px;
+    border: 2px solid dimgray;
+}
+
+.button
+{
+    background-color: white;
+    cursor: pointer;
+}
+
+.button:hover
+{
+    background-color: gray;
+    color: white;
+}
+
+form
+{
+    background-image: url(https://media1.giphy.com/media/fSeQICKvIpaGlNK8o4/giphy.gif?cid=790b7611cfd4e22380f273ddb0bc7b84510e6ff7e337f546&rid=giphy.gif);
+    background-repeat: no-repeat;
+    background-size: contain;
+    padding: 15px;
+}
+
+@media print
+{
+    .so-screen
+    {
+        display: none;
+    }
+}
+
+@media (orientation: portrait)
+{
+    #text-format
+    {
+        margin: 100px;
+        background-image: linear-gradient(red 5%, yellow 15%, green 60%);
+    }
+}

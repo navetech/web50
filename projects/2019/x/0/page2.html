@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+    <head>
+        <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" rel="stylesheet">
+
+        <link href='https://fonts.googleapis.com/css?family=Aclonica' rel='stylesheet'>
+        <link href='https://fonts.googleapis.com/css?family=Sofia' rel='stylesheet'>
+        <link href="./styles/style.css" rel="stylesheet">
+
+        <title>Page 2</title>
+    </head>
+
+    <body>
+
+        <div class="jumbotron text-center">
+
+            <div class="page-title">
+                hello, page 2
+            </div>
+            <a href="./index.html">Home</a>
+            <a href="./page2.html" class="current-page">Page 2</a>
+            <a href="./page3.html">Page 3</a>
+            <a href="./page4.html">Page 4</a>
+
+        </div>
+
+        <div class="container">
+
+            <div class="page-text">
+                <h2>Page 2: Lorem ipsum</h2>
+                <p>
+                    Lorem ipsum dolor sit amet, consectetur adipisicing elit. Suscipit, pariatur. Suscipit molestiae tenetur hic obcaecati optio voluptatibus saepe, cum sint, quis ipsam ad quo, officia asperiores. Pariatur, harum cupiditate laborum.
+                </p>
+            </div>
+
+            <table class="phone-pad">
+                <tr><td>1</td><td>2</td><td>3</td></tr>
+                <tr><td>4</td><td>5</td><td>6</td></tr>
+                <tr><td>7</td><td>8</td><td>9</td></tr>
+                <tr><td>*</td><td>0</td><td>#</td></tr>
+            </table>
+
+            <button class="button" onclick="getLocation()">Get Location</button>
+
+            <div id="show-location"></div>
+
+            <script>
+                var x = document.getElementById("show-location");
+                function getLocation() {
+                  if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(showPosition);
+                } else {
+                    x.innerHTML = "Geolocation is not supported by this browser.";
+                  }
+                }
+
+                function showPosition(position) {
+                x.innerHTML = "Latitude: " + position.coords.latitude +
+                      "<br>Longitude: " + position.coords.longitude;
+                }
+            </script>
+
+        </div>
+
+    </body>
+
+</html>
