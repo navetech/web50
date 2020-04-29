@@ -44,28 +44,17 @@
 
             <button class="button" onclick="getLocation()">Get Location</button>
 
-            <div id="show-location"></div>
+            <div id="show-location">
+                Latitude: <span id = show-latitude></span>
+                <br>
+                Longitude: <span id = show-longitude></span>
+            </div>
 
-            <script>
-                var x = document.getElementById("show-location");
-                function getLocation() {
-                  if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(showPosition);
-                } else {
-                    x.innerHTML = "Geolocation is not supported by this browser.";
-                  }
-                }
-
-                function showPosition(position) {
-                x.innerHTML = "Latitude: " + position.coords.latitude +
-                      "<br>Longitude: " + position.coords.longitude;
-                }
-            </script>
+            <script src="./scripts/show-location.js"></script>
 
             <br><br><br>
+
             <img src="./images/lua-cheia-fotografada-do-espaco-por-telescopio-da-NASA.jpg" alt="Lua Cheia">
-
-
 
         </div>
 
