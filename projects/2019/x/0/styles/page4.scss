@@ -1,0 +1,34 @@
+$h6-color: orange;
+$p-color: brown;
+
+%section
+{
+    background: lightyellow;
+}
+
+.section1
+{
+    @extend %section;
+    color: green;
+
+    h6 
+    {
+        color: $h6-color
+    }
+}
+
+.section2
+{
+    @extend %section;
+    color: blue;
+
+    div
+    {
+        p 
+        {
+            color: p-color;
+        }
+    }
+}
+
+
