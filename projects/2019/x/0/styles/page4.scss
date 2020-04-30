@@ -3,7 +3,7 @@ $p-color: brown;
 
 %section
 {
-    background: lightyellow;
+    background: yellow;
 }
 
 .section1
@@ -26,7 +26,7 @@ $p-color: brown;
     {
         p 
         {
-            color: p-color;
+            color: $p-color;
         }
     }
 }

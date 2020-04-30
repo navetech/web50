@@ -1,0 +1,19 @@
+.section2, .section1 {
+  background: yellow;
+}
+
+.section1 {
+  color: green;
+}
+.section1 h6 {
+  color: orange;
+}
+
+.section2 {
+  color: blue;
+}
+.section2 div p {
+  color: brown;
+}
+
+/*# sourceMappingURL=page4.css.map */
