@@ -1,0 +1,33 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Book
+{% endblock %}
+
+{% block main %}
+    <h1>Book</h1>
+
+    <ul>
+        <li>ISBN: {{ book.isbn }}</li>
+        <li>Title: {{ book.title }}</li>
+        <li>Author: {{ book.author }}</li>
+        <li>Year: {{ book.year }}</li>
+        <li>Average Rating: {{ average_rating }}</li>
+        <li>Ratings Count: {{ ratings_count }}</li>
+        <li>Comments Count: {{ comments_count }}</li>
+        <li>Reviews Count: {{ reviews_count }}</li>
+    </ul>
+
+    <a href="{{ url_for('review', book_isbn=book['isbn'], user_id=user_id) }}">Do a Review</a>
+
+    <h6>Reviews</h6>
+    {% for review in reviews %}
+        <ul>
+            <li>Reviewer: {{ review.reviewer }} {{ review.date }}</li>
+            <ul>
+                <li>Rating: {{ review.rating }}</li>
+                <li>Comment: <pre>{{ review.comment }}</pre></li>
+                </ul>
+        </ul>
+    {% endfor %}
+{% endblock %}
