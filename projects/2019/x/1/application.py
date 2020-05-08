@@ -45,7 +45,7 @@ def search():
 
     # User reached route via GET (as by clicking a link or via redirect)
     if request.method == "GET":
-        return render_template("search.html", books=books)
+        return render_template("search.html", books=books, searched=False)
 
     # User reached route via POST (as by submitting a form via POST)
     elif request.method == "POST":
@@ -53,8 +53,7 @@ def search():
         # Ensure search key was submitted
         search_key = request.form.get("search-key")
         if not search_key:
-            # Redirect user to search page
-            return redirect("/search")
+            return render_template("search.html", books=books, searched=False)
 
         # Query database for books
         search_key = "%" + search_key + "%"
@@ -63,7 +62,7 @@ def search():
                             author ILIKE :search_key",
                            {"search_key":search_key})
 
-        return render_template("search.html", books=books)
+        return render_template("search.html", books=books, searched=True)
 
     else:
         return apology("invalid method", 403)
@@ -226,9 +225,10 @@ def book(book_isbn):
     ratings_count = 0
     comments_count = 0
     for review in reviews:
-        if review["rating"]:
+        rating = review["rating"]
+        if rating and rating >= 1 and rating <= 5:
             ratings_count += 1
-            s += review["rating"]
+            s += rating
 
         if review["comment"]:
             comments_count += 1
@@ -268,20 +268,41 @@ def review(book_isbn, user_id):
     # Query database for user
     reviewer = db.execute("SELECT * FROM users WHERE id = :user_id", {"user_id": user_id}).fetchone()
 
+    # Query database for review
+    review = db.execute("SELECT * FROM reviews WHERE reviewer_id = :reviewer_id AND \
+                         book_id = :book_id",
+                         {"reviewer_id": reviewer.id, "book_id": book.id}).fetchone()
+
     # User reached route via GET (as by clicking a link or via redirect)
     if request.method == "GET":
-        return render_template("review.html", book=book, reviewer=reviewer.fullname)
+        return render_template("review.html", book=book, reviewer=reviewer.fullname,
+            review=review)
 
     # User reached route via POST (as by submitting a form via POST)
     elif request.method == "POST":
+        
+        rating = request.form.get("rating")
+        if not rating:
+            rating = 0
 
-        # Insert review into database
-        db.execute("INSERT INTO reviews (reviewer_id, book_id, date, time, rating, comment, timestamp) VALUES \
-                   (:reviewer_id, :book_id, 'now', 'now', :rating, :comment, 'now')",
-                   {"reviewer_id": reviewer.id, "book_id": book.id,
-                    "rating": request.form.get("rating"),
-                    "comment": request.form.get("comment")})
-        db.commit()
+        if review:
+            # Update review into database
+            db.execute("UPDATE reviews SET date = 'now', time = 'now', rating = :rating, \
+                       comment = :comment, timestamp = 'now' \
+                       WHERE reviewer_id = :reviewer_id AND book_id = :book_id",
+                       {"reviewer_id": reviewer.id, "book_id": book.id,
+                        "rating": rating,
+                        "comment": request.form.get("comment")})
+            db.commit()
+
+        else:
+            # Insert review into database
+            db.execute("INSERT INTO reviews (reviewer_id, book_id, date, time, rating, comment, timestamp) VALUES \
+                       (:reviewer_id, :book_id, 'now', 'now', :rating, :comment, 'now')",
+                       {"reviewer_id": reviewer.id, "book_id": book.id,
+                        "rating": rating,
+                        "comment": request.form.get("comment")})
+            db.commit()
 
         # Redirect user to book page
         return redirect("/books/" + book['isbn'])

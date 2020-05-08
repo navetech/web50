@@ -5,9 +5,7 @@
 {% endblock %}
 
 {% block main %}
-    <h1>Book</h1>
-
-    <ul>
+    <ul class="list-estilo">
         <li>ISBN: {{ book.isbn }}</li>
         <li>Title: {{ book.title }}</li>
         <li>Author: {{ book.author }}</li>
@@ -18,16 +16,22 @@
         <li>Reviews Count: {{ reviews_count }}</li>
     </ul>
 
+    <br>
+
     <a href="{{ url_for('review', book_isbn=book['isbn'], user_id=session['user_id']) }}">Do a Review</a>
 
-    <h6>Reviews</h6>
+    <br>
+
     {% for review in reviews %}
-        <ul>
-            <li>Reviewer: {{ review.reviewer }} {{ review.date }} {{ review.time }} {{ review.timestamp }}</li>
-            <ul>
-                <li>Rating: {{ review.rating }}</li>
-                <li>Comment: <pre>{{ review.comment }}</pre></li>
-                </ul>
+        <br>
+        <ul class="list-estilo">
+            {% if review.rating >=1 and review.rating <=5 %}
+                <li>{{ review.reviewer }} {{ review.date }} {{ review.time }} Rating: {{ review.rating }}</li>
+            {% else %}
+                <li>{{ review.reviewer }} {{ review.date }} {{ review.time }}</li>
+            {% endif %}
+
+            <li><pre>{{ review.comment }}</pre></li>
         </ul>
     {% endfor %}
 {% endblock %}

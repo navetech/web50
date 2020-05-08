@@ -5,8 +5,6 @@
 {% endblock %}
 
 {% block main %}
-    <h1>Search Books</h1>
-
     <form action="/search" method="post">
         <div class="form-group">
             <input autocomplete="off" autofocus class="form-control"  type="text" name="search-key" placeholder="ISBN/Title/Author">
@@ -14,11 +12,15 @@
         <button class="btn btn-primary" type="submit">Search</button>
     </form>
 
-    <ul>
+    <br>
+
+    <ul class="list-estilo">
         {% for book in books%}
-            <li> <a href="{{ url_for('book', book_isbn=book['isbn']) }}">{{ book.title }}</a></li>
+            <li><a href="{{ url_for('book', book_isbn=book['isbn']) }}">{{ book.title }}</a></li>
         {% else %}
-            <h6>No matches</h6>
-        {%endfor%}
+            {% if searched %}
+                <li>No matches</li>
+            {% endif %}
+        {% endfor %}
     </ul>
 {% endblock %}
