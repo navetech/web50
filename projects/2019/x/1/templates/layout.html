@@ -43,11 +43,11 @@
                         <!-- Default dropleft button -->
                         <div class="btn-group dropleft">
                             <button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                {{ session["user_name"] }}
+                                {{ session["user_fullname"] }}
                             </button>
                             <div class="dropdown-menu">
-                                <a class="dropdown-item" href="/cash">Change Cash</a>
-                                <a class="dropdown-item" href="/password">Change Password</a>
+                                <a class="dropdown-item" href="/unregister">Unregister</a>
+                                <a class="dropdown-item" href="/unregisterall">Unregister All</a>
                                 <div class="dropdown-divider"></div>
                                 <a class="dropdown-item" href="/logout">Log Out</a>
                             </div>
@@ -55,6 +55,8 @@
                     </ul>
                 {% else %}
                     <ul class="navbar-nav ml-auto mt-2">
+                        <li class="nav-item"><a class="nav-link" href="/allusers">All Users</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/allreviews">All Reviews</a></li>
                         <li class="nav-item"><a class="nav-link" href="/register">Register</a></li>
                         <li class="nav-item"><a class="nav-link" href="/login">Log In</a></li>
                     </ul>

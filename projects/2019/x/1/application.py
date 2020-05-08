@@ -4,8 +4,10 @@ from flask import Flask, session, render_template, request, flash, redirect
 from flask_session import Session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
+from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
+from werkzeug.security import check_password_hash, generate_password_hash
 
-from helpers import login_required
+from helpers import login_required, apology
 
 
 app = Flask(__name__)
@@ -23,19 +25,10 @@ Session(app)
 engine = create_engine(os.getenv("DATABASE_URL"))
 db = scoped_session(sessionmaker(bind=engine))
 
-"""
-with engine.connect() as connection:
-    result = connection.execute("select username from users")
-    for row in result:
-        print("username:", row['username'])
-"""
-con = engine.connect()
 
 @app.route("/")
 @login_required
 def index():
-#    return "Project 1: TODO"
-
     """ Home page """
 
     # Redirect user to search page
@@ -76,6 +69,83 @@ def search():
         return apology("invalid method", 403)
 
 
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    """Register user"""
+
+    # Forget any user_id
+    session.clear()
+
+    # User reached route via GET (as by clicking a link or via redirect)
+    if request.method == "GET":
+        return render_template("register.html")
+
+    # User reached route via POST (as by submitting a form via POST)
+    elif request.method == "POST":
+
+        # Ensure fullname was submitted
+        fullname = request.form.get("fullname")
+        if not fullname:
+            return apology("must provide full name", 403)
+
+        # Ensure username was submitted
+        username = request.form.get("username")
+        if not username:
+            return apology("must provide username", 403)
+
+        # Ensure password was submitted
+        password = request.form.get("password")
+        if not password:
+            return apology("must provide password", 403)
+
+        # Ensure password confirmation was submitted
+        confirmation = request.form.get("confirmation")
+        if not confirmation:
+            return apology("must provide password confirmation", 403)
+
+        if not password == confirmation:
+            return apology("password confirmation does not match", 403)
+
+        # Query database for username
+        user = db.execute("SELECT * FROM users WHERE username = :username",
+                          {"username": username}).fetchall()
+
+        # Ensure username does not exists
+        if user:
+            return apology("username already exists", 403)
+
+        # Insert user into database
+        db.execute("INSERT INTO users (username, password, fullname) VALUES \
+                   (:username, :password, :fullname)",
+                   {"username": username, "password": generate_password_hash(password),
+                   "fullname": fullname})
+        db.commit()
+                          
+        # Query database for username
+        user = db.execute("SELECT * FROM users WHERE username = :username",
+                          {"username": username}).fetchone()
+
+        # Ensure user was inserted
+        if not user:
+            return apology("internal server error", 500)
+
+        # Remember which user has logged in
+        session["user_id"] = user.id
+        session["user_username"] = user.username
+        session["user_fullname"] = user.fullname
+
+        # Report message
+        flash('You were successfully logged in')
+        flash(user.fullname)
+
+        # Redirect user to home page
+        return redirect("/")
+
+    # User reached route not via GET neither via POST
+    else:
+        return apology("invalid method", 403)
+
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     """Log user in"""
@@ -89,46 +159,40 @@ def login():
 
     # User reached route via POST (as by submitting a form via POST)
     elif request.method == "POST":
+
         # Ensure username was submitted
         username = request.form.get("username")
         if not username:
-            session.clear()
-            return "must provide username", 403
-#            return apology("must provide username", 403)
+            return apology("must provide username", 403)
 
-        """
         # Ensure password was submitted
-        elif not request.form.get("password"):
+        password = request.form.get("password")
+        if not request.form.get("password"):
             return apology("must provide password", 403)
 
         # Query database for username
-        rows = db.execute("SELECT * FROM users WHERE username = :username",
-                          username=request.form.get("username"))
+        user = db.execute("SELECT * FROM users WHERE username = :username",
+                          {"username":username}).fetchone()
 
         # Ensure username exists and password is correct
-        if len(rows) != 1 or not check_password_hash(rows[0]["hash"], request.form.get("password")):
+        if not user or not check_password_hash(user.password, password):
             return apology("invalid username and/or password", 403)
 
         # Remember which user has logged in
-        session["user_id"] = rows[0]["id"]
-        session["user_name"] = rows[0]["username"]
+        session["user_id"] = user.id
+        session["user_username"] = user.username
+        session["user_fullname"] = user.fullname
 
         # Report message
         flash('You were successfully logged in')
-        flash(request.form.get("username"))
-        """
-        session["user_id"] = 1
-        session["user_name"] = username
-
-        flash('You were successfully logged in')
-        flash(username)
+        flash(user.fullname)
 
         # Redirect user to home page
         return redirect("/")
 
+    # User reached route not via GET neither via POST
     else:
         return apology("invalid method", 403)
-
 
 
 @app.route("/logout")
@@ -138,7 +202,7 @@ def logout():
     # Forget any user_id
     session.clear()
 
-    # Redirect user to login form
+    # Redirect user to home page
     return redirect("/")
 
 
@@ -148,37 +212,49 @@ def book(book_isbn):
     """Show book info"""
 
     # Query database for book
-    # Nao pode usar con.execute pois ocorre erro no placeholder :isbn
     book = db.execute("SELECT * FROM books WHERE isbn = :isbn", {"isbn": book_isbn}).fetchone()
 
-    user_id = 999
+    # Query database for book reviews
+    reviews = db.execute("SELECT * FROM reviews WHERE book_id = :book_id",
+                      {"book_id": book.id}).fetchall()
 
-    reviews = []
-    reviews.append({"reviewer": "Ladislau", "date":"07/05/2020 11:45", "rating": 4, "comment": "review 1"})
-    reviews.append({"reviewer": "Lygia", "date":"07/05/2020 11:45", "rating": 5})
-    reviews.append({"reviewer": "Filipe", "date":"07/05/2020 11:45", "comment": "review 3"})
-    reviews.append({"reviewer": "Maira", "date":"07/05/2020 11:45", "rating": None, "comment": None})
-    reviews.append({"reviewer": "Julia", "date":"07/05/2020 11:45", "rating": 4, "comment": ""})
-    reviews.append({"reviewer": "Jose", "date":"07/05/2020 11:45", "rating": 4, "comment": "Review 6"})
-    
     reviews_count = len(reviews)
-    
+
+    # Build reviews data
+    reviews_data = []
     s = 0
     ratings_count = 0
     comments_count = 0
     for review in reviews:
-        if "rating" in review and review["rating"]:
+        if review["rating"]:
             ratings_count += 1
             s += review["rating"]
 
-        if "comment" in review and review["comment"]:
+        if review["comment"]:
             comments_count += 1
 
-    average_rating = s / ratings_count
+        # Query database for book reviews
+        reviewer = db.execute("SELECT * FROM users WHERE id = :reviewer_id",
+                              {"reviewer_id": review.reviewer_id}).fetchone()
 
-    return render_template("book.html", user_id=user_id, book=book, average_rating=average_rating,
+        review_data = {}
+        review_data["reviewer"] = reviewer.fullname
+        review_data["date"] = review.date
+        review_data["time"] = review.time
+        review_data["timestamp"] = review.timestamp
+        review_data["rating"] = review.rating
+        review_data["comment"] = review.comment
+
+        reviews_data.append(review_data)
+
+    if ratings_count != 0:
+        average_rating = s / ratings_count
+    else:
+        average_rating = None
+
+    return render_template("book.html", book=book, average_rating=average_rating,
         ratings_count=ratings_count, comments_count=comments_count, reviews_count=reviews_count,
-        reviews=reviews)
+        reviews=reviews_data)
 
 
 @app.route("/review/<string:book_isbn>/<int:user_id>", methods=["GET", "POST"])
@@ -187,17 +263,97 @@ def review(book_isbn, user_id):
     """ Do a review """ 
 
     # Query database for book
-    # Nao pode usar con.execute pois ocorre erro no placeholder :isbn
     book = db.execute("SELECT * FROM books WHERE isbn = :isbn", {"isbn": book_isbn}).fetchone()
 
     # Query database for user
-#    user = db.execute("SELECT * FROM users WHERE id = :user_id", {"user_id": user_id}).fetchone()
-    reviewer = str(user_id)
+    reviewer = db.execute("SELECT * FROM users WHERE id = :user_id", {"user_id": user_id}).fetchone()
 
     # User reached route via GET (as by clicking a link or via redirect)
     if request.method == "GET":
-        return render_template("review.html", book=book, reviewer=reviewer)
+        return render_template("review.html", book=book, reviewer=reviewer.fullname)
 
     # User reached route via POST (as by submitting a form via POST)
     elif request.method == "POST":
-        return "Review Done"
+
+        # Insert review into database
+        db.execute("INSERT INTO reviews (reviewer_id, book_id, date, time, rating, comment, timestamp) VALUES \
+                   (:reviewer_id, :book_id, 'now', 'now', :rating, :comment, 'now')",
+                   {"reviewer_id": reviewer.id, "book_id": book.id,
+                    "rating": request.form.get("rating"),
+                    "comment": request.form.get("comment")})
+        db.commit()
+
+        # Redirect user to book page
+        return redirect("/books/" + book['isbn'])
+
+    # User reached route not via GET neither via POST
+    else:
+        return apology("invalid method", 403)
+
+
+@app.route("/unregister")
+@login_required
+def unregister():
+    """Unregister the user"""
+
+    user_id = session["user_id"]
+
+    # Delete user reviews from database
+    db.execute("DELETE FROM reviews WHERE reviewer_id = :reviewer_id", {"reviewer_id": user_id})
+    db.commit()
+
+    # Delete user from database
+    db.execute("DELETE FROM users WHERE id = :user_id", {"user_id": user_id})
+    db.commit()
+
+    # Forget any user_id
+    session.clear()
+
+    # Redirect user to home page
+    return redirect("/")
+
+
+@app.route("/unregisterall")
+@login_required
+def unregister_all():
+    """Unregister all users"""
+
+    # Query database for all users
+    users = db.execute("SELECT * FROM users").fetchall()
+
+    # Repeat for each user
+    for user in users:
+        # Delete user reviews from database
+        db.execute("DELETE FROM reviews WHERE reviewer_id = :reviewer_id", {"reviewer_id": user.id})
+        db.commit()
+
+        # Delete user from database
+        db.execute("DELETE FROM users WHERE id = :user_id", {"user_id": user.id})
+        db.commit()
+
+    # Forget any user_id
+    session.clear()
+
+    # Redirect user to home page
+    return redirect("/")
+
+
+@app.route("/allusers")
+def all_users():
+    """ Show all users"""
+
+    # Query database for all users
+    users = db.execute("SELECT * FROM users").fetchall()
+
+    return render_template("allusers.html", users=users)
+
+
+@app.route("/allreviews")
+def all_reviews():
+    """ Show all reviews"""
+
+    # Query database for all reviews
+    reviews = db.execute("SELECT * FROM reviews").fetchall()
+
+    return render_template("allreviews.html", reviews=reviews)
+

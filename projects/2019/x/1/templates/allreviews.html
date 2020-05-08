@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    All Reviews
+{% endblock %}
+
+{% block main %}
+    <h1>All Reviews</h1>
+
+    {% for review in reviews %}
+        <ul>
+            <li>Date/Time: {{ review.date }} {{ review.time }} {{ review.timestamp }}</li>
+            <li>Rating: {{ review.rating }}</li>
+            <li>Comment: <pre>{{ review.comment }}</pre></li>
+        </ul>
+    {% endfor %}
+{% endblock %}

@@ -18,12 +18,12 @@
         <li>Reviews Count: {{ reviews_count }}</li>
     </ul>
 
-    <a href="{{ url_for('review', book_isbn=book['isbn'], user_id=user_id) }}">Do a Review</a>
+    <a href="{{ url_for('review', book_isbn=book['isbn'], user_id=session['user_id']) }}">Do a Review</a>
 
     <h6>Reviews</h6>
     {% for review in reviews %}
         <ul>
-            <li>Reviewer: {{ review.reviewer }} {{ review.date }}</li>
+            <li>Reviewer: {{ review.reviewer }} {{ review.date }} {{ review.time }} {{ review.timestamp }}</li>
             <ul>
                 <li>Rating: {{ review.rating }}</li>
                 <li>Comment: <pre>{{ review.comment }}</pre></li>
