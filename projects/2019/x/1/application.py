@@ -38,9 +38,8 @@ def index():
 @app.route("/search", methods=["GET", "POST"])
 @login_required
 def search():
-    """ Search for a book"""
+    """ Search for a book """
 
-    # Empty books list
     books = []
 
     # User reached route via GET (as by clicking a link or via redirect)
@@ -56,11 +55,63 @@ def search():
             return render_template("search.html", books=books, searched=False)
 
         # Query database for books
+        try:
+            year = int(search_key)
+        except ValueError:
+            year = None
+
         search_key = "%" + search_key + "%"
-        books = db.execute("SELECT * FROM books where \
-                            isbn ILIKE :search_key OR title ILIKE :search_key OR \
-                            author ILIKE :search_key",
-                           {"search_key":search_key})
+
+        print(year, search_key)
+
+        if not year:
+            books = db.execute("SELECT * FROM books WHERE \
+                                isbn ILIKE :search_key OR title ILIKE :search_key OR \
+                                author ILIKE :search_key",
+                               {"search_key": search_key})
+        else:
+            books = db.execute("SELECT * FROM books WHERE \
+                                isbn ILIKE :search_key OR title ILIKE :search_key OR \
+                                author ILIKE :search_key OR year = :year",
+                               {"search_key": search_key, "year": year})
+
+        return render_template("search.html", books=books, searched=True)
+
+    else:
+        return apology("invalid method", 403)
+
+
+@app.route("/books/<string:author>/", methods=["GET"])
+@login_required
+def books_by_author(author):
+    """ Show books by author """
+
+    # User reached route via GET (as by clicking a link or via redirect)
+    if request.method == "GET":
+
+        # Query database for books
+        books = db.execute("SELECT * FROM books WHERE \
+                            author = :author",
+                           {"author": author})
+
+        return render_template("search.html", books=books, searched=True)
+
+    else:
+        return apology("invalid method", 403)
+
+
+@app.route("/books/<int:year>/", methods=["GET"])
+@login_required
+def books_in_year(year):
+    """ Show books in year """
+
+    # User reached route via GET (as by clicking a link or via redirect)
+    if request.method == "GET":
+
+        # Query database for books
+        books = db.execute("SELECT * FROM books WHERE \
+                            year = :year",
+                           {"year": year})
 
         return render_template("search.html", books=books, searched=True)
 
@@ -182,6 +233,7 @@ def login():
         session["user_username"] = user.username
         session["user_fullname"] = user.fullname
 
+
         # Report message
         flash('You were successfully logged in')
         flash(user.fullname)
@@ -205,13 +257,13 @@ def logout():
     return redirect("/")
 
 
-@app.route("/books/<string:book_isbn>")
+@app.route("/book/<string:isbn>")
 @login_required
-def book(book_isbn):
-    """Show book info"""
+def book(isbn):
+    """Show book's data """
 
     # Query database for book
-    book = db.execute("SELECT * FROM books WHERE isbn = :isbn", {"isbn": book_isbn}).fetchone()
+    book = db.execute("SELECT * FROM books WHERE isbn = :isbn", {"isbn": isbn}).fetchone()
 
     # Query database for book reviews
     reviews = db.execute("SELECT * FROM reviews WHERE book_id = :book_id",
