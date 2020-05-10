@@ -18,6 +18,7 @@ def login_required(f):
 
 def apology(message, code=400):
     """Render message as an apology to user."""
+
     def escape(s):
         """
         Escape special characters.
@@ -29,4 +30,48 @@ def apology(message, code=400):
             s = s.replace(old, new)
         return s
     return render_template("apology.html", top=code, bottom=escape(message)), code
+
+
+def query_books(db, query_key):
+    """ Query books from data base """
+
+    books = []
+
+    if not db or not query_key:
+        return books
+
+    # Query database for books
+    if query_key["all"]:
+        search_key = query_key["all"]["search_key"]
+    
+        if query_key["all"]["year"]:
+            year = query_key["all"]["year"]
+
+            books = db.execute("SELECT * FROM books WHERE \
+                                    isbn ILIKE :search_key OR title ILIKE :search_key OR \
+                                    author ILIKE :search_key OR year = :year",
+                                    {"search_key": search_key, "year": year})
+
+        else:
+            books = db.execute("SELECT * FROM books WHERE \
+                                isbn ILIKE :search_key OR title ILIKE :search_key OR \
+                                author ILIKE :search_key",
+                                {"search_key": search_key})
+
+    elif query_key["author"]:
+        author = query_key["author"]
+
+        books = db.execute("SELECT * FROM books WHERE \
+                            author = :author",
+                           {"author": author})
+
+    elif query_key["year"]:
+        year = query_key["year"]
+
+        books = db.execute("SELECT * FROM books WHERE \
+                            year = :year",
+                           {"year": year})
+
+    return books
+
 

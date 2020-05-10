@@ -7,7 +7,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from helpers import login_required, apology
+from helpers import login_required, apology, query_books
 
 
 app = Flask(__name__)
@@ -40,10 +40,13 @@ def index():
 def search():
     """ Search for a book """
 
-    books = []
-
     # User reached route via GET (as by clicking a link or via redirect)
     if request.method == "GET":
+
+        # Query books with last query key
+        books_query_key = session.get("books_query_key")
+        books = query_books(db, books_query_key)
+
         return render_template("search.html", books=books, searched=False)
 
     # User reached route via POST (as by submitting a form via POST)
@@ -51,10 +54,17 @@ def search():
 
         # Ensure search key was submitted
         search_key = request.form.get("search-key")
-        if not search_key:
+
+        if not search_key or  not search_key.strip():
+
+            # Query books with last query key
+            books_query_key = session.get("books_query_key")
+            books = query_books(db, books_query_key)
+
             return render_template("search.html", books=books, searched=False)
 
-        # Query database for books
+        # Query books with all query key
+        search_key = search_key.strip()
         try:
             year = int(search_key)
         except ValueError:
@@ -62,18 +72,18 @@ def search():
 
         search_key = "%" + search_key + "%"
 
+#######################
         print(year, search_key)
 
-        if not year:
-            books = db.execute("SELECT * FROM books WHERE \
-                                isbn ILIKE :search_key OR title ILIKE :search_key OR \
-                                author ILIKE :search_key",
-                               {"search_key": search_key})
-        else:
-            books = db.execute("SELECT * FROM books WHERE \
-                                isbn ILIKE :search_key OR title ILIKE :search_key OR \
-                                author ILIKE :search_key OR year = :year",
-                               {"search_key": search_key, "year": year})
+        books_query_key = {}
+        books_query_key["all"] = {}
+        books_query_key["all"]["search_key"] = search_key
+        books_query_key["all"]["year"] = year
+        books_query_key["author"] = None
+        books_query_key["year"] = None
+        session["books_query_key"] = books_query_key
+
+        books = query_books(db, books_query_key)
 
         return render_template("search.html", books=books, searched=True)
 
@@ -89,10 +99,14 @@ def books_by_author(author):
     # User reached route via GET (as by clicking a link or via redirect)
     if request.method == "GET":
 
-        # Query database for books
-        books = db.execute("SELECT * FROM books WHERE \
-                            author = :author",
-                           {"author": author})
+        # Query books with author query key
+        books_query_key = {}
+        books_query_key["all"] = None
+        books_query_key["author"] = author
+        books_query_key["year"] = None
+        session["books_query_key"] = books_query_key
+
+        books = query_books(db, books_query_key)
 
         return render_template("search.html", books=books, searched=True)
 
@@ -108,10 +122,14 @@ def books_in_year(year):
     # User reached route via GET (as by clicking a link or via redirect)
     if request.method == "GET":
 
-        # Query database for books
-        books = db.execute("SELECT * FROM books WHERE \
-                            year = :year",
-                           {"year": year})
+        # Query books with year query key
+        books_query_key = {}
+        books_query_key["all"] = None
+        books_query_key["author"] = None
+        books_query_key["year"] = year
+        session["books_query_key"] = books_query_key
+
+        books = query_books(db, books_query_key)
 
         return render_template("search.html", books=books, searched=True)
 
