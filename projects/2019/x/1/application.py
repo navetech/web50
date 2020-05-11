@@ -52,10 +52,8 @@ def search():
     # User reached route via POST (as by submitting a form via POST)
     elif request.method == "POST":
 
-        # Ensure search key was submitted
-        search_key = request.form.get("search-key")
-
-        if not search_key or  not search_key.strip():
+        search_key = request.form.get("search-key").strip()
+        if not search_key:
 
             # Query books with last query key
             books_query_key = session.get("books_query_key")
@@ -64,16 +62,12 @@ def search():
             return render_template("search.html", books=books, searched=False)
 
         # Query books with all query key
-        search_key = search_key.strip()
         try:
             year = int(search_key)
         except ValueError:
             year = None
 
         search_key = "%" + search_key + "%"
-
-#######################
-        print(year, search_key)
 
         books_query_key = {}
         books_query_key["all"] = {}
@@ -139,7 +133,7 @@ def books_in_year(year):
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
-    """Register user"""
+    """Register a new user"""
 
     # Forget any user_id
     session.clear()
@@ -199,7 +193,6 @@ def register():
 
         # Remember which user has logged in
         session["user_id"] = user.id
-        session["user_username"] = user.username
         session["user_fullname"] = user.fullname
 
         # Report message
@@ -248,7 +241,6 @@ def login():
 
         # Remember which user has logged in
         session["user_id"] = user.id
-        session["user_username"] = user.username
         session["user_fullname"] = user.fullname
 
 
@@ -285,7 +277,7 @@ def book(isbn):
 
     # Query database for book reviews
     reviews = db.execute("SELECT * FROM reviews WHERE book_id = :book_id",
-                      {"book_id": book.id}).fetchall()
+                         {"book_id": book.id}).fetchall()
 
     reviews_count = len(reviews)
 
@@ -299,8 +291,11 @@ def book(isbn):
         if rating and rating >= 1 and rating <= 5:
             ratings_count += 1
             s += rating
+        else:
+            rating = None
 
-        if review["comment"]:
+        comment = review.comment.strip()
+        if comment:
             comments_count += 1
 
         # Query database for book reviews
@@ -311,9 +306,8 @@ def book(isbn):
         review_data["reviewer"] = reviewer.fullname
         review_data["date"] = review.date
         review_data["time"] = review.time
-        review_data["timestamp"] = review.timestamp
         review_data["rating"] = review.rating
-        review_data["comment"] = review.comment
+        review_data["comment"] = comment
 
         reviews_data.append(review_data)
 

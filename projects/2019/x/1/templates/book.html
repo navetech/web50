@@ -5,11 +5,13 @@
 {% endblock %}
 
 {% block main %}
+    <a href="{{ url_for('review', book_isbn=book['isbn'], user_id=session['user_id']) }}">Do a Review</a>
+    <br>
+    
+    <br>
     <ul class="list-estilo">
+        <li>{{ book.title }} by {{ book.author }} in {{ book.year }}</li>
         <li>ISBN: {{ book.isbn }}</li>
-        <li>Title: {{ book.title }}</li>
-        <li>Author: {{ book.author }}</li>
-        <li>Year: {{ book.year }}</li>
         <li>Average Rating: {{ average_rating }}</li>
         <li>Ratings Count: {{ ratings_count }}</li>
         <li>Comments Count: {{ comments_count }}</li>
@@ -17,21 +19,32 @@
     </ul>
 
     <br>
-
-    <a href="{{ url_for('review', book_isbn=book['isbn'], user_id=session['user_id']) }}">Do a Review</a>
-
-    <br>
-
     {% for review in reviews %}
         <br>
         <ul class="list-estilo">
-            {% if review.rating >=1 and review.rating <=5 %}
-                <li>{{ review.reviewer }} {{ review.date }} {{ review.time }} Rating: {{ review.rating }}</li>
+            <li>by {{ review.reviewer }} in {{ review.date }} at {{ review.time }}</li>
+                
+            {% if review.rating %}
+                <li>Rating: {{ review.rating }}</li>
             {% else %}
-                <li>{{ review.reviewer }} {{ review.date }} {{ review.time }}</li>
+                <li>No rating</li>
             {% endif %}
-
-            <li><pre>{{ review.comment }}</pre></li>
         </ul>
+
+        {% if review.comment %}
+<!--
+            <br>
+            <pre>{{ review.comment }}</pre>
+-->
+            <textarea class="form-control" name="comment" maxlength=1024 placeholder="Comment">
+                {{ review.comment }}
+            </textarea>
+        {% else %}
+            No comment
+        {% endif %}
+
+        <br>
+
     {% endfor %}
+
 {% endblock %}
