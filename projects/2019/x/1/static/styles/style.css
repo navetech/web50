@@ -56,3 +56,13 @@ main .list-estilo
     margin: 0;
     padding: 0;
 }
+
+.logo-front
+{
+    color: orange;
+}
+
+.logo-back
+{
+    background-color: black;
+}
