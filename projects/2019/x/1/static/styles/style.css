@@ -66,3 +66,16 @@ main .list-estilo
 {
     background-color: black;
 }
+
+.comment-out
+{
+    width: 80em;
+    max-width: 100%;
+    height: auto;
+}
+
+.comment-in
+{
+    width: 80em;
+    height: 15em;
+}

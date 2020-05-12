@@ -1,5 +1,8 @@
 import os
 
+from datetime import datetime
+from datetime import date
+
 from flask import Flask, session, render_template, request, flash, redirect
 from flask_session import Session
 from sqlalchemy import create_engine
@@ -24,6 +27,10 @@ Session(app)
 # Set up database
 engine = create_engine(os.getenv("DATABASE_URL"))
 db = scoped_session(sessionmaker(bind=engine))
+
+# Set rating limits
+rating_min = 1
+rating_max = 5
 
 
 @app.route("/")
@@ -288,7 +295,7 @@ def book(isbn):
     comments_count = 0
     for review in reviews:
         rating = review["rating"]
-        if rating and rating >= 1 and rating <= 5:
+        if rating and rating >= rating_min and rating <= rating_max:
             ratings_count += 1
             s += rating
         else:
@@ -304,10 +311,13 @@ def book(isbn):
 
         review_data = {}
         review_data["reviewer"] = reviewer.fullname
-        review_data["date"] = review.date
-        review_data["time"] = review.time
         review_data["rating"] = review.rating
         review_data["comment"] = comment
+
+        dt = datetime.fromisoformat(str(review.timestamp))
+        cdt = dt.ctime()
+        tzn = dt.tzname()
+        review_data["datetime"] = dt.strftime("%a %d/%b/%Y %H:%M:%S %Z")
 
         reviews_data.append(review_data)
 

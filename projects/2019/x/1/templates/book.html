@@ -12,17 +12,29 @@
     <ul class="list-estilo">
         <li>{{ book.title }} by {{ book.author }} in {{ book.year }}</li>
         <li>ISBN: {{ book.isbn }}</li>
-        <li>Average Rating: {{ average_rating }}</li>
-        <li>Ratings Count: {{ ratings_count }}</li>
-        <li>Comments Count: {{ comments_count }}</li>
-        <li>Reviews Count: {{ reviews_count }}</li>
     </ul>
+
+    {% if ratings_count > 0 %}
+        <br>
+        <ul class="list-estilo">
+            <li>Average Rating: {{ average_rating }}</li>
+            <li>Ratings Count: {{ ratings_count }}</li>
+        </ul>
+    {% endif %}
+
+    {% if reviews %}
+        <br>
+        <ul class="list-estilo">
+            <li>Comments Count: {{ comments_count }}</li>
+            <li>Reviews Count: {{ reviews_count }}</li>
+        </ul>
+    {% endif %}
 
     <br>
     {% for review in reviews %}
         <br>
         <ul class="list-estilo">
-            <li>by {{ review.reviewer }} in {{ review.date }} at {{ review.time }}</li>
+            <li>by {{ review.reviewer }} on {{ review.datetime }}</li>
                 
             {% if review.rating %}
                 <li>Rating: {{ review.rating }}</li>
@@ -36,7 +48,7 @@
             <br>
             <pre>{{ review.comment }}</pre>
 -->
-            <textarea class="form-control" name="comment" maxlength=1024 placeholder="Comment">
+            <textarea class="comment-out" readonly>
                 {{ review.comment }}
             </textarea>
         {% else %}
