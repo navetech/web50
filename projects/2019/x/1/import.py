@@ -27,7 +27,7 @@ def main():
                 db.execute(
                     "INSERT INTO books (isbn, title, author, year) \
                     VALUES (:isbn, :title, :author, :year)",
-                    {"isbn":isbn, "title":title, "author":author, "year":int(year)})
+                    {"isbn": isbn, "title": title, "author": author, "year": int(year)})
             except ValueError:
                 pass
 

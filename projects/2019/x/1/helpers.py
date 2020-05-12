@@ -40,38 +40,35 @@ def query_books(db, query_key):
     if not db or not query_key:
         return books
 
-    # Query database for books
     if query_key["all"]:
         search_key = query_key["all"]["search_key"]
-    
+
         if query_key["all"]["year"]:
             year = query_key["all"]["year"]
 
+            # Query database for books by isbn, or title, or author, or year
             books = db.execute("SELECT * FROM books WHERE \
-                                    isbn ILIKE :search_key OR title ILIKE :search_key OR \
-                                    author ILIKE :search_key OR year = :year",
-                                    {"search_key": search_key, "year": year})
+                                isbn ILIKE :search_key OR title ILIKE :search_key OR \
+                                author ILIKE :search_key OR year = :year",
+                               {"search_key": search_key, "year": year})
 
         else:
+            # Query database for books by isbn, or title, or author
             books = db.execute("SELECT * FROM books WHERE \
                                 isbn ILIKE :search_key OR title ILIKE :search_key OR \
                                 author ILIKE :search_key",
-                                {"search_key": search_key})
+                               {"search_key": search_key})
 
     elif query_key["author"]:
         author = query_key["author"]
 
-        books = db.execute("SELECT * FROM books WHERE \
-                            author = :author",
-                           {"author": author})
+        # Query database for books by author
+        books = db.execute("SELECT * FROM books WHERE author = :author", {"author": author})
 
     elif query_key["year"]:
         year = query_key["year"]
 
-        books = db.execute("SELECT * FROM books WHERE \
-                            year = :year",
-                           {"year": year})
+        # Query database for books by year
+        books = db.execute("SELECT * FROM books WHERE year = :year", {"year": year})
 
     return books
-
-

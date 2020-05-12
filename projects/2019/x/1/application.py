@@ -185,11 +185,11 @@ def register():
 
         # Insert user into database
         db.execute("INSERT INTO users (username, password, fullname) VALUES \
-                   (:username, :password, :fullname)",
+                    (:username, :password, :fullname)",
                    {"username": username, "password": generate_password_hash(password),
-                   "fullname": fullname})
+                    "fullname": fullname})
         db.commit()
-                          
+
         # Query database for username
         user = db.execute("SELECT * FROM users WHERE username = :username",
                           {"username": username}).fetchone()
@@ -240,7 +240,7 @@ def login():
 
         # Query database for username
         user = db.execute("SELECT * FROM users WHERE username = :username",
-                          {"username":username}).fetchone()
+                          {"username": username}).fetchone()
 
         # Ensure username exists and password is correct
         if not user or not check_password_hash(user.password, password):
@@ -249,7 +249,6 @@ def login():
         # Remember which user has logged in
         session["user_id"] = user.id
         session["user_fullname"] = user.fullname
-
 
         # Report message
         flash('You were successfully logged in')
@@ -317,7 +316,7 @@ def book(isbn):
         dt = datetime.fromisoformat(str(review.timestamp))
         cdt = dt.ctime()
         tzn = dt.tzname()
-        review_data["datetime"] = dt.strftime("%a %d/%b/%Y %H:%M:%S %Z")
+        review_data["datetime"] = dt.strftime("%a, %d %b %Y %H:%M:%S %Z")
 
         reviews_data.append(review_data)
 
@@ -327,14 +326,14 @@ def book(isbn):
         average_rating = None
 
     return render_template("book.html", book=book, average_rating=average_rating,
-        ratings_count=ratings_count, comments_count=comments_count, reviews_count=reviews_count,
-        reviews=reviews_data)
+                           ratings_count=ratings_count, comments_count=comments_count,
+                           reviews_count=reviews_count, reviews=reviews_data)
 
 
 @app.route("/review/<string:book_isbn>/<int:user_id>", methods=["GET", "POST"])
 @login_required
 def review(book_isbn, user_id):
-    """ Do a review """ 
+    """ Do a review """
 
     # Query database for book
     book = db.execute("SELECT * FROM books WHERE isbn = :isbn", {"isbn": book_isbn}).fetchone()
@@ -345,16 +344,16 @@ def review(book_isbn, user_id):
     # Query database for review
     review = db.execute("SELECT * FROM reviews WHERE reviewer_id = :reviewer_id AND \
                          book_id = :book_id",
-                         {"reviewer_id": reviewer.id, "book_id": book.id}).fetchone()
+                        {"reviewer_id": reviewer.id, "book_id": book.id}).fetchone()
 
     # User reached route via GET (as by clicking a link or via redirect)
     if request.method == "GET":
         return render_template("review.html", book=book, reviewer=reviewer.fullname,
-            review=review)
+                               review=review)
 
     # User reached route via POST (as by submitting a form via POST)
     elif request.method == "POST":
-        
+
         rating = request.form.get("rating")
         if not rating:
             rating = 0
@@ -362,20 +361,18 @@ def review(book_isbn, user_id):
         if review:
             # Update review into database
             db.execute("UPDATE reviews SET date = 'now', time = 'now', rating = :rating, \
-                       comment = :comment, timestamp = 'now' \
-                       WHERE reviewer_id = :reviewer_id AND book_id = :book_id",
+                        comment = :comment, timestamp = 'now' \
+                        WHERE reviewer_id = :reviewer_id AND book_id = :book_id",
                        {"reviewer_id": reviewer.id, "book_id": book.id,
-                        "rating": rating,
-                        "comment": request.form.get("comment")})
+                        "rating": rating, "comment": request.form.get("comment")})
             db.commit()
 
         else:
             # Insert review into database
-            db.execute("INSERT INTO reviews (reviewer_id, book_id, date, time, rating, comment, timestamp) VALUES \
-                       (:reviewer_id, :book_id, 'now', 'now', :rating, :comment, 'now')",
+            db.execute("INSERT INTO reviews (reviewer_id, book_id, date, time, rating, comment, timestamp) \
+                        VALUES (:reviewer_id, :book_id, 'now', 'now', :rating, :comment, 'now')",
                        {"reviewer_id": reviewer.id, "book_id": book.id,
-                        "rating": rating,
-                        "comment": request.form.get("comment")})
+                        "rating": rating, "comment": request.form.get("comment")})
             db.commit()
 
         # Redirect user to book page
@@ -418,6 +415,7 @@ def unregister_all():
 
     # Repeat for each user
     for user in users:
+
         # Delete user reviews from database
         db.execute("DELETE FROM reviews WHERE reviewer_id = :reviewer_id", {"reviewer_id": user.id})
         db.commit()
@@ -451,4 +449,3 @@ def all_reviews():
     reviews = db.execute("SELECT * FROM reviews").fetchall()
 
     return render_template("allreviews.html", reviews=reviews)
-
