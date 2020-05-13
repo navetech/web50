@@ -1,7 +1,8 @@
 import os
 
 from datetime import datetime
-from datetime import date
+import time
+import locale
 
 from flask import Flask, session, render_template, request, flash, redirect
 from flask_session import Session
@@ -27,6 +28,10 @@ Session(app)
 # Set up database
 engine = create_engine(os.getenv("DATABASE_URL"))
 db = scoped_session(sessionmaker(bind=engine))
+
+# Get time zone
+lt = time.localtime()
+gmt_off = int(lt.tm_gmtoff / 3600)
 
 # Set rating limits
 rating_min = 1
@@ -281,6 +286,10 @@ def book(isbn):
     # Query database for book
     book = db.execute("SELECT * FROM books WHERE isbn = :isbn", {"isbn": isbn}).fetchone()
 
+    # Set database timezone
+    db.execute(f"SET TIME ZONE \'{gmt_off}\'")
+    db.commit()
+
     # Query database for book reviews
     reviews = db.execute("SELECT * FROM reviews WHERE book_id = :book_id",
                          {"book_id": book.id}).fetchall()
@@ -314,8 +323,14 @@ def book(isbn):
         review_data["comment"] = comment
 
         dt = datetime.fromisoformat(str(review.timestamp))
-        cdt = dt.ctime()
-        tzn = dt.tzname()
+
+        # Set locale
+        loc = locale.getlocale(locale.LC_CTYPE)
+        (lang_code, encoding) = loc
+        lang_code = lang_code.replace("_", "-")
+
+        locale.setlocale(locale.LC_TIME, lang_code)
+
         review_data["datetime"] = dt.strftime("%a, %d %b %Y %H:%M:%S %Z")
 
         reviews_data.append(review_data)
