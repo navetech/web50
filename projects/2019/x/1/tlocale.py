@@ -23,7 +23,6 @@ print(loc)
 
 loc = locale.getlocale(locale.LC_TIME)
 print(loc)
-"""
 
 locs = locale.setlocale(locale.LC_ALL)
 print("set", locs)
@@ -56,3 +55,51 @@ print(time.tzname)
 lt = time.localtime()
 print(lt)
 print(lt.tm_zone, lt.tm_gmtoff)
+
+def f(h):
+    return ((h > 0) - (h < 0)) * (abs(h) % 24)
+
+h = -13
+print(h, f(h))
+
+h = -12
+print(h, f(h))
+
+h = -11
+print(h, f(h))
+
+h = -1
+print(h, f(h))
+
+h = 0
+print(h, f(h))
+
+h = 1
+print(h, f(h))
+
+h = 11
+print(h, f(h))
+
+h = 12
+print(h, f(h))
+
+h = 13
+print(h, f(h))
+# Get local time zone
+lt = time.localtime() # localtime returns tm_gmtoff in seconds
+gmt_min_off = (int(abs(lt.tm_gmtoff) / 60)) % 60
+h = lt.tm_gmtoff // 3600
+gmt_hours_off = ((h > 0) - (h < 0)) * (abs(h) % 24)
+
+
+# Set database timezone
+print(f"SET TIME ZONE INTERVAL \'{gmt_hours_off:+03}:{gmt_min_off:02}\' HOUR TO MINUTE")
+"""
+
+# Set locale
+loc = locale.getlocale(locale.LC_CTYPE)
+(language_code, encoding ) = loc
+language_code = language_code.replace("_", "-", 1)
+locale.setlocale(locale.LC_TIME, language_code)
+print(loc, language_code, encoding)
+

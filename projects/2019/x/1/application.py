@@ -4,7 +4,7 @@ from datetime import datetime
 import time
 import locale
 
-from flask import Flask, session, render_template, request, flash, redirect
+from flask import Flask, session, render_template, request, flash, redirect, url_for
 from flask_session import Session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -28,10 +28,6 @@ Session(app)
 # Set up database
 engine = create_engine(os.getenv("DATABASE_URL"))
 db = scoped_session(sessionmaker(bind=engine))
-
-# Get time zone
-lt = time.localtime()
-gmt_off = int(lt.tm_gmtoff / 3600)
 
 # Set rating limits
 rating_min = 1
@@ -207,6 +203,14 @@ def register():
         session["user_id"] = user.id
         session["user_fullname"] = user.fullname
 
+        # Get locale
+        loc = locale.getlocale(locale.LC_CTYPE)
+        (language_code, encoding ) = loc
+        # language_code format returned by getlocale is like 'pt_BR' but 
+        # language_code format required by setlocale is like 'pt-BR' 
+        language_code = language_code.replace("_", "-", 1)
+        session["language_code"] = language_code
+
         # Report message
         flash('You were successfully logged in')
         flash(user.fullname)
@@ -255,6 +259,14 @@ def login():
         session["user_id"] = user.id
         session["user_fullname"] = user.fullname
 
+        # Get locale
+        loc = locale.getlocale(locale.LC_CTYPE)
+        (language_code, encoding ) = loc
+        # language_code format returned by getlocale is like 'pt_BR' but 
+        # language_code format required by setlocale is like 'pt-BR' 
+        language_code = language_code.replace("_", "-", 1)
+        session["language_code"] = language_code
+
         # Report message
         flash('You were successfully logged in')
         flash(user.fullname)
@@ -286,10 +298,16 @@ def book(isbn):
     # Query database for book
     book = db.execute("SELECT * FROM books WHERE isbn = :isbn", {"isbn": isbn}).fetchone()
 
-    # Set database timezone
-    db.execute(f"SET TIME ZONE \'{gmt_off}\'")
-    db.commit()
 
+    # Get local time zone
+    lt = time.localtime() # localtime returns tm_gmtoff in seconds
+    gmt_min_off = (int(abs(lt.tm_gmtoff) / 60)) % 60
+    h = lt.tm_gmtoff // 3600
+    gmt_hours_off = ((h > 0) - (h < 0)) * (abs(h) % 24)
+
+    # Set database timezone
+    db.execute(f"SET LOCAL TIME ZONE INTERVAL \'{gmt_hours_off:+03}:{gmt_min_off:02}\' HOUR TO MINUTE")
+    
     # Query database for book reviews
     reviews = db.execute("SELECT * FROM reviews WHERE book_id = :book_id",
                          {"book_id": book.id}).fetchall()
@@ -324,12 +342,9 @@ def book(isbn):
 
         dt = datetime.fromisoformat(str(review.timestamp))
 
-        # Set locale
-        loc = locale.getlocale(locale.LC_CTYPE)
-        (lang_code, encoding) = loc
-        lang_code = lang_code.replace("_", "-")
-
-        locale.setlocale(locale.LC_TIME, lang_code)
+        # Set locale for formatting datetime according local language
+        language_code = session["language_code"]
+        locale.setlocale(locale.LC_TIME, language_code)
 
         review_data["datetime"] = dt.strftime("%a, %d %b %Y %H:%M:%S %Z")
 
@@ -391,7 +406,7 @@ def review(book_isbn, user_id):
             db.commit()
 
         # Redirect user to book page
-        return redirect("/books/" + book['isbn'])
+        return redirect(url_for('book', isbn=book['isbn']))
 
     # User reached route not via GET neither via POST
     else:

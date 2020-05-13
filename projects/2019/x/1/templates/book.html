@@ -10,7 +10,13 @@
     
     <br>
     <ul class="list-estilo">
-        <li>{{ book.title }} by {{ book.author }} in {{ book.year }}</li>
+        <li>
+            {{ book.title }}
+            by
+            <a href="{{ url_for('books_by_author', author=book['author']) }}">{{ book.author }}</a>
+            in
+            <a href="{{ url_for('books_in_year', year=book['year']) }}">{{ book.year }}</a>
+            </li>
         <li>ISBN: {{ book.isbn }}</li>
     </ul>
 

@@ -5,32 +5,35 @@
 {% endblock %}
 
 {% block main %}
-    <h6>Book</h6>
     <ul class="list-estilo">
+        <li>
+            <a href="{{ url_for('book', isbn=book['isbn']) }}">{{ book.title }}</a>
+            by
+            <a href="{{ url_for('books_by_author', author=book['author']) }}">{{ book.author }}</a>
+            in
+            <a href="{{ url_for('books_in_year', year=book['year']) }}">{{ book.year }}</a>
+        </li>
         <li>ISBN: {{ book.isbn }}</li>
-        <li>Title: {{ book.title }}</li>
-        <li>Author: {{ book.author }}</li>
-        <li>Year: {{ book.year }}</li>
     </ul>
 
     <br>
 
-    <h6>Reviewer</h6>
-    <ul class="list-estilo">
-        <li>{{ reviewer }}</li>
-    </ul>
-
-    <h6>Review</h6>
     <form action="{{ url_for('review', book_isbn=book['isbn'], user_id=session['user_id']) }}" method="post">
-        <div class="form-group">
-            <input autocomplete="off" autofocus class="form-control" type="number" " name="rating" min="1" max="5" placeholder="Between 1 and 5">
+        Rating (Between 1 and 5)
+        <div>
+            <input autocomplete="off" autofocus type="number" " name="rating" min="1" max="5">
         </div>
 
-        <div class="form-group">
-            <textarea class="form-control comment-in" name="comment" maxlength=1200 placeholder="Comment">
+        <br>
+
+        Comment
+        <div>
+            <textarea class="comment-in" name="comment" maxlength=1200 placeholder="Comment">
                 {{ review.comment }}
             </textarea>
         </div>
+
+        <br>
 
         <button class="btn btn-primary" type="submit">Sumbit</button>
 

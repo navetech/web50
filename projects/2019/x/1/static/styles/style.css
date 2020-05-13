@@ -77,5 +77,6 @@ main .list-estilo
 .comment-in
 {
     width: 80em;
-    height: 15em;
+    max-width: 100%;
+    height: auto;
 }
