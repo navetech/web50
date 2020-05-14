@@ -7,16 +7,17 @@
 {% block main %}
     <form action="/search" method="post">
         <div class="form-group">
-            <input autocomplete="off" autofocus class="form-control"  type="text" name="search-key" placeholder="ISBN/Title/Author/Year">
+            <label for="search-key">ISBN/Title/Author/Year</label>
+            <input autocomplete="off" autofocus class="form-control"  type="text" id="search-key" name="search-key" placeholder="ISBN/Title/Author/Year">
         </div>
         <button class="btn btn-primary" type="submit">Search</button>
     </form>
 
     <br>
 
-    <ul class="list-estilo">
+    <ul class="list-group">
         {% for book in books%}
-            <li>
+            <li class="list-group-item">
                 <a href="{{ url_for('book', isbn=book['isbn']) }}">{{ book.title }}</a>
                 by
                 <a href="{{ url_for('books_by_author', author=book['author']) }}">{{ book.author }}</a>
@@ -25,7 +26,7 @@
             </li>
         {% else %}
             {% if searched %}
-                <li>No matches</li>
+              <li class="list-group-item">No matches</li>
             {% endif %}
         {% endfor %}
     </ul>

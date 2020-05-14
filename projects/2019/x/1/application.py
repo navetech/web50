@@ -226,6 +226,11 @@ def register():
         language_code = language_code.replace("_", "-", 1)
         session["language_code"] = language_code
 
+        # Get local time zone
+        lt = time.localtime() # localtime returns tm_gmtoff in seconds
+        gmt_offset = lt.tm_gmtoff
+        session["gmt_offset"] = gmt_offset
+
         # Report message
         flash('You were successfully logged in')
         flash(user.fullname)
@@ -282,6 +287,11 @@ def login():
         language_code = language_code.replace("_", "-", 1)
         session["language_code"] = language_code
 
+        # Get local time zone
+        lt = time.localtime() # localtime returns tm_gmtoff in seconds
+        gmt_offset = lt.tm_gmtoff
+        session["gmt_offset"] = gmt_offset
+
         # Report message
         flash('You were successfully logged in')
         flash(user.fullname)
@@ -313,15 +323,13 @@ def book(isbn):
     # Query database for book
     book = db.execute("SELECT * FROM books WHERE isbn = :isbn", {"isbn": isbn}).fetchone()
 
-
-    # Get local time zone
-    lt = time.localtime() # localtime returns tm_gmtoff in seconds
-    gmt_min_off = (int(abs(lt.tm_gmtoff) / 60)) % 60
-    h = lt.tm_gmtoff // 3600
-    gmt_hours_off = ((h > 0) - (h < 0)) * (abs(h) % 24)
-
     # Set database timezone
-    db.execute(f"SET LOCAL TIME ZONE INTERVAL \'{gmt_hours_off:+03}:{gmt_min_off:02}\' HOUR TO MINUTE")
+    gmt_offset = session["gmt_offset"]
+    minutes_offset = (int(abs(gmt_offset) / 60)) % 60
+    h = gmt_offset // 3600
+    hours_offset = ((h > 0) - (h < 0)) * (abs(h) % 24)
+    db.execute(f"SET LOCAL TIME ZONE INTERVAL \'{hours_offset:+03}:{minutes_offset:02}\' \
+                HOUR TO MINUTE")
     
     # Query database for book reviews
     reviews = db.execute("SELECT * FROM reviews WHERE book_id = :book_id ORDER BY timestamp DESC",
