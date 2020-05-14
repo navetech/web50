@@ -19,21 +19,26 @@
     <br>
 
     <form action="{{ url_for('review', book_isbn=book['isbn'], user_id=session['user_id']) }}" method="post">
-        Rating (Between 1 and 5)
-        <div>
-            <input autocomplete="off" autofocus type="number" " name="rating" min="1" max="5">
-        </div>
-
+        
+        Rating (Between {{ reviews_conf.ratings.min }} and {{ reviews_conf.ratings.max }})
         <br>
+        {%if review.rating %}
+            <input autocomplete="off" autofocus type="number" " name="rating" min="1" max="5" value={{ review.rating }}>
+        {% else %}
+            <input autocomplete="off" autofocus type="number" " name="rating" min="1" max="5">
+        {% endif %}
+
+        <br><br>
 
         Comment
-        <div>
-            <textarea class="comment-in" name="comment" maxlength=1200 placeholder="Comment">
-                {{ review.comment }}
-            </textarea>
-        </div>
-
         <br>
+        {%if review.comment %}
+            <textarea name="comment" class="comment-in" rows= {{ reviews_conf.comments.rows_number }} maxlength={{ reviews_conf.comments.max_length }} placeholder="Comment">{{ review.comment }}</textarea>
+        {% else %}
+            <textarea name="comment" class="comment-in" rows= {{ reviews_conf.comments.rows_number }} maxlength={{ reviews_conf.comments.max_length }} placeholder="Comment"></textarea>
+        {% endif %}
+        
+        <br><br>
 
         <button class="btn btn-primary" type="submit">Sumbit</button>
 

@@ -54,14 +54,15 @@
             <br>
             <pre>{{ review.comment }}</pre>
 -->
-            <textarea class="comment-out" readonly>
-                {{ review.comment }}
-            </textarea>
+            <textarea readonly class="comment-out" rows= {{ reviews_conf.comments.rows_number }}>{{ review.comment }}</textarea>
         {% else %}
             No comment
         {% endif %}
 
         <br>
+
+    {% else %}
+        No reviews
 
     {% endfor %}
 

@@ -29,9 +29,24 @@ Session(app)
 engine = create_engine(os.getenv("DATABASE_URL"))
 db = scoped_session(sessionmaker(bind=engine))
 
-# Set rating limits
+# Set reviews configuration
 rating_min = 1
 rating_max = 5
+ratings_conf = {}
+ratings_conf["min"] = rating_min
+ratings_conf["max"] = rating_max
+
+comment_columns_max = 80
+comment_rows_number = 5
+comment_max_length = comment_columns_max * comment_rows_number
+comments_conf = {}
+comments_conf["columns_max"] = comment_columns_max
+comments_conf["rows_number"] = comment_rows_number
+comments_conf["max_length"] = comment_max_length
+
+reviews_conf = {}
+reviews_conf["ratings"] = ratings_conf
+reviews_conf["comments"] = comments_conf
 
 
 @app.route("/")
@@ -309,7 +324,7 @@ def book(isbn):
     db.execute(f"SET LOCAL TIME ZONE INTERVAL \'{gmt_hours_off:+03}:{gmt_min_off:02}\' HOUR TO MINUTE")
     
     # Query database for book reviews
-    reviews = db.execute("SELECT * FROM reviews WHERE book_id = :book_id",
+    reviews = db.execute("SELECT * FROM reviews WHERE book_id = :book_id ORDER BY timestamp DESC",
                          {"book_id": book.id}).fetchall()
 
     reviews_count = len(reviews)
@@ -321,15 +336,19 @@ def book(isbn):
     comments_count = 0
     for review in reviews:
         rating = review["rating"]
-        if rating and rating >= rating_min and rating <= rating_max:
-            ratings_count += 1
-            s += rating
-        else:
-            rating = None
+        if rating:
+            if rating >= rating_min and rating <= rating_max:
+                ratings_count += 1
+                s += rating
+            else:
+                rating = None
 
-        comment = review.comment.strip()
+        comment = review.comment
         if comment:
-            comments_count += 1
+            if comment.strip():
+                comments_count += 1
+            else:
+                comment = None
 
         # Query database for book reviews
         reviewer = db.execute("SELECT * FROM users WHERE id = :reviewer_id",
@@ -337,7 +356,7 @@ def book(isbn):
 
         review_data = {}
         review_data["reviewer"] = reviewer.fullname
-        review_data["rating"] = review.rating
+        review_data["rating"] = rating
         review_data["comment"] = comment
 
         dt = datetime.fromisoformat(str(review.timestamp))
@@ -357,7 +376,8 @@ def book(isbn):
 
     return render_template("book.html", book=book, average_rating=average_rating,
                            ratings_count=ratings_count, comments_count=comments_count,
-                           reviews_count=reviews_count, reviews=reviews_data)
+                           reviews_count=reviews_count, reviews=reviews_data,
+                           reviews_conf=reviews_conf)
 
 
 @app.route("/review/<string:book_isbn>/<int:user_id>", methods=["GET", "POST"])
@@ -368,41 +388,56 @@ def review(book_isbn, user_id):
     # Query database for book
     book = db.execute("SELECT * FROM books WHERE isbn = :isbn", {"isbn": book_isbn}).fetchone()
 
-    # Query database for user
-    reviewer = db.execute("SELECT * FROM users WHERE id = :user_id", {"user_id": user_id}).fetchone()
-
     # Query database for review
     review = db.execute("SELECT * FROM reviews WHERE reviewer_id = :reviewer_id AND \
                          book_id = :book_id",
-                        {"reviewer_id": reviewer.id, "book_id": book.id}).fetchone()
+                        {"reviewer_id": user_id, "book_id": book.id}).fetchone()
 
     # User reached route via GET (as by clicking a link or via redirect)
     if request.method == "GET":
-        return render_template("review.html", book=book, reviewer=reviewer.fullname,
-                               review=review)
+        return render_template("review.html", book=book, review=review,
+                               reviews_conf=reviews_conf)
 
     # User reached route via POST (as by submitting a form via POST)
     elif request.method == "POST":
 
         rating = request.form.get("rating")
-        if not rating:
-            rating = 0
+        comment = request.form.get("comment")
+        if comment:
+            comment_stripped = comment.strip()
+        else:
+            comment_stripped = None
 
         if review:
-            # Update review into database
-            db.execute("UPDATE reviews SET date = 'now', time = 'now', rating = :rating, \
-                        comment = :comment, timestamp = 'now' \
-                        WHERE reviewer_id = :reviewer_id AND book_id = :book_id",
-                       {"reviewer_id": reviewer.id, "book_id": book.id,
-                        "rating": rating, "comment": request.form.get("comment")})
+            # Delete review from database
+            db.execute("DELETE FROM reviews WHERE reviewer_id = :reviewer_id AND \
+                        book_id = :book_id",
+                       {"reviewer_id": user_id, "book_id": book.id})
             db.commit()
 
-        else:
-            # Insert review into database
+        if rating and comment_stripped:
+
+            # Insert review into database with rating and comment
             db.execute("INSERT INTO reviews (reviewer_id, book_id, date, time, rating, comment, timestamp) \
                         VALUES (:reviewer_id, :book_id, 'now', 'now', :rating, :comment, 'now')",
-                       {"reviewer_id": reviewer.id, "book_id": book.id,
-                        "rating": rating, "comment": request.form.get("comment")})
+                       {"reviewer_id": user_id, "book_id": book.id,
+                        "rating": rating, "comment": comment})
+            db.commit()
+
+        elif rating:
+            
+            # Insert review into database with rating and without comment
+            db.execute("INSERT INTO reviews (reviewer_id, book_id, date, time, rating, timestamp) \
+                        VALUES (:reviewer_id, :book_id, 'now', 'now', :rating, 'now')",
+                       {"reviewer_id": user_id, "book_id": book.id, "rating": rating})
+            db.commit()
+
+        elif comment_stripped:
+
+            # Insert review into database with comment and without rating
+            db.execute("INSERT INTO reviews (reviewer_id, book_id, date, time, comment, timestamp) \
+                        VALUES (:reviewer_id, :book_id, 'now', 'now', :comment, 'now')",
+                       {"reviewer_id": user_id, "book_id": book.id, "comment": comment})
             db.commit()
 
         # Redirect user to book page
