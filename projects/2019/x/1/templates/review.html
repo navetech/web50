@@ -5,55 +5,45 @@
 {% endblock %}
 
 {% block main %}
-<!--
-    <ul class="list-estilo">
-        <li>
+    <ul class="list-group">
+        <li class="list-group-item">
             <a href="{{ url_for('book', isbn=book['isbn']) }}">{{ book.title }}</a>
             by
             <a href="{{ url_for('books_by_author', author=book['author']) }}">{{ book.author }}</a>
             in
             <a href="{{ url_for('books_in_year', year=book['year']) }}">{{ book.year }}</a>
         </li>
-        <li>ISBN: {{ book.isbn }}</li>
+
+        <li class="list-group-item">
+            <ul class="list-group">
+                <li class="list-group-item">ISBN: {{ book.isbn }}</li>
+
+                <li class="list-group-item">
+                    <form action="{{ url_for('review', book_isbn=book['isbn'], user_id=session['user_id']) }}" method="post">
+                        <div class="form-group">
+                            <label for="rating">Rating (Between {{ reviews_conf.ratings.min }} and {{ reviews_conf.ratings.max }})</label>
+
+                            {%if review.rating %}
+                                <input autocomplete="off" autofocus type="number" " name="rating" class="form-control" id="rating" min="1" max="5" placeholder="Rating (Between {{ reviews_conf.ratings.min }} and {{ reviews_conf.ratings.max }})" value={{ review.rating }}>
+                            {% else %}
+                                <input autocomplete="off" autofocus type="number" " name="rating" class="form-control" id="rating" min="1" max="5" placeholder="Rating (Between {{ reviews_conf.ratings.min }} and {{ reviews_conf.ratings.max }})">
+                            {% endif %}
+                        </div>
+                
+                        <div class="form-group">
+                            <label for="comment">Comment</label>
+                            
+                            {%if review.comment %}
+                                <textarea name="comment" id="comment" class="form-control" rows= {{ reviews_conf.comments.rows_number }} maxlength={{ reviews_conf.comments.max_length }} placeholder="Comment">{{ review.comment }}</textarea>
+                            {% else %}
+                                <textarea name="comment" id="comment" class="form-control" rows= {{ reviews_conf.comments.rows_number }} maxlength={{ reviews_conf.comments.max_length }} placeholder="Comment"></textarea>
+                            {% endif %}
+                        </div>
+                
+                        <button class="btn btn-primary" type="submit">Sumbit</button>
+                    </form>
+                </li>
+            </ul>
+        </li>
     </ul>
--->
-    <a href="{{ url_for('book', isbn=book['isbn']) }}">{{ book.title }}</a>
-    by
-    <a href="{{ url_for('books_by_author', author=book['author']) }}">{{ book.author }}</a>
-    in
-    <a href="{{ url_for('books_in_year', year=book['year']) }}">{{ book.year }}</a>
-
-    <br>
-    ISBN: {{ book.isbn }}
-
-    <br><br>
-    
-    <form action="{{ url_for('review', book_isbn=book['isbn'], user_id=session['user_id']) }}" method="post">
-        
-        <div class="form-group">
-            <label for="rating">Rating (Between {{ reviews_conf.ratings.min }} and {{ reviews_conf.ratings.max }})</label>
-            <br>
-            {%if review.rating %}
-                <input autocomplete="off" autofocus type="number" " name="rating" class="form-control" id="rating" min="1" max="5" placeholder="Rating (Between {{ reviews_conf.ratings.min }} and {{ reviews_conf.ratings.max }})" value={{ review.rating }}>
-            {% else %}
-                <input autocomplete="off" autofocus type="number" " name="rating" class="form-control" id="rating" min="1" max="5" placeholder="Rating (Between {{ reviews_conf.ratings.min }} and {{ reviews_conf.ratings.max }})">
-            {% endif %}
-        </div>
-
-        <div class="form-group">
-            <label for="comment">Comment</label>
-            <br>
-            {%if review.comment %}
-                <textarea name="comment" id="comment" class="form-control comment-in" rows= {{ reviews_conf.comments.rows_number }} maxlength={{ reviews_conf.comments.max_length }} placeholder="Comment">{{ review.comment }}</textarea>
-            {% else %}
-                <textarea name="comment" id="comment" class="form-control comment-in" rows= {{ reviews_conf.comments.rows_number }} maxlength={{ reviews_conf.comments.max_length }} placeholder="Comment"></textarea>
-            {% endif %}
-        </div>
-        
-        <br><br>
-
-        <button class="btn btn-primary" type="submit">Sumbit</button>
-
-    </form>
-
-    {% endblock %}
+{% endblock %}

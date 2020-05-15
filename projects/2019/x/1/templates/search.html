@@ -10,10 +10,9 @@
             <label for="search-key">ISBN/Title/Author/Year</label>
             <input autocomplete="off" autofocus class="form-control"  type="text" id="search-key" name="search-key" placeholder="ISBN/Title/Author/Year">
         </div>
+        
         <button class="btn btn-primary" type="submit">Search</button>
     </form>
-
-    <br>
 
     <ul class="list-group">
         {% for book in books%}

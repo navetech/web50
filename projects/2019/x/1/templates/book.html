@@ -5,63 +5,62 @@
 {% endblock %}
 
 {% block main %}
-    <a href="{{ url_for('review', book_isbn=book['isbn'], user_id=session['user_id']) }}">Do a Review</a>
-
-    <br><br>
-    
-    {{ book.title }}
-    by
-    <a href="{{ url_for('books_by_author', author=book['author']) }}">{{ book.author }}</a>
-    in
-    <a href="{{ url_for('books_in_year', year=book['year']) }}">{{ book.year }}</a>
-
-    <br>
-
     <ul class="list-group">
-        {% if ratings_count > 0 %}
-            <li class="list-group-item">Average Rating: {{ average_rating }}</li>
-            <li class="list-group-item">Ratings Count: {{ ratings_count }}</li>
-        {% endif %}
+        <li class="list-group-item">
+            {{ book.title }}
+            by
+            <a href="{{ url_for('books_by_author', author=book['author']) }}">{{ book.author }}</a>
+            in
+            <a href="{{ url_for('books_in_year', year=book['year']) }}">{{ book.year }}</a>
+        </li>
 
-        {% if reviews %}
-            <li class="list-group-item">Comments Count: {{ comments_count }}</li>
-            <li class="list-group-item">Reviews Count: {{ reviews_count }}</li>
-        {% endif %}
-    </ul>
+        <li class="list-group-item">
+            <ul class="list-group">
+                <li class="list-group-item">
+                    <a href="{{ url_for('review', book_isbn=book['isbn'], user_id=session['user_id']) }}">Do a Review</a>
+                </li>
+        
+                {% if ratings_count > 0 %}
+                    <li class="list-group-item">Average Rating: {{ average_rating }}</li>
+                    <li class="list-group-item">Ratings Count: {{ ratings_count }}</li>
+                {% endif %}
+        
+                {% if reviews %}
+                    <li class="list-group-item">Comments Count: {{ comments_count }}</li>
+                    <li class="list-group-item">Reviews Count: {{ reviews_count }}</li>
+                {% endif %}
+            </ul>
+        </li>
 
-    <br>
-    <ul class="list-group">
-        {% for review in reviews %}
-            <br>
-            <li class="list-group-item">
-                <ul class="list-group">
+        <li class="list-group-item">
+            <ul class="list-group">
+                {% for review in reviews %}
                     <li class="list-group-item">by {{ review.reviewer }} on {{ review.datetime }}</li>
-                
-                    {% if review.rating %}
-                        <li class="list-group-item">Rating: {{ review.rating }}</li>
-                    {% else %}
-                        <li class="list-group-item">No rating</li>
-                    {% endif %}
 
-                    {% if review.comment %}
+                    <li class="list-group-item">
+                        <ul class="list-group">
+                            {% if review.rating %}
+                                <li class="list-group-item">Rating: {{ review.rating }}</li>
+                            {% else %}
+                                <li class="list-group-item">No rating</li>
+                            {% endif %}
+
+                            {% if review.comment %}
+                                <li class="list-group-item">
+                                    <pre>{{ review.comment }}</pre>
 <!--
-            <br>
-            <pre>{{ review.comment }}</pre>
+                                    <textarea readonly class="comment-out" rows= {{ reviews_conf.comments.rows_number }}>{{ review.comment }}</textarea>
 -->
-                        <li class="list-group-item">
-                            <textarea readonly class="comment-out" rows= {{ reviews_conf.comments.rows_number }}>{{ review.comment }}</textarea>
-                        </li>
-                    {% else %}
-                        <li class="list-group-item">No comment</li>
-                    {% endif %}
-                </ul>
-            </li>
-
-            <br>
-
-        {% else %}
-            <li class="list-group-item">No reviews</li>
-        {% endfor %}
+                                </li>
+                            {% else %}
+                                <li class="list-group-item">No comment</li>
+                            {% endif %}
+                        </ul>
+                    </li>
+                {% else %}
+                    <li class="list-group-item">No reviews</li>
+                {% endfor %}
+            </ul>
+        </li>
     </ul>
-
 {% endblock %}

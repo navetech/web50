@@ -10,8 +10,15 @@ main
     overflow-x: auto;
 
     /* center contents */
-    text-align: center;
+    /*text-align: center;*/
 }
+
+main img
+{
+    /* constrain images on small screens */
+    max-width: 100%;
+}
+
 
 /*main .form-control*/
 {
@@ -34,14 +41,5 @@ main
 
 .comment-out
 {
-    width: 80em;
-    max-width: 100%;
-    height: auto;
-}
-
-.comment-in
-{
-    width: 80em;
-    max-width: 100%;
-    height: auto;
+    width: 100%;
 }

@@ -3,7 +3,6 @@
 <html lang="en">
 
     <head>
-
         <!-- Required meta tags -->
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -21,29 +20,28 @@
         <link href="/static/styles/style.css" rel="stylesheet">
 
         <title>Books Reviews: {% block title %}{% endblock %}</title>
-
     </head>
 
     <body>
-
         <nav class="navbar navbar-expand-md navbar-light bg-light border">
             <a class="navbar-brand" href="/">
                 <span class="logo-front logo-back">LN10</span>
-                <!--
-                <span class="yellow">L</span><span class="red">N</span><span class="yellow">1</span><span class="green">0</span>
-                -->
             </a>
+
             <a class="navbar-brand" href="/">
                 <span class="logo-front">Books Reviews</span></a>
             </a>
+
             <button aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation" class="navbar-toggler" data-target="#navbar" data-toggle="collapse" type="button">
                 <span class="navbar-toggler-icon"></span>
             </button>
+
             <div class="collapse navbar-collapse" id="navbar">
                 {% if session.user_id %}
                     <ul class="navbar-nav mr-auto mt-2">
                         <li class="nav-item"><a class="nav-link" href="/">Search</a></li>
                     </ul>
+
                     <ul class="navbar-nav ml-auto mt-2">
                         <li class="nav-item"><a class="nav-link" href="/allusers">All Users</a></li>
                         <li class="nav-item"><a class="nav-link" href="/allreviews">All Reviews</a></li>
@@ -55,6 +53,7 @@
                             <button type="button" class="btn btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 {{ session["user_fullname"] }}
                             </button>
+
                             <div class="dropdown-menu">
                                 <a class="dropdown-item" href="/unregister">Unregister</a>
                                 <a class="dropdown-item" href="/unregisterall">Unregister All</a>
@@ -74,7 +73,6 @@
             </div>
         </nav>
 
-
         {% if get_flashed_messages() %}
             <header>
                 <div class="alert alert-primary border text-center" role="alert">
@@ -90,7 +88,5 @@
         <footer class="small text-center text-muted">
             Data provided for free by <a href="https://iextrading.com/developer">IEX</a>. View <a href="https://iextrading.com/api-exhibit-a/">IEX’s Terms of Use</a>.
         </footer>
-
     </body>
-
 </html>
