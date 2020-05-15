@@ -1,14 +1,14 @@
-.ln-brand-color
+.ln-marca-color
 {
     color: orange;
 }
 
-.ln-brand-background
+.ln-marca-background-color
 {
     background-color: black;
 }
 
-.ln-brand
+.ln-marca
 {
     color: orange;
     background-color: black;
@@ -20,7 +20,7 @@ nav .navbar-brand
     font-size: x-large;
 }
 
-nav .navbar-brand .ln-brand
+nav .navbar-brand .ln-marca
 {
     /* size for brand */
     font-size: xx-large;
@@ -50,7 +50,9 @@ main img
     /*width: auto;*/
 }
 
+/*
 .comment-out
 {
     width: 100%;
 }
+*/

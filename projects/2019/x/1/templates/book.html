@@ -18,7 +18,7 @@
 
         <ul class="list-group">
             <li class="list-group-item">
-                <a href="{{ url_for('review', book_isbn=book['isbn'], user_id=session['user_id']) }}">
+                <a class="btn btn-primary" role="button" href="{{ url_for('review', book_isbn=book['isbn'], user_id=session['user_id']) }}">
                     Do a Review
                 </a>
             </li>
