@@ -1,4 +1,26 @@
+.ln-brand-color
+{
+    color: orange;
+}
+
+.ln-brand-background
+{
+    background-color: black;
+}
+
+.ln-brand
+{
+    color: orange;
+    background-color: black;
+}
+
 nav .navbar-brand
+{
+    /* size for brand */
+    font-size: x-large;
+}
+
+nav .navbar-brand .ln-brand
 {
     /* size for brand */
     font-size: xx-large;
@@ -19,7 +41,6 @@ main img
     max-width: 100%;
 }
 
-
 /*main .form-control*/
 {
     /* center form controls */
@@ -27,16 +48,6 @@ main img
 
     /* override Bootstrap's 100% width for form controls */
     /*width: auto;*/
-}
-
-.logo-front
-{
-    color: orange;
-}
-
-.logo-back
-{
-    background-color: black;
 }
 
 .comment-out

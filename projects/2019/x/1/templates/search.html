@@ -4,29 +4,46 @@
     Search
 {% endblock %}
 
-{% block main %}
-    <form action="/search" method="post">
-        <div class="form-group">
-            <label for="search-key">ISBN/Title/Author/Year</label>
-            <input autocomplete="off" autofocus class="form-control"  type="text" id="search-key" name="search-key" placeholder="ISBN/Title/Author/Year">
-        </div>
-        
-        <button class="btn btn-primary" type="submit">Search</button>
-    </form>
+{% block main_ul %}
+    <li class="list-group-item">
+        <form action="/search" method="post">
+            <div class="form-group">
+                <label for="search-key">
+                    ISBN/Title/Author/Year
+                </label>
 
-    <ul class="list-group">
-        {% for book in books%}
-            <li class="list-group-item">
-                <a href="{{ url_for('book', isbn=book['isbn']) }}">{{ book.title }}</a>
-                by
-                <a href="{{ url_for('books_by_author', author=book['author']) }}">{{ book.author }}</a>
-                in
-                <a href="{{ url_for('books_in_year', year=book['year']) }}">{{ book.year }}</a>
-            </li>
-        {% else %}
-            {% if searched %}
-              <li class="list-group-item">No matches</li>
-            {% endif %}
-        {% endfor %}
-    </ul>
+                <input autocomplete="on" autofocus class="form-control"  type="text" id="search-key" name="search-key" placeholder="ISBN/Title/Author/Year">
+            </div>
+        
+            <button class="btn btn-primary" type="submit">
+                Search
+            </button>
+        </form>
+    </li>
+
+    <li class="list-group-item">
+        <ul class="list-group">
+            {% for book in books%}
+                <li class="list-group-item">
+                    <a href="{{ url_for('book', isbn=book['isbn']) }}">
+                        {{ book.title }}
+                    </a>
+                    by
+                    <a href="{{ url_for('books_by_author', author=book['author']) }}">
+                        {{ book.author }}
+                    </a>
+                    in
+                    <a href="{{ url_for('books_in_year', year=book['year']) }}">
+                        {{ book.year }}
+                    </a>
+                </li>
+            {% else %}
+                {% if searched %}
+                    <li class="list-group-item">
+                        No matches
+                    </li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    </li>
 {% endblock %}
