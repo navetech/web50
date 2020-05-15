@@ -25,15 +25,15 @@
         <ul class="list-group">
             {% for book in books%}
                 <li class="list-group-item">
-                    <a href="{{ url_for('book', isbn=book['isbn']) }}">
+                    <a class="ln-destaque" href="{{ url_for('book', isbn=book['isbn']) }}">
                         {{ book.title }}
                     </a>
                     by
-                    <a href="{{ url_for('books_by_author', author=book['author']) }}">
+                    <a class="ln-destaque" href="{{ url_for('books_by_author', author=book['author']) }}">
                         {{ book.author }}
                     </a>
                     in
-                    <a href="{{ url_for('books_in_year', year=book['year']) }}">
+                    <a class="ln-destaque" href="{{ url_for('books_in_year', year=book['year']) }}">
                         {{ book.year }}
                     </a>
                 </li>

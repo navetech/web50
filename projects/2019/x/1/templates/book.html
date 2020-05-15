@@ -6,15 +6,17 @@
 
 {% block main_ul %}
     <li class="list-group-item">
-        {{ book.title }}
-        by
-        <a href="{{ url_for('books_by_author', author=book['author']) }}">
-            {{ book.author }}
-        </a>
-        in
-        <a href="{{ url_for('books_in_year', year=book['year']) }}">
-            {{ book.year }}
-        </a>
+        <div class="ln-titulo1">
+            <span class="ln-destaque">{{ book.title }}</span>
+            by
+            <a class="ln-destaque" href="{{ url_for('books_by_author', author=book['author']) }}">
+                {{ book.author }}
+            </a>
+            in
+            <a class="ln-destaque" href="{{ url_for('books_in_year', year=book['year']) }}">
+                {{ book.year }}
+            </a>
+        </div>
 
         <ul class="list-group">
             <li class="list-group-item">
@@ -25,39 +27,48 @@
         
             {% if ratings_count > 0 %}
                 <li class="list-group-item">
-                    Average Rating: {{ average_rating }}
+                    <span class="ln-rotulo">Average Rating:</span>
+                    <span class="ln-enfase">{{ average_rating }}</span>
                 </li>
 
                 <li class="list-group-item">
-                    Ratings Count: {{ ratings_count }}
+                    <span class="ln-rotulo">Ratings Count:</span>
+                    <span class="ln-enfase">{{ ratings_count }}</span>
                 </li>
             {% endif %}
         
             {% if reviews %}
                 <li class="list-group-item">
-                    Comments Count: {{ comments_count }}
+                    <span class="ln-rotulo">Comments Count:</span>
+                    <span class="ln-enfase">{{ comments_count }}</span>
                 </li>
 
                 <li class="list-group-item">
-                    Reviews Count: {{ reviews_count }}
+                    <span class="ln-rotulo">Reviews Count:</span>
+                    <span class="ln-enfase">{{ reviews_count }}</span>
                 </li>
             {% endif %}
 
             <li class="list-group-item">
-                Reviews
+                <span class="ln-rotulo">Reviews</span>
 
                 <ul class="list-group">
                     {% for review in reviews %}
                         <li class="list-group-item">
-                            by {{ review.reviewer }} on {{ review.datetime }}
+                            by
+                            <span class="ln-destaque">{{ review.reviewer }}</span>
+                            on
+                            <span class="ln-destaque">{{ review.datetime }}</span>
+
                             <ul class="list-group">
                                 {% if review.rating %}
                                     <li class="list-group-item">
-                                        Rating: {{ review.rating }}
+                                        <span class="ln-rotulo">Rating:</span>
+                                        <span class="ln-enfase">{{ review.rating }}</span>
                                     </li>
                                 {% else %}
                                     <li class="list-group-item">
-                                        No rating
+                                        <span class="ln-enfase">No rating</span>
                                     </li>
                                 {% endif %}
 
@@ -74,14 +85,14 @@
                                     </li>
                                 {% else %}
                                     <li class="list-group-item">
-                                        No comment
+                                        <span class="ln-enfase">No comment</span>
                                     </li>
                                 {% endif %}
                             </ul>
                         </li>
                     {% else %}
                         <li class="list-group-item">
-                            No reviews
+                            <span class="ln-enfase">No reviews</span>
                         </li>
                     {% endfor %}
                 </ul>

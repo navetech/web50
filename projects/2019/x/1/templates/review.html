@@ -6,36 +6,37 @@
 
 {% block main_ul %}
     <li class="list-group-item">
-        <a href="{{ url_for('book', isbn=book['isbn']) }}">
+        <div class="ln-titulo1">
+        <a class="ln-destaque" href="{{ url_for('book', isbn=book['isbn']) }}">
             {{ book.title }}
         </a>
         by
-        <a href="{{ url_for('books_by_author', author=book['author']) }}">
+        <a class="ln-destaque" href="{{ url_for('books_by_author', author=book['author']) }}">
             {{ book.author }}
         </a>
         in
-        <a href="{{ url_for('books_in_year', year=book['year']) }}">
+        <a class="ln-destaque" href="{{ url_for('books_in_year', year=book['year']) }}">
             {{ book.year }}
         </a>
+        </div>
 
         <ul class="list-group">
             <li class="list-group-item">
-                ISBN: {{ book.isbn }}
+                <span class="ln-rotulo">ISBN:</span>
+                <span class="ln-enfase">{{ book.isbn }}</span>
             </li>
 
             <li class="list-group-item">
-                Review
-
                 <form action="{{ url_for('review', book_isbn=book['isbn'], user_id=session['user_id']) }}" method="post">
                     <div class="form-group">
                         <label for="rating">
-                            Rating (Between {{ reviews_conf.ratings.min }} and {{ reviews_conf.ratings.max }})
+                            {{ reviews_conf.ratings.min }} &le; Rating &le; {{ reviews_conf.ratings.max }}
                         </label>
 
                         {%if review.rating %}
-                            <input autocomplete="off" autofocus type="number" " name="rating" class="form-control" id="rating" min="1" max="5" placeholder="Rating (Between {{ reviews_conf.ratings.min }} and {{ reviews_conf.ratings.max }})" value={{ review.rating }}>
+                            <input autocomplete="off" autofocus type="number" " name="rating" class="form-control rating-in" id="rating" min="{{ reviews_conf.ratings.min }}" max="{{ reviews_conf.ratings.max }}" placeholder="{{ reviews_conf.ratings.min }}-{{ reviews_conf.ratings.max }}" value={{ review.rating }}>
                         {% else %}
-                            <input autocomplete="off" autofocus type="number" " name="rating" class="form-control" id="rating" min="1" max="5" placeholder="Rating (Between {{ reviews_conf.ratings.min }} and {{ reviews_conf.ratings.max }})">
+                            <input autocomplete="off" autofocus type="number" " name="rating" class="form-control rating-in" id="rating" min="{{ reviews_conf.ratings.min }}" max="{{ reviews_conf.ratings.max }}" placeholder="{{ reviews_conf.ratings.min }}-{{ reviews_conf.ratings.max }}">
                         {% endif %}
                     </div>
                 
