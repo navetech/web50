@@ -13,9 +13,6 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from helpers import login_required, apology, query_books
 
-##########################
-from tempfile import mkdtemp
-########################
 
 app = Flask(__name__)
 
@@ -72,6 +69,7 @@ def search():
         # Query books with last query key
         books_query_key = session.get("books_query_key")
         books = query_books(db, books_query_key)
+
         return render_template("search.html", books=books, searched=False)
 
     # User reached route via POST (as by submitting a form via POST)
