@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block main_ul %}
-    <li class="list-group-item">
+    <li class="list-group-item ln-container20">
         <div class="ln-titulo1">
         <a class="ln-destaque" href="{{ url_for('book', isbn=book['isbn']) }}">
             {{ book.title }}
@@ -21,12 +21,12 @@
         </div>
 
         <ul class="list-group">
-            <li class="list-group-item">
+            <li class="list-group-item ln-container30">
                 <span class="ln-rotulo">ISBN:</span>
                 <span class="ln-enfase">{{ book.isbn }}</span>
             </li>
 
-            <li class="list-group-item">
+            <li class="list-group-item ln-container30">
                 <form action="{{ url_for('review', book_isbn=book['isbn'], user_id=session['user_id']) }}" method="post">
                     <div class="form-group">
                         <label for="rating">

@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block main_ul %}
-    <li class="list-group-item">
+    <li class="list-group-item ln-container20">
         <div class="ln-titulo1">
             <span class="ln-destaque">{{ book.title }}</span>
             by
@@ -19,42 +19,47 @@
         </div>
 
         <ul class="list-group">
-            <li class="list-group-item">
+            <li class="list-group-item ln-container30">
                 <a class="btn btn-primary" role="button" href="{{ url_for('review', book_isbn=book['isbn'], user_id=session['user_id']) }}">
                     Do a Review
                 </a>
             </li>
         
+            <li class="list-group-item ln-container30">
+                <span class="ln-rotulo">ISBN:</span>
+                <span class="ln-enfase">{{ book.isbn }}</span>
+            </li>
+
             {% if ratings_count > 0 %}
-                <li class="list-group-item">
+                <li class="list-group-item ln-container30">
                     <span class="ln-rotulo">Average Rating:</span>
                     <span class="ln-enfase">{{ average_rating }}</span>
                 </li>
 
-                <li class="list-group-item">
+                <li class="list-group-item ln-container30">
                     <span class="ln-rotulo">Ratings Count:</span>
                     <span class="ln-enfase">{{ ratings_count }}</span>
                 </li>
             {% endif %}
         
             {% if reviews %}
-                <li class="list-group-item">
+                <li class="list-group-item ln-container30">
                     <span class="ln-rotulo">Comments Count:</span>
                     <span class="ln-enfase">{{ comments_count }}</span>
                 </li>
 
-                <li class="list-group-item">
+                <li class="list-group-item ln-container30">
                     <span class="ln-rotulo">Reviews Count:</span>
                     <span class="ln-enfase">{{ reviews_count }}</span>
                 </li>
             {% endif %}
 
-            <li class="list-group-item">
+            <li class="list-group-item ln-container30">
                 <span class="ln-rotulo">Reviews</span>
 
                 <ul class="list-group">
                     {% for review in reviews %}
-                        <li class="list-group-item">
+                        <li class="list-group-item ln-container40">
                             by
                             <span class="ln-destaque">{{ review.reviewer }}</span>
                             on
@@ -62,19 +67,19 @@
 
                             <ul class="list-group">
                                 {% if review.rating %}
-                                    <li class="list-group-item">
+                                    <li class="list-group-item ln-container50">
                                         <span class="ln-rotulo">Rating:</span>
                                         <span class="ln-enfase">{{ review.rating }}</span>
                                     </li>
                                 {% else %}
-                                    <li class="list-group-item">
+                                    <li class="list-group-item ln-container50">
                                         <span class="ln-enfase">No rating</span>
                                     </li>
                                 {% endif %}
 
                                 {% if review.comment %}
-                                    <li class="list-group-item">
-                                        <pre>
+                                    <li class="list-group-item ln-container50">
+                                        <pre class="comment-out">
                                             {{ review.comment }}
                                         </pre>
 <!--
@@ -84,14 +89,14 @@
 -->
                                     </li>
                                 {% else %}
-                                    <li class="list-group-item">
+                                    <li class="list-group-item ln-container50">
                                         <span class="ln-enfase">No comment</span>
                                     </li>
                                 {% endif %}
                             </ul>
                         </li>
                     {% else %}
-                        <li class="list-group-item">
+                        <li class="list-group-item ln-container40">
                             <span class="ln-enfase">No reviews</span>
                         </li>
                     {% endfor %}
