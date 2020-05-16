@@ -4,44 +4,46 @@
     Register
 {% endblock %}
 
-{% block main_ul %}
-    <li class="list-group-item ln-container20">
+{% block main %}
+<ul class="list-group">
+    <li class="list-group-item ln-container1">
         <form action="/register" method="post">
-            <div class="form-group">
-                <label for="fullname">
-                    Full Name
-                </label>
+                <div class="form-group">
+                    <label for="fullname">
+                        Full Name
+                    </label>
 
-                <input required autocomplete="off" autofocus class="form-control" id="fullname" name="fullname" placeholder="Full Name" type="text">
-            </div>
+                    <input required autocomplete="off" autofocus class="form-control" id="fullname" name="fullname" placeholder="Full Name" type="text">
+                </div>
 
-            <div class="form-group">
-                <label for="username">
+                <div class="form-group">
+                    <label for="username">
                     Username
-                </label>
+                    </label>
 
-                <input required class="form-control" id= "username" name="username" placeholder="Username" type="text">
-            </div>
+                    <input required class="form-control" id= "username" name="username" placeholder="Username" type="text">
+                </div>
 
-            <div class="form-group">
-                <label for="password">
-                    Password
-                </label>
+                <div class="form-group">
+                    <label for="password">
+                        Password
+                    </label>
 
-                <input required class="form-control" id="password" name="password" placeholder="Password" type="password">
-            </div>
+                    <input required class="form-control" id="password" name="password" placeholder="Password" type="password">
+                </div>
 
-            <div class="form-group">
-                <label for="confirmation">
-                    Password Confirmation
-                </label>
+                <div class="form-group">
+                    <label for="confirmation">
+                        Password Confirmation
+                    </label>
 
-                <input required class="form-control" id="confirmation" name="confirmation" placeholder="Password Confirmation" type="password">
-            </div>
+                    <input required class="form-control" id="confirmation" name="confirmation" placeholder="Password Confirmation" type="password">
+                </div>
 
-            <button class="btn btn-primary" type="submit">
+                <button class="btn btn-primary" type="submit">
                 Register
-            </button>
-        </form>
-    </li>
+                </button>
+            </form>
+        </li>
+    </ul>
 {% endblock %}

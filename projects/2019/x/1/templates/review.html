@@ -4,9 +4,9 @@
     Review
 {% endblock %}
 
-{% block main_ul %}
-    <li class="list-group-item ln-container20">
-        <div class="ln-titulo1">
+{% block main %}
+<ul class="list-group">
+    <li class="list-group-item ln-container1 ln-titulo3">
         <a class="ln-destaque" href="{{ url_for('book', isbn=book['isbn']) }}">
             {{ book.title }}
         </a>
@@ -18,15 +18,20 @@
         <a class="ln-destaque" href="{{ url_for('books_in_year', year=book['year']) }}">
             {{ book.year }}
         </a>
-        </div>
+    </li>
 
+    <li class="list-group-item ln-container1">
         <ul class="list-group">
-            <li class="list-group-item ln-container30">
+            <li class="list-group-item ln-container2">
                 <span class="ln-rotulo">ISBN:</span>
                 <span class="ln-enfase">{{ book.isbn }}</span>
             </li>
+        </ul>
+    </li>
+</ul>
 
-            <li class="list-group-item ln-container30">
+<ul class="list-group pt-4">
+    <li class="list-group-item ln-container1">
                 <form action="{{ url_for('review', book_isbn=book['isbn'], user_id=session['user_id']) }}" method="post">
                     <div class="form-group">
                         <label for="rating">
@@ -60,6 +65,5 @@
                     </button>
                 </form>
             </li>
-        </ul>
-    </li>
+</ul>
 {% endblock %}
