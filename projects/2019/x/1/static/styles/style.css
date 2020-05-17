@@ -1,201 +1,14 @@
-.ln-marca-color
-{
-    color: orange;
-}
-
-.ln-marca-background-color
-{
-    background-color: black;
-}
-
-.ln-marca
-{
-    color: orange;
-    background-color: black;
-}
-
-.ln-container00
-{
-    background-color: #ffffff; /* 100% */
-}
-
-.ln-container05
-{
-    background-color: #fff6e6; /* 95% */
-}
-
-.ln-container10
-{
-    background-color: #ffedcc; /* 90% */
-}
-
-.ln-container15
-{
-    background-color: #ffe4b3; /* 85% */
-}
-
-.ln-container20
-{
-    background-color: #ffdb99; /* 80% */
-}
-
-.ln-container25
-{
-    background-color: #ffd280; /* 75% */
-}
-
-.ln-container30
-{
-    background-color: #ffc966; /* 70% */
-}
-
-.ln-container35
-{
-    background-color: #ffc14d; /* 65% */
-}
-
-.ln-container40
-{
-    background-color: #ffb833; /* 60% */
-}
-
-.ln-container45
-{
-    background-color: #ffaf1a; /* 55% */
-}
-
-.ln-container50
-{
-    background-color: #ffa500; /* 50% */
-}
-
-.ln-container55
-{
-    background-color: #e69500; /* 45% */
-}
-
-.ln-container60
-{
-    background-color: #cc8500; /* 40% */
-}
-
-.ln-container65
-{
-    background-color: #b37400; /* 35% */
-}
-
-.ln-container70
-{
-    background-color: #996300; /* 30% */
-}
-
-.ln-container75
-{
-    background-color: #805300; /* 25% */
-}
-
-.ln-container80
-{
-    background-color: #664200; /* 20% */
-}
-
-.ln-container85
-{
-    background-color: #4d3200; /* 15% */
-}
-
-.ln-container90
-{
-    background-color: #332100; /* 10% */
-}
-
-.ln-container95
-{
-    background-color: #1a1100; /* 5% */
-}
-
-.ln-container100
-{
-    background-color: #000000; /* 0% */
-}
-
-.ln-container1
-{
-    background-color: #ffdb99; /* 80% */
-}
-
-.ln-container2
-{
-    background-color: #ffc966; /* 70% */
-}
-
-.ln-titulo1
-{
-    font-size: xx-large;
-}
-
-.ln-titulo2
-{
-    font-size: x-large;
-}
-
-.ln-titulo3
-{
-    font-size: large;
-}
-
-.ln-titulo4
-{
-    font-size: medium;
-}
-
-.ln-titulo5
-{
-    font-size: small;
-}
-
-.ln-titulo6
-{
-    font-size: x-small;
-}
-
-.ln-titulo7
-{
-    font-size: xx-small;
-}
-
-.ln-destaque
-{
-    font-weight: bold;
-    font-style: italic;
-}
-
-.ln-enfase
-{
-    font-weight: bold;
-}
-
-.ln-rotulo
-{
-    font-style: italic;
-}
-
-.ln-alerta-error
-{
-    text-align: center;
-}
-
+/*
 nav .navbar-brand
 {
-    /* size for brand */
     font-size: x-large;
 }
 
 nav .navbar-brand .ln-marca
 {
-    /* size for brand */
     font-size: xx-large;
 }
+*/
 
 main
 {
@@ -217,15 +30,6 @@ main form label
     font-style: oblique;
 }
 
-/*main .form-control*/
-{
-    /* center form controls */
-    /*display: inline-block;*/
-
-    /* override Bootstrap's 100% width for form controls */
-    /*width: auto;*/
-}
-
 .comment-out
 {
     background-color: white;
@@ -235,4 +39,3 @@ main form label
 {
     width: auto
 }
-

@@ -6,7 +6,7 @@
 
 {% block main %}
 <ul class="list-group">
-    <li class="list-group-item ln-container20 ln-titulo3">
+    <li class="list-group-item ln-container1 ln-titulo3">
         <span class="ln-destaque">{{ book.title }}</span>
         by
         <a class="ln-destaque" href="{{ url_for('books_by_author', author=book['author']) }}">
@@ -18,9 +18,9 @@
         </a>
     </li>
 
-    <li class="list-group-item ln-container20">
+    <li class="list-group-item ln-container1">
         <ul class="list-group">
-            <li class="list-group-item ln-container30">
+            <li class="list-group-item ln-container2">
                 <span class="ln-rotulo">ISBN:</span>
                 <span class="ln-enfase">{{ book.isbn }}</span>
             </li>
@@ -29,7 +29,7 @@
 </ul>
 
 <ul class="list-group pt-4">
-    <li class="list-group-item ln-container20">
+    <li class="list-group-item ln-container1">
         <a class="btn btn-primary" role="button" href="{{ url_for('review', book_isbn=book['isbn'], user_id=session['user_id']) }}">
             Do a Review
         </a>
@@ -38,27 +38,27 @@
 
 {% if ratings_count > 0 or reviews%}
 <ul class="list-group pt-4">
-    <li class="list-group-item ln-container20">
+    <li class="list-group-item ln-container1">
         <ul class="list-group">
             {% if ratings_count > 0 %}
-            <li class="list-group-item ln-container30">
+            <li class="list-group-item ln-container2">
                 <span class="ln-rotulo">Average Rating:</span>
                 <span class="ln-enfase">{{ average_rating }}</span>
             </li>
 
-            <li class="list-group-item ln-container30">
+            <li class="list-group-item ln-container2">
                 <span class="ln-rotulo">Ratings Count:</span>
                 <span class="ln-enfase">{{ ratings_count }}</span>
             </li>
             {% endif %}
         
             {% if reviews %}
-            <li class="list-group-item ln-container30">
+            <li class="list-group-item ln-container2">
                 <span class="ln-rotulo">Comments Count:</span>
                 <span class="ln-enfase">{{ comments_count }}</span>
             </li>
 
-            <li class="list-group-item ln-container30">
+            <li class="list-group-item ln-container2">
                 <span class="ln-rotulo">Reviews Count:</span>
                 <span class="ln-enfase">{{ reviews_count }}</span>
             </li>
@@ -70,7 +70,7 @@
 
 {% for review in reviews %}
 <ul class="list-group pt-4">
-    <li class="list-group-item ln-container20">
+    <li class="list-group-item ln-container1">
         by
         <span class="ln-destaque">{{ review.reviewer }}</span>
         on
@@ -78,19 +78,19 @@
     </li>
 
     {% if review.rating %}
-    <li class="list-group-item ln-container20">
+    <li class="list-group-item ln-container1">
         <span class="ln-rotulo">Rating:</span>
         <span class="ln-enfase">{{ review.rating }}</span>
     </li>
 
     {% else %}
-    <li class="list-group-item ln-container20">
+    <li class="list-group-item ln-container1">
         <span class="ln-enfase">No rating</span>
     </li>
     {% endif %}
 
     {% if review.comment %}
-    <li class="list-group-item ln-container20">
+    <li class="list-group-item ln-container1">
         <pre class="comment-out">{{ review.comment }}</pre>
 <!--
                                         <textarea readonly class="comment-out" rows= {{ reviews_conf.comments.rows_number }}>
@@ -100,7 +100,7 @@
     </li>
 
     {% else %}
-    <li class="list-group-item ln-container20">
+    <li class="list-group-item ln-container1">
         <span class="ln-enfase">No comment</span>
     </li>
     {% endif %}

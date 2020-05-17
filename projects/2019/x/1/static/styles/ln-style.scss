@@ -1,0 +1,130 @@
+
+/*
+   Tons de laranja
+      00 - 100% claro
+     100 -   0% claro
+*/
+$orange00: #ffffff;
+$orange05: #fff6e6;
+$orange10: #ffedcc;
+$orange15: #ffe4b3;
+$orange20: #ffdb99;
+$orange25: #ffd280;
+$orange30: #ffc966;
+$orange35: #ffc14d;
+$orange40: #ffb833;
+$orange45: #ffaf1a;
+$orange50: #ffa500;
+$orange55: #e69500;
+$orange60: #cc8500;
+$orange65: #b37400;
+$orange70: #996300;
+$orange75: #805300;
+$orange80: #664200;
+$orange85: #4d3200;
+$orange90: #332100;
+$orange95: #1a1100;
+$orange100: #000000;
+
+$marca-color: orange;
+$marca-background-color: black;
+
+.ln-marca-color
+{
+    color: $marca-color;
+}
+
+.ln-marca-background-color
+{
+    color: $marca-background-color;
+}
+
+.ln-marca
+{
+    color: $marca-color;
+    background-color: $marca-background-color;
+    font-size: xx-large;
+}
+
+.ln-navbar-bg
+{
+    background-color: $orange05;
+}
+
+.ln-navbar-produto-nome
+{
+    font-size: x-large;
+}
+
+.ln-drop-button-bg
+{
+    background-color: $orange80;
+}
+
+.ln-container1
+{
+    background-color: $orange20;
+}
+
+.ln-container2
+{
+    background-color: $orange30;
+}
+
+
+.ln-titulo1
+{
+    font-size: xx-large;
+}
+
+.ln-titulo2
+{
+    font-size: x-large;
+}
+
+.ln-titulo3
+{
+    font-size: large;
+}
+
+.ln-titulo4
+{
+    font-size: medium;
+}
+
+.ln-titulo5
+{
+    font-size: small;
+}
+
+.ln-titulo6
+{
+    font-size: x-small;
+}
+
+.ln-titulo7
+{
+    font-size: xx-small;
+}
+
+.ln-destaque
+{
+    font-weight: bold;
+    font-style: italic;
+}
+
+.ln-enfase
+{
+    font-weight: bold;
+}
+
+.ln-rotulo
+{
+    font-style: italic;
+}
+
+.ln-alerta-error
+{
+    text-align: center;
+}
+
