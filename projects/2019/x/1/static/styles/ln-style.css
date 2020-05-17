@@ -1,10 +1,10 @@
 /*
-   Tons de laranja
-      00 - 100% claro
-     100 -   0% claro
+   Tons de cores
+     100 - 100% claro
+     000 -   0% claro
 */
 .ln-marca-color {
-  color: orange;
+  color: #ffa600;
 }
 
 .ln-marca-background-color {
@@ -12,21 +12,33 @@
 }
 
 .ln-marca {
-  color: orange;
+  color: #ffa600;
   background-color: black;
   font-size: xx-large;
 }
 
 .ln-navbar-bg {
-  background-color: #fff6e6;
+  background-color: #ffedcc;
 }
 
 .ln-navbar-produto-nome {
   font-size: x-large;
 }
 
-.ln-drop-button-bg {
-  background-color: #664200;
+.ln-lista-center {
+  text-align: center;
+}
+
+.ln-lista-center-item {
+  display: inline-block;
+}
+
+.ln-button-drop {
+  background-color: #b37400;
+}
+
+.ln-button-submit {
+  background-color: #805300;
 }
 
 .ln-container1 {

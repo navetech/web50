@@ -28,9 +28,9 @@
     </li>
 </ul>
 
-<ul class="list-group pt-4">
-    <li class="list-group-item ln-container1">
-        <a class="btn btn-primary" role="button" href="{{ url_for('review', book_isbn=book['isbn'], user_id=session['user_id']) }}">
+    <ul class="list-group pt-4 ln-lista-center">
+    <li class="list-group-item ln-lista-center-item ln-container1">
+        <a class="btn btn-dark ln-button-submit" role="button" href="{{ url_for('review', book_isbn=book['isbn'], user_id=session['user_id']) }}">
             Do a Review
         </a>
     </li>
@@ -91,12 +91,10 @@
 
     {% if review.comment %}
     <li class="list-group-item ln-container1">
-        <pre class="comment-out">{{ review.comment }}</pre>
 <!--
-                                        <textarea readonly class="comment-out" rows= {{ reviews_conf.comments.rows_number }}>
-                                            {{ review.comment }}
-                                        </textarea>
+        <pre class="comment-out">{{ review.comment }}</pre>
 -->
+        <textarea readonly class="comment-out" rows= {{ reviews_conf.comments.rows_number }}>{{ review.comment }}</textarea>
     </li>
 
     {% else %}

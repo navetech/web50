@@ -32,10 +32,11 @@ main form label
 
 .comment-out
 {
+    width: 100%;
     background-color: white;
 }
 
 .rating-in
 {
-    width: auto
+    width: auto;
 }

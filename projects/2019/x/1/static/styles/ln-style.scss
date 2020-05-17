@@ -1,33 +1,39 @@
-
 /*
-   Tons de laranja
-      00 - 100% claro
-     100 -   0% claro
+   Tons de cores
+     100 - 100% claro
+     000 -   0% claro
 */
-$orange00: #ffffff;
-$orange05: #fff6e6;
-$orange10: #ffedcc;
-$orange15: #ffe4b3;
-$orange20: #ffdb99;
-$orange25: #ffd280;
-$orange30: #ffc966;
-$orange35: #ffc14d;
-$orange40: #ffb833;
-$orange45: #ffaf1a;
-$orange50: #ffa500;
-$orange55: #e69500;
-$orange60: #cc8500;
-$orange65: #b37400;
-$orange70: #996300;
-$orange75: #805300;
-$orange80: #664200;
-$orange85: #4d3200;
-$orange90: #332100;
-$orange95: #1a1100;
-$orange100: #000000;
+$orange100: hsl(0, 0%, 100%);
+$orange095: hsl(39, 100%, 95%);
+$orange090: hsl(39, 100%, 90%);
+$orange085: hsl(39, 100%, 85%);
+$orange080: hsl(39, 100%, 80%);
+$orange075: hsl(39, 100%, 75%);
+$orange070: hsl(39, 100%, 70%);
+$orange065: hsl(39, 100%, 65%);
+$orange060: hsl(39, 100%, 60%);
+$orange055: hsl(39, 100%, 55%);
+$orange050: hsl(39, 100%, 50%);
+$orange045: hsl(39, 100%, 45%);
+$orange040: hsl(39, 100%, 40%);
+$orange035: hsl(39, 100%, 35%);
+$orange030: hsl(39, 100%, 30%);
+$orange025: hsl(39, 100%, 25%);
+$orange020: hsl(39, 100%, 20%);
+$orange015: hsl(39, 100%, 15%);
+$orange010: hsl(39, 100%, 10%);
+$orange005: hsl(39, 100%, 5%);
+$orange000: hsl(0, 0%, 0%);
 
-$marca-color: orange;
-$marca-background-color: black;
+$gray000: hsl(0, 0%, 0%);
+
+$brown020: hsl(0, 59%, 20%);
+$brown050: hsl(0, 59%, 50%);
+$brown095: hsl(0, 59%, 95%);
+
+
+$marca-color: $orange050;
+$marca-background-color: $gray000;
 
 .ln-marca-color
 {
@@ -48,7 +54,7 @@ $marca-background-color: black;
 
 .ln-navbar-bg
 {
-    background-color: $orange05;
+    background-color: $orange090;
 }
 
 .ln-navbar-produto-nome
@@ -56,21 +62,35 @@ $marca-background-color: black;
     font-size: x-large;
 }
 
-.ln-drop-button-bg
+.ln-lista-center
 {
-    background-color: $orange80;
+    text-align: center;
+}
+
+.ln-lista-center-item
+{
+    display: inline-block;
+}
+
+.ln-button-drop
+{
+    background-color: $orange035;
+}
+
+.ln-button-submit
+{
+    background-color: $orange025;
 }
 
 .ln-container1
 {
-    background-color: $orange20;
+    background-color: $orange080;
 }
 
 .ln-container2
 {
-    background-color: $orange30;
+    background-color: $orange070;
 }
-
 
 .ln-titulo1
 {
@@ -127,4 +147,3 @@ $marca-background-color: black;
 {
     text-align: center;
 }
-
