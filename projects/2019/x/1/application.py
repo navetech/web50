@@ -37,7 +37,7 @@ ratings_conf["min"] = rating_min
 ratings_conf["max"] = rating_max
 
 comment_columns_max = 80
-comment_rows_number = 5
+comment_rows_number = 10
 comment_max_length = comment_columns_max * comment_rows_number
 comments_conf = {}
 comments_conf["columns_max"] = comment_columns_max
@@ -168,10 +168,10 @@ def register():
     # User reached route via POST (as by submitting a form via POST)
     elif request.method == "POST":
 
-        # Ensure fullname was submitted
-        fullname = request.form.get("fullname")
-        if not fullname:
-            return apology("must provide full name", 403)
+        # Ensure profile name was submitted
+        profile_name = request.form.get("profile-name")
+        if not profile_name:
+            return apology("must provide profile name", 403)
 
         # Ensure username was submitted
         username = request.form.get("username")
@@ -201,9 +201,9 @@ def register():
 
         # Insert user into database
         db.execute("INSERT INTO users (username, password, fullname) VALUES \
-                    (:username, :password, :fullname)",
+                    (:username, :password, :profile_name)",
                    {"username": username, "password": generate_password_hash(password),
-                    "fullname": fullname})
+                    "profile_name": profile_name})
         db.commit()
 
         # Query database for username
@@ -216,7 +216,7 @@ def register():
 
         # Remember which user has logged in
         session["user_id"] = user.id
-        session["user_fullname"] = user.fullname
+        session["user_name"] = user.fullname
 
         # Get locale
         loc = locale.getlocale(locale.LC_CTYPE)
@@ -277,7 +277,7 @@ def login():
 
         # Remember which user has logged in
         session["user_id"] = user.id
-        session["user_fullname"] = user.fullname
+        session["user_name"] = user.fullname
 
         # Get locale
         loc = locale.getlocale(locale.LC_CTYPE)
@@ -313,6 +313,86 @@ def logout():
 
     # Redirect user to home page
     return redirect("/")
+
+
+@app.route("/profile", methods=["GET", "POST"])
+def profile():
+    """Show/Change profile of a user"""
+
+    # Query database for username
+    user_id = session["user_id"]
+
+    user = db.execute("SELECT * FROM users WHERE id = :user_id",
+                      {"user_id": user_id}).fetchone()
+
+    # User reached route via GET (as by clicking a link or via redirect)
+    if request.method == "GET":
+        return render_template("profile.html", user=user)
+
+    # User reached route via POST (as by submitting a form via POST)
+    elif request.method == "POST":
+
+        # Ensure profile name and/or password was submitted and confirmation matches
+        profile_name = request.form.get("profile-name")
+        password = request.form.get("password")
+        confirmation = request.form.get("confirmation")
+
+        if profile_name and profile_name == user.fullname:
+            return apology("same profile name", 403)
+
+        if password and check_password_hash(user.password, password):
+            return apology("same password", 403)
+        
+        if not profile_name and not password and not confirmation:
+            return render_template("profile.html", user=user)
+
+        elif profile_name:
+            if not password and not confirmation:
+                db.execute("UPDATE users SET fullname = :profile_name WHERE id = :user_id",
+                           {"user_id": user_id, "profile_name": profile_name})
+                db.commit()
+
+            elif password and confirmation and password == confirmation:
+                db.execute("UPDATE users SET fullname = :profile_name, password = :password \
+                            WHERE id = :user_id",
+                           {"user_id": user_id, "profile_name": profile_name,
+                            "password": generate_password_hash(password)})
+                db.commit()
+
+            else:
+                return apology("password confirmation does not match", 403)
+
+        else:
+            if password and confirmation and password == confirmation:
+                db.execute("UPDATE users SET password = :password WHERE id = :user_id",
+                           {"user_id": user_id, "password": generate_password_hash(password)})
+                db.commit()
+
+            else:
+                return apology("password confirmation does not match", 403)
+
+        # Query database for username
+        user = db.execute("SELECT * FROM users WHERE id = :user_id",
+                          {"user_id": user_id}).fetchone()
+
+        # Ensure user profile was changed
+        if not user:
+            return apology("internal server error", 500)
+
+        # Remember which user has logged in
+        session["user_id"] = user.id
+        session["user_name"] = user.fullname
+
+        # Report message
+        flash('You were successfully changed profile')
+        flash(user.fullname)
+
+        # Redirect user to home page
+        return redirect("/")
+
+    # User reached route not via GET neither via POST
+    else:
+        return apology("invalid method", 403)
 
 
 @app.route("/book/<string:isbn>")
