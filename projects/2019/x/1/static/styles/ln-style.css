@@ -33,6 +33,11 @@
   display: inline-block;
 }
 
+.lt-lista-width-auto {
+  width: auto;
+  display: inline-block;
+}
+
 .ln-button-drop {
   background-color: #b37400;
 }
@@ -41,12 +46,16 @@
   background-color: #805300;
 }
 
-.ln-container1 {
+.ln-container0 {
   background-color: #ffdb99;
 }
 
-.ln-container2 {
+.ln-container1 {
   background-color: #ffc966;
+}
+
+.ln-container2 {
+  background-color: #ffb833;
 }
 
 .ln-titulo1 {

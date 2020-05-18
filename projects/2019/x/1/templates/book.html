@@ -5,68 +5,89 @@
 {% endblock %}
 
 {% block main %}
-<ul class="list-group">
-    <li class="list-group-item ln-container1 ln-titulo3">
-        <span class="ln-destaque">{{ book.title }}</span>
-        by
-        <a class="ln-destaque" href="{{ url_for('books_by_author', author=book['author']) }}">
-            {{ book.author }}
-        </a>
-        in
-        <a class="ln-destaque" href="{{ url_for('books_in_year', year=book['year']) }}">
-            {{ book.year }}
-        </a>
-    </li>
+    <ul class="list-group lt-lista-width-auto">
+        <li class="list-group-item ln-container1 ln-titulo3">
+            <span class="ln-destaque">{{ book.title }}</span>
+            by
+            <a class="ln-destaque" href="{{ url_for('books_by_author', author=book['author']) }}">
+                {{ book.author }}
+            </a>
+            in
+            <a class="ln-destaque" href="{{ url_for('books_in_year', year=book['year']) }}">
+                {{ book.year }}
+            </a>
+        </li>
 
-    <li class="list-group-item ln-container1">
-        <ul class="list-group">
-            <li class="list-group-item ln-container2">
-                <span class="ln-rotulo">ISBN:</span>
-                <span class="ln-enfase">{{ book.isbn }}</span>
-            </li>
-        </ul>
+        <li class="list-group-item ln-container1">
+            <ul class="list-group">
+                <li class="list-group-item ln-container2">
+                    <span class="ln-rotulo">ISBN:</span>
+                    <span class="ln-enfase">{{ book.isbn }}</span>
+                </li>
+    <!--
+    </ul>
     </li>
-</ul>
+    </ul>
 
-    <ul class="list-group pt-4 ln-lista-center">
+<div></div>
+
+    <ul class="list-group pt-4 ln-lista-center lt-lista-width-auto">
     <li class="list-group-item ln-lista-center-item ln-container1">
-        <a class="btn btn-dark ln-button-submit" role="button" href="{{ url_for('review', book_isbn=book['isbn'], user_id=session['user_id']) }}">
-            Do a Review
-        </a>
-    </li>
+    <li class="list-group-item ln-container1"></li>
+    -->
+    <!--
 </ul>
-
-{% if ratings_count > 0 or reviews%}
-<ul class="list-group pt-4">
+-->
+                {% if ratings_count > 0 or reviews%}
+    <!--
+<div></div>
+<ul class="list-group pt-4 lt-lista-width-auto">
     <li class="list-group-item ln-container1">
-        <ul class="list-group">
-            {% if ratings_count > 0 %}
-            <li class="list-group-item ln-container2">
-                <span class="ln-rotulo">Average Rating:</span>
-                <span class="ln-enfase">{{ average_rating }}</span>
-            </li>
+<ul class="list-group">
+-->
+                    {% if ratings_count > 0 %}
+                        <li class="list-group-item ln-container2">
+                            <span class="ln-rotulo">Average Rating:</span>
+                            <span class="ln-enfase">{{ average_rating }}</span>
+                        </li>
 
-            <li class="list-group-item ln-container2">
-                <span class="ln-rotulo">Ratings Count:</span>
-                <span class="ln-enfase">{{ ratings_count }}</span>
-            </li>
-            {% endif %}
-        
-            {% if reviews %}
-            <li class="list-group-item ln-container2">
-                <span class="ln-rotulo">Comments Count:</span>
-                <span class="ln-enfase">{{ comments_count }}</span>
-            </li>
+                        <li class="list-group-item ln-container2">
+                            <span class="ln-rotulo">Ratings Count:</span>
+                            <span class="ln-enfase">{{ ratings_count }}</span>
+                        </li>
+                    {% endif %}
+            
+                    {% if reviews %}
+                        <li class="list-group-item ln-container2">
+                            <span class="ln-rotulo">Comments Count:</span>
+                            <span class="ln-enfase">{{ comments_count }}</span>
+                        </li>
 
-            <li class="list-group-item ln-container2">
-                <span class="ln-rotulo">Reviews Count:</span>
-                <span class="ln-enfase">{{ reviews_count }}</span>
-            </li>
-            {% endif %}
-        </ul>
+                        <li class="list-group-item ln-container2">
+                            <span class="ln-rotulo">Reviews Count:</span>
+                            <span class="ln-enfase">{{ reviews_count }}</span>
+                        </li>
+                    {% endif %}
+<!--
+            </ul>
     </li>
 </ul>
-{% endif %}
+-->
+                {% endif %}
+            </ul>
+        </li>
+    </ul>
+
+    <div></div>
+
+    <ul class="list-group pt-4 lt-lista-width-auto">
+        <li class="list-group-item ln-container1">
+            <a class="btn btn-dark ln-button-submit" role="button" href="{{ url_for('review', book_isbn=book['isbn'], user_id=session['user_id']) }}">
+                Do a Review
+            </a>
+        </li>
+    </ul>
+
 
 {% for review in reviews %}
 <ul class="list-group pt-4">

@@ -16,7 +16,7 @@ main
     overflow-x: auto;
 
     /* center contents */
-    /*text-align: center;*/
+    text-align: center;
 }
 
 main img
@@ -37,6 +37,7 @@ main form label
 }
 
 .rating-in
-{
+{ 
+    text-align: center;
     width: auto;
 }

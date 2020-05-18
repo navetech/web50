@@ -24,7 +24,7 @@
     </ul>
 
     {% if searched or books %}
-        <ul class="list-group pt-4">
+        <ul class="list-group pt-4 lt-lista-width-auto">
             {% if not books %}
                 <li class="list-group-item ln-container1">
                     No matches
@@ -44,6 +44,7 @@
                                     {{ book.year }}
                                 </a>
                             </li>
+                            <div></div>
                         {% endfor %}
             {% endif %}
         </ul>

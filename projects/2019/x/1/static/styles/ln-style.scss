@@ -72,6 +72,12 @@ $marca-background-color: $gray000;
     display: inline-block;
 }
 
+.lt-lista-width-auto
+{
+    width:auto;
+    display: inline-block;
+}
+
 .ln-button-drop
 {
     background-color: $orange035;
@@ -82,14 +88,19 @@ $marca-background-color: $gray000;
     background-color: $orange025;
 }
 
-.ln-container1
+.ln-container0
 {
     background-color: $orange080;
 }
 
-.ln-container2
+.ln-container1
 {
     background-color: $orange070;
+}
+
+.ln-container2
+{
+    background-color: $orange060;
 }
 
 .ln-titulo1
