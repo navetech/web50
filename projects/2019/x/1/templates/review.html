@@ -5,65 +5,52 @@
 {% endblock %}
 
 {% block main %}
-<ul class="list-group lt-lista-width-auto">
-    <li class="list-group-item ln-container1 ln-titulo3">
-        <a class="ln-destaque" href="{{ url_for('book', isbn=book['isbn']) }}">
-            {{ book.title }}
-        </a>
-        by
-        <a class="ln-destaque" href="{{ url_for('books_by_author', author=book['author']) }}">
-            {{ book.author }}
-        </a>
-        in
-        <a class="ln-destaque" href="{{ url_for('books_in_year', year=book['year']) }}">
-            {{ book.year }}
-        </a>
-    </li>
+    <ul class="list-group ln-group-width-auto">
+        <li class="list-group-item ln-container01 ln-h03">
+            <a class="ln-highlight" href="{{ url_for('book', isbn=book['isbn']) }}">{{ book.title }}</a>
+            by
+            <a class="ln-highlight" href="{{ url_for('books_by_author', author=book['author']) }}">{{ book.author }}</a>
+            in
+            <a class="ln-highlight" href="{{ url_for('books_in_year', year=book['year']) }}">{{ book.year }}</a>
+        </li>
 
-    <li class="list-group-item ln-container1">
-        <ul class="list-group">
-            <li class="list-group-item ln-container2">
-                <span class="ln-rotulo">ISBN:</span>
-                <span class="ln-enfase">{{ book.isbn }}</span>
-            </li>
-        </ul>
-    </li>
-</ul>
+        <li class="list-group-item ln-container01">
+            <ul class="list-group">
+                <li class="list-group-item ln-container02">
+                    <span class="ln-label">ISBN:</span>
+                    <span class="ln-strong">{{ book.isbn }}</span>
+                </li>
+            </ul>
+        </li>
+    </ul>
 
-<ul class="list-group pt-4">
-    <li class="list-group-item ln-container1">
-                <form action="{{ url_for('review', book_isbn=book['isbn'], user_id=session['user_id']) }}" method="post">
-                    <div class="form-group ln-lista-center"">
-                        <label for="rating">
-                            {{ reviews_conf.ratings.min }} &le; Rating &le; {{ reviews_conf.ratings.max }}
-                        </label>
+    <ul class="list-group pt-4">
+        <li class="list-group-item ln-container01">
+            <form action="{{ url_for('review', book_isbn=book['isbn'], user_id=session['user_id']) }}" method="post">
+                <div class="form-group ln-group-center"">
+                    <label for="rating">{{ reviews_conf.ratings.min }} &le; Rating &le; {{ reviews_conf.ratings.max }}</label>
 
-                        <div></div>
+                    <div class="ln-group-divider"></div>
 
-                        {%if review.rating %}
-                            <input autocomplete="off" autofocus type="number" " name="rating" class="form-control ln-lista-center-item rating-in" id="rating" min="{{ reviews_conf.ratings.min }}" max="{{ reviews_conf.ratings.max }}" placeholder="{{ reviews_conf.ratings.min }}-{{ reviews_conf.ratings.max }}" value={{ review.rating }}>
-                        {% else %}
-                            <input autocomplete="off" autofocus type="number" " name="rating" class="form-control ln-lista-center-item rating-in" id="rating" min="{{ reviews_conf.ratings.min }}" max="{{ reviews_conf.ratings.max }}" placeholder="{{ reviews_conf.ratings.min }}-{{ reviews_conf.ratings.max }}">
-                        {% endif %}
-                    </div>
-                
-                    <div class="form-group">
-                        <label for="comment">
-                            Comment
-                        </label>
+                    {%if review.rating %}
+                        <input autocomplete="off" autofocus type="number" " name="rating" class="form-control ln-group-item-center rating-in" id="rating" min="{{ reviews_conf.ratings.min }}" max="{{ reviews_conf.ratings.max }}" value={{ review.rating }}>
+                    {% else %}
+                        <input autocomplete="off" autofocus type="number" " name="rating" class="form-control ln-group-item-center rating-in" id="rating" min="{{ reviews_conf.ratings.min }}" max="{{ reviews_conf.ratings.max }}">
+                    {% endif %}
+                </div>
+            
+                <div class="form-group">
+                    <label for="comment">Comment</label>
 
-                        {%if review.comment %}
-                            <textarea name="comment" id="comment" class="form-control" rows= {{ reviews_conf.comments.rows_number }} maxlength={{ reviews_conf.comments.max_length }} placeholder="Comment">{{ review.comment }}</textarea>
-                        {% else %}
-                            <textarea name="comment" id="comment" class="form-control" rows= {{ reviews_conf.comments.rows_number }} maxlength={{ reviews_conf.comments.max_length }} placeholder="Comment">
-                            </textarea>
-                        {% endif %}
-                    </div>
-                
-                    <button class="btn btn-dark ln-button-submit" type="submit">
-                        Sumbit
-                    </button>
-                </form>
-            </li>
-</ul>
+                    {%if review.comment %}
+                        <textarea name="comment" id="comment" class="form-control" rows= {{ reviews_conf.comments.rows_number }} maxlength={{ reviews_conf.comments.max_length }} placeholder="Comment">{{ review.comment }}</textarea>
+                    {% else %}
+                        <textarea name="comment" id="comment" class="form-control" rows= {{ reviews_conf.comments.rows_number }} maxlength={{ reviews_conf.comments.max_length }} placeholder="Comment"></textarea>
+                    {% endif %}
+                </div>
+            
+                <button class="btn btn-dark ln-btn-dark" type="submit">Sumbit</button>
+            </form>
+        </li>
+    </ul>
 {% endblock %}

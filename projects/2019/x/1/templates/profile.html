@@ -1,0 +1,33 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Profile
+{% endblock %}
+
+{% block main %}
+    <ul class="list-group">
+        <li class="list-group-item ln-container01">
+            <form action="/profile" method="post">
+                <div class="form-group">
+                    <label for="profile-name">Profile Name</label>
+
+                    <input autocomplete="off" autofocus class="form-control" id="profile-name" name="profile-name" placeholder="Profile Name" type="text" value={{ user.fullname }}>"
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+
+                    <input class="form-control" id="password" name="password" placeholder="Password" type="password">
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmation">Password Confirmation</label>
+
+                    <input class="form-control" id="confirmation" name="confirmation" placeholder="Password Confirmation" type="password">
+                </div>
+
+                <button class="btn btn-dark ln-btn-dark" type="submit">Submit</button>
+            </form>
+        </li>
+    </ul>
+{% endblock %}
