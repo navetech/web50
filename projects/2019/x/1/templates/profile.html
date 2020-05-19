@@ -9,9 +9,9 @@
         <li class="list-group-item ln-container01">
             <form action="/profile" method="post">
                 <div class="form-group">
-                    <label for="profile-name">Profile Name</label>
+                    <label for="name">Name</label>
 
-                    <input autocomplete="off" autofocus class="form-control" id="profile-name" name="profile-name" placeholder="Profile Name" type="text" value={{ user.fullname }}>"
+                    <input autocomplete="off" autofocus class="form-control" id="name" name="name" placeholder="Name" type="text" value={{ user.name }}>"
                 </div>
 
                 <div class="form-group">
@@ -26,7 +26,7 @@
                     <input class="form-control" id="confirmation" name="confirmation" placeholder="Password Confirmation" type="password">
                 </div>
 
-                <button class="btn btn-dark ln-btn-dark" type="submit">Submit</button>
+                <button class="btn btn-secondary" type="submit">Submit</button>
             </form>
         </li>
     </ul>

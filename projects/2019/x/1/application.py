@@ -168,10 +168,10 @@ def register():
     # User reached route via POST (as by submitting a form via POST)
     elif request.method == "POST":
 
-        # Ensure profile name was submitted
-        profile_name = request.form.get("profile-name")
-        if not profile_name:
-            return apology("must provide profile name", 403)
+        # Ensure name was submitted
+        name = request.form.get("name")
+        if not name:
+            return apology("must provide name", 403)
 
         # Ensure username was submitted
         username = request.form.get("username")
@@ -200,10 +200,10 @@ def register():
             return apology("username already exists", 403)
 
         # Insert user into database
-        db.execute("INSERT INTO users (username, password, fullname) VALUES \
-                    (:username, :password, :profile_name)",
+        db.execute("INSERT INTO users (username, password, name) VALUES \
+                    (:username, :password, :name)",
                    {"username": username, "password": generate_password_hash(password),
-                    "profile_name": profile_name})
+                    "name": name})
         db.commit()
 
         # Query database for username
@@ -216,7 +216,7 @@ def register():
 
         # Remember which user has logged in
         session["user_id"] = user.id
-        session["user_name"] = user.fullname
+        session["user_name"] = user.name
 
         # Get locale
         loc = locale.getlocale(locale.LC_CTYPE)
@@ -233,7 +233,7 @@ def register():
 
         # Report message
         flash('You were successfully logged in')
-        flash(user.fullname)
+        flash(user.name)
 
         # Redirect user to home page
         return redirect("/")
@@ -277,7 +277,7 @@ def login():
 
         # Remember which user has logged in
         session["user_id"] = user.id
-        session["user_name"] = user.fullname
+        session["user_name"] = user.name
 
         # Get locale
         loc = locale.getlocale(locale.LC_CTYPE)
@@ -294,7 +294,7 @@ def login():
 
         # Report message
         flash('You were successfully logged in')
-        flash(user.fullname)
+        flash(user.name)
 
         # Redirect user to home page
         return redirect("/")
@@ -317,7 +317,7 @@ def logout():
 
 @app.route("/profile", methods=["GET", "POST"])
 def profile():
-    """Show/Change profile of a user"""
+    """Show/Change user profile"""
 
     # Query database for username
     user_id = session["user_id"]
@@ -332,30 +332,30 @@ def profile():
     # User reached route via POST (as by submitting a form via POST)
     elif request.method == "POST":
 
-        # Ensure profile name and/or password was submitted and confirmation matches
-        profile_name = request.form.get("profile-name")
+        # Ensure name and/or password was submitted and confirmation matches
+        name = request.form.get("name")
         password = request.form.get("password")
         confirmation = request.form.get("confirmation")
 
-        if profile_name and profile_name == user.fullname:
-            return apology("same profile name", 403)
+        if name and name == user.name:
+            return apology("same name", 403)
 
         if password and check_password_hash(user.password, password):
             return apology("same password", 403)
         
-        if not profile_name and not password and not confirmation:
+        if not name and not password and not confirmation:
             return render_template("profile.html", user=user)
 
-        elif profile_name:
+        elif name:
             if not password and not confirmation:
-                db.execute("UPDATE users SET fullname = :profile_name WHERE id = :user_id",
-                           {"user_id": user_id, "profile_name": profile_name})
+                db.execute("UPDATE users SET name = :name WHERE id = :user_id",
+                           {"user_id": user_id, "name": name})
                 db.commit()
 
             elif password and confirmation and password == confirmation:
-                db.execute("UPDATE users SET fullname = :profile_name, password = :password \
+                db.execute("UPDATE users SET name = :name, password = :password \
                             WHERE id = :user_id",
-                           {"user_id": user_id, "profile_name": profile_name,
+                           {"user_id": user_id, "name": name,
                             "password": generate_password_hash(password)})
                 db.commit()
 
@@ -381,11 +381,11 @@ def profile():
 
         # Remember which user has logged in
         session["user_id"] = user.id
-        session["user_name"] = user.fullname
+        session["user_name"] = user.name
 
         # Report message
-        flash('You were successfully changed profile')
-        flash(user.fullname)
+        flash('You successfully changed user profile')
+        flash(user.name)
 
         # Redirect user to home page
         return redirect("/")
@@ -443,7 +443,7 @@ def book(isbn):
                               {"reviewer_id": review.reviewer_id}).fetchone()
 
         review_data = {}
-        review_data["reviewer"] = reviewer.fullname
+        review_data["reviewer"] = reviewer.name
         review_data["rating"] = rating
         review_data["comment"] = comment
 
@@ -506,8 +506,8 @@ def review(book_isbn, user_id):
         if rating and comment_stripped:
 
             # Insert review into database with rating and comment
-            db.execute("INSERT INTO reviews (reviewer_id, book_id, date, time, rating, comment, timestamp) \
-                        VALUES (:reviewer_id, :book_id, 'now', 'now', :rating, :comment, 'now')",
+            db.execute("INSERT INTO reviews (reviewer_id, book_id, rating, comment, timestamp) \
+                        VALUES (:reviewer_id, :book_id, :rating, :comment, 'now')",
                        {"reviewer_id": user_id, "book_id": book.id,
                         "rating": rating, "comment": comment})
             db.commit()
@@ -515,16 +515,16 @@ def review(book_isbn, user_id):
         elif rating:
             
             # Insert review into database with rating and without comment
-            db.execute("INSERT INTO reviews (reviewer_id, book_id, date, time, rating, timestamp) \
-                        VALUES (:reviewer_id, :book_id, 'now', 'now', :rating, 'now')",
+            db.execute("INSERT INTO reviews (reviewer_id, book_id, rating, timestamp) \
+                        VALUES (:reviewer_id, :book_id, :rating, 'now')",
                        {"reviewer_id": user_id, "book_id": book.id, "rating": rating})
             db.commit()
 
         elif comment_stripped:
 
             # Insert review into database with comment and without rating
-            db.execute("INSERT INTO reviews (reviewer_id, book_id, date, time, comment, timestamp) \
-                        VALUES (:reviewer_id, :book_id, 'now', 'now', :comment, 'now')",
+            db.execute("INSERT INTO reviews (reviewer_id, book_id, comment, timestamp) \
+                        VALUES (:reviewer_id, :book_id, :comment, 'now')",
                        {"reviewer_id": user_id, "book_id": book.id, "comment": comment})
             db.commit()
 
