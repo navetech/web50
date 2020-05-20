@@ -21,7 +21,21 @@
                     <span class="ln-strong">{{ book.isbn }}</span>
                 </li>
 
-                {% if ratings_count > 0 or reviews%}
+                {% if reviews or review_adds %}
+                    {% if reviews %}
+                        <li class="list-group-item ln-container02">
+                        <span class="ln-label">Reviews Count:</span>
+                        <span class="ln-strong">{{ reviews_count }}</span>
+                        </li>
+                    {% endif %}
+
+                    {% if comments_count > 0%}
+                        <li class="list-group-item ln-container02">
+                            <span class="ln-label">Comments Count:</span>
+                            <span class="ln-strong">{{ comments_count }}</span>
+                        </li>
+                    {% endif %}
+
                     {% if ratings_count > 0 %}
                         <li class="list-group-item ln-container02">
                             <span class="ln-label">Average Rating:</span>
@@ -34,15 +48,20 @@
                         </li>
                     {% endif %}
             
-                    {% if reviews %}
+                    {% if review_adds %}
                         <li class="list-group-item ln-container02">
-                            <span class="ln-label">Comments Count:</span>
-                            <span class="ln-strong">{{ comments_count }}</span>
-                        </li>
+                            <span class="ln-label">From Goodreads</span>
+                            <ul class="list-group">
+                                <li class="list-group-item ln-container03">
+                                    <span class="ln-label">Average Rating:</span>
+                                    <span class="ln-strong">{{ review_adds.average_rating }}</span>
+                                </li>
 
-                        <li class="list-group-item ln-container02">
-                            <span class="ln-label">Reviews Count:</span>
-                            <span class="ln-strong">{{ reviews_count }}</span>
+                                <li class="list-group-item ln-container03">
+                                    <span class="ln-label">Ratings Count:</span>
+                                    <span class="ln-strong">{{ review_adds.work_ratings_count }}</span>
+                                </li>
+                            </ul>
                         </li>
                     {% endif %}
                 {% endif %}
@@ -81,7 +100,7 @@
 
             {% if review.comment %}
                 <li class="list-group-item ln-container01">
-                    <textarea readonly class="comment-out" rows= {{ reviews_conf.comments.rows_number }}>{{ review.comment }}</textarea>
+                    <textarea readonly class="comment-out" rows= {{ reviews_cfg.comments.rows_number }}>{{ review.comment }}</textarea>
                 </li>
             {% else %}
                 <li class="list-group-item ln-container01">

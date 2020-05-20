@@ -4,12 +4,14 @@ from datetime import datetime
 import time
 import locale
 
-from flask import Flask, session, render_template, request, flash, redirect, url_for
+from flask import Flask, session, render_template, request, flash, redirect, url_for, jsonify
 from flask_session import Session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
 from werkzeug.security import check_password_hash, generate_password_hash
+
+import requests
 
 from helpers import login_required, apology, query_books
 
@@ -21,9 +23,14 @@ app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
-# Check for environment variable
+# Check for environment variables
 if not os.getenv("DATABASE_URL"):
     raise RuntimeError("DATABASE_URL is not set")
+
+apikey = os.getenv("API_KEY")
+if not apikey:
+    raise RuntimeError("API_KEY is not set")
+
 
 # Set up database
 engine = create_engine(os.getenv("DATABASE_URL"))
@@ -44,9 +51,9 @@ comments_conf["columns_max"] = comment_columns_max
 comments_conf["rows_number"] = comment_rows_number
 comments_conf["max_length"] = comment_max_length
 
-reviews_conf = {}
-reviews_conf["ratings"] = ratings_conf
-reviews_conf["comments"] = comments_conf
+reviews_cfg = {}
+reviews_cfg["ratings"] = ratings_conf
+reviews_cfg["comments"] = comments_conf
 
 
 @app.route("/")
@@ -439,7 +446,7 @@ def book(isbn):
             else:
                 comment = None
 
-        # Query database for book reviews
+        # Query database for book reviewer
         reviewer = db.execute("SELECT * FROM users WHERE id = :reviewer_id",
                               {"reviewer_id": review.reviewer_id}).fetchone()
 
@@ -459,14 +466,21 @@ def book(isbn):
         reviews_data.append(review_data)
 
     if ratings_count != 0:
-        average_rating = s / ratings_count
+        average_rating = f"{s / ratings_count:.2f}"
     else:
         average_rating = None
+ 
+    res = requests.get("https://www.goodreads.com/book/review_counts.json", params={"key": f"{apikey}", "isbns": f"{isbn}"})
+
+    if res.status_code != 200:
+        raise Exception("ERROR: API request unsuccessful.")
+      
+    review_adds = res.json()["books"][0]
 
     return render_template("book.html", book=book, average_rating=average_rating,
                            ratings_count=ratings_count, comments_count=comments_count,
                            reviews_count=reviews_count, reviews=reviews_data,
-                           reviews_conf=reviews_conf)
+                           review_adds=review_adds, reviews_cfg=reviews_cfg)
 
 
 @app.route("/review/<string:book_isbn>/<int:user_id>", methods=["GET", "POST"])
@@ -485,7 +499,7 @@ def review(book_isbn, user_id):
     # User reached route via GET (as by clicking a link or via redirect)
     if request.method == "GET":
         return render_template("review.html", book=book, review=review,
-                               reviews_conf=reviews_conf)
+                               reviews_cfg=reviews_cfg)
 
     # User reached route via POST (as by submitting a form via POST)
     elif request.method == "POST":
@@ -535,6 +549,61 @@ def review(book_isbn, user_id):
     # User reached route not via GET neither via POST
     else:
         return apology("invalid method", 403)
+
+
+@app.route("/api/books/<string:isbn>")
+def book_api(isbn):
+    """ Return details about a single book """
+
+    # Query database for book
+    book = db.execute("SELECT * FROM books WHERE isbn = :isbn", {"isbn": isbn}).fetchone()
+
+    # Make sure book exists
+    if not book:
+        return jsonify({"error": "book not found"}), 404
+
+    # Query database for book reviews
+    reviews = db.execute("SELECT * FROM reviews WHERE book_id = :book_id ORDER BY timestamp DESC",
+                         {"book_id": book.id}).fetchall()
+
+    reviews_count = len(reviews)
+
+    # Build reviews data
+    s = 0
+    ratings_count = 0
+    comments_count = 0
+    for review in reviews:
+        rating = review["rating"]
+        if rating:
+            if rating >= rating_min and rating <= rating_max:
+                ratings_count += 1
+                s += rating
+            else:
+                rating = None
+
+        comment = review.comment
+        if comment:
+            if comment.strip():
+                comments_count += 1
+            else:
+                comment = None
+
+    if ratings_count != 0:
+        average_rating = f"{s / ratings_count:.2f}"
+    else:
+        average_rating = None
+
+    return jsonify(
+        {
+            "title": book.title,
+            "author": book.author,
+            "year": book.year,
+            "isbn": book.isbn,
+            "reviews_count": reviews_count,
+            "average_rating": average_rating,
+            "ratings_count": ratings_count,
+            "comments_count": comments_count
+        })
 
 
 @app.route("/unregister", methods=["GET", "POST"])

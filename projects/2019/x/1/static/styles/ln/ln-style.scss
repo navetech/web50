@@ -110,8 +110,9 @@ $btn-dark-background-color: $orange025;
 
 
 $container00: $orange080;
-$container01: $orange070;
-$container02: $orange060;
+$container01: $orange075;
+$container02: $orange070;
+$container03: $orange065;
 
 .ln-container00
 {
@@ -126,6 +127,11 @@ $container02: $orange060;
 .ln-container02
 {
     background-color: $container02;
+}
+
+.ln-container03
+{
+    background-color: $container03;
 }
 
 
