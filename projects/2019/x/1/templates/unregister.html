@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Unregister
+{% endblock %}
+
+{% block main %}
+    <ul class="list-group ln-group-width-auto">
+        <li class="list-group-item ln-container01">
+            <form action="/unregister" method="post">
+                <label>Unregister</label>
+                <div class="ln-group-divider"></div>
+                <button class="btn btn-secondary" type="submit" name="cancel" value="cancel">Cancel</button>
+                <button class="btn btn-dark" type="submit" name="confirm" value="confirm">Confirm</button>
+            </form>
+        </li>
+    </ul>
+{% endblock %}

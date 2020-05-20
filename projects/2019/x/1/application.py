@@ -206,7 +206,7 @@ def register():
                     "name": name})
         db.commit()
 
-        # Query database for username
+        # Query database for user
         user = db.execute("SELECT * FROM users WHERE username = :username",
                           {"username": username}).fetchone()
 
@@ -234,6 +234,8 @@ def register():
         # Report message
         flash('You were successfully logged in')
         flash(user.name)
+        flash(' / ')
+        flash(user.username)
 
         # Redirect user to home page
         return redirect("/")
@@ -295,6 +297,8 @@ def login():
         # Report message
         flash('You were successfully logged in')
         flash(user.name)
+        flash(' / ')
+        flash(user.username)
 
         # Redirect user to home page
         return redirect("/")
@@ -305,6 +309,7 @@ def login():
 
 
 @app.route("/logout")
+@login_required
 def logout():
     """Log user out"""
 
@@ -316,12 +321,12 @@ def logout():
 
 
 @app.route("/profile", methods=["GET", "POST"])
+@login_required
 def profile():
     """Show/Change user profile"""
 
-    # Query database for username
+    # Query database for user
     user_id = session["user_id"]
-
     user = db.execute("SELECT * FROM users WHERE id = :user_id",
                       {"user_id": user_id}).fetchone()
 
@@ -331,61 +336,57 @@ def profile():
 
     # User reached route via POST (as by submitting a form via POST)
     elif request.method == "POST":
-
-        # Ensure name and/or password was submitted and confirmation matches
+        # Ensure data submitted are proper
         name = request.form.get("name")
+        username = request.form.get("username")
         password = request.form.get("password")
         confirmation = request.form.get("confirmation")
 
-        if name and name == user.name:
-            return apology("same name", 403)
+        if  not name:
+            name = user.name
 
-        if password and check_password_hash(user.password, password):
-            return apology("same password", 403)
-        
-        if not name and not password and not confirmation:
-            return render_template("profile.html", user=user)
+        if  not username:
+            username = user.username
 
-        elif name:
-            if not password and not confirmation:
-                db.execute("UPDATE users SET name = :name WHERE id = :user_id",
-                           {"user_id": user_id, "name": name})
-                db.commit()
-
-            elif password and confirmation and password == confirmation:
-                db.execute("UPDATE users SET name = :name, password = :password \
-                            WHERE id = :user_id",
-                           {"user_id": user_id, "name": name,
-                            "password": generate_password_hash(password)})
-                db.commit()
-
-            else:
-                return apology("password confirmation does not match", 403)
-
+        if not password:
+            if confirmation:
+                return apology("must provide password", 403)
         else:
-            if password and confirmation and password == confirmation:
-                db.execute("UPDATE users SET password = :password WHERE id = :user_id",
-                           {"user_id": user_id, "password": generate_password_hash(password)})
-                db.commit()
-
+            if not confirmation:
+                return apology("must provide password confirmation", 403)
             else:
-                return apology("password confirmation does not match", 403)
+                if not password == confirmation:
+                    return apology("password confirmation does not match", 403)
 
-        # Query database for username
-        user = db.execute("SELECT * FROM users WHERE id = :user_id",
+        # Ensure username does not exists
+        if username != user.username:
+            other_user = db.execute("SELECT * FROM users WHERE username = :username",
+                                    {"username": username}).fetchall()
+            if other_user:
+                return apology("username already exists", 403)
+
+        # Update profile into database
+        if name != user.name or username != user.username or password:
+            db.execute("UPDATE users SET username = :username, password = :password, \
+                        name = :name WHERE id = :user_id",
+                       {"user_id": user_id, "username": username,
+                        "password": generate_password_hash(password), "name": name})
+            db.commit()
+
+            # Ensure profile was changed
+            user = db.execute("SELECT * FROM users WHERE id = :user_id",
                           {"user_id": user_id}).fetchone()
+            if not user:
+                return apology("internal server error", 500)
 
-        # Ensure user profile was changed
-        if not user:
-            return apology("internal server error", 500)
+            # Remember name of user that is logged in
+            session["user_name"] = user.name
 
-        # Remember which user has logged in
-        session["user_id"] = user.id
-        session["user_name"] = user.name
-
-        # Report message
-        flash('You successfully changed user profile')
-        flash(user.name)
+            # Report message
+            flash('You successfully changed profile')
+            flash(user.name)
+            flash(' / ')
+            flash(user.username)
 
         # Redirect user to home page
         return redirect("/")
@@ -536,26 +537,40 @@ def review(book_isbn, user_id):
         return apology("invalid method", 403)
 
 
-@app.route("/unregister")
+@app.route("/unregister", methods=["GET", "POST"])
 @login_required
 def unregister():
     """Unregister the user"""
 
-    user_id = session["user_id"]
+    # User reached route via GET (as by clicking a link or via redirect)
+    if request.method == "GET":
+        return render_template("unregister.html")
 
-    # Delete user reviews from database
-    db.execute("DELETE FROM reviews WHERE reviewer_id = :reviewer_id", {"reviewer_id": user_id})
-    db.commit()
+    # User reached route via POST (as by submitting a form via POST)
+    elif request.method == "POST":
 
-    # Delete user from database
-    db.execute("DELETE FROM users WHERE id = :user_id", {"user_id": user_id})
-    db.commit()
+        if request.form.get("confirm"):
 
-    # Forget any user_id
-    session.clear()
+            # Delete user reviews from database
+            user_id = session["user_id"]
 
-    # Redirect user to home page
-    return redirect("/")
+            db.execute("DELETE FROM reviews WHERE reviewer_id = :reviewer_id",
+                       {"reviewer_id": user_id})
+            db.commit()
+
+            # Delete user from database
+            db.execute("DELETE FROM users WHERE id = :user_id", {"user_id": user_id})
+            db.commit()
+
+            # Forget any user_id
+            session.clear()
+
+        # Redirect user to home page
+        return redirect("/")
+
+    # User reached route not via GET neither via POST
+    else:
+        return apology("invalid method", 403)
 
 
 @app.route("/unregisterall")

@@ -49,27 +49,32 @@ def query_books(db, query_key):
             # Query database for books by isbn, or title, or author, or year
             books = db.execute("SELECT * FROM books WHERE \
                                 isbn ILIKE :search_key OR title ILIKE :search_key OR \
-                                author ILIKE :search_key OR year = :year",
+                                author ILIKE :search_key OR year = :year \
+                                ORDER BY author, year DESC, title",
                                {"search_key": search_key, "year": year}).fetchall()
 
         else:
             # Query database for books by isbn, or title, or author
             books = db.execute("SELECT * FROM books WHERE \
                                 isbn ILIKE :search_key OR title ILIKE :search_key OR \
-                                author ILIKE :search_key",
+                                author ILIKE :search_key \
+                                ORDER BY author, year DESC, title",
                                {"search_key": search_key}).fetchall()
 
     elif query_key["author"]:
         author = query_key["author"]
 
         # Query database for books by author
-        books = db.execute("SELECT * FROM books WHERE author = :author",
+        books = db.execute("SELECT * FROM books WHERE author = :author \
+                            ORDER BY year DESC, title",
                            {"author": author}).fetchall()
 
     elif query_key["year"]:
         year = query_key["year"]
 
         # Query database for books by year
-        books = db.execute("SELECT * FROM books WHERE year = :year", {"year": year}).fetchall()
+        books = db.execute("SELECT * FROM books WHERE year = :year \
+                            ORDER BY author, title",
+                           {"year": year}).fetchall()
 
     return books
