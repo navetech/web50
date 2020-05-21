@@ -86,11 +86,6 @@ $navbar-background-color: $orange090;
 .ln-group-divider
 {
     height: 0;
-    /*
-    margin: .5rem 0;
-    overflow: hidden;
-    border-top: 1px solid #e9ecef;
-    */
 }
 
 
@@ -110,9 +105,9 @@ $btn-dark-background-color: $orange025;
 
 
 $container00: $orange080;
-$container01: $orange075;
-$container02: $orange070;
-$container03: $orange065;
+$container01: $orange070;
+$container02: $orange060;
+$container03: $orange050;
 
 .ln-container00
 {
@@ -192,11 +187,3 @@ $container03: $orange065;
 {
     font-style: italic;
 }
-
-
-/*
-.ln-alerta-error
-{
-    text-align: center;
-}
-*/

@@ -40,11 +40,6 @@
 
 .ln-group-divider {
   height: 0;
-  /*
-  margin: .5rem 0;
-  overflow: hidden;
-  border-top: 1px solid #e9ecef;
-  */
 }
 
 .ln-btn-dropdown-toggle {
@@ -60,15 +55,15 @@
 }
 
 .ln-container01 {
-  background-color: #ffd280;
-}
-
-.ln-container02 {
   background-color: #ffc966;
 }
 
+.ln-container02 {
+  background-color: #ffb833;
+}
+
 .ln-container03 {
-  background-color: #ffc14d;
+  background-color: #ffa600;
 }
 
 .ln-h01 {
@@ -115,12 +110,5 @@
 .ln-label {
   font-style: italic;
 }
-
-/*
-.ln-alerta-error
-{
-    text-align: center;
-}
-*/
 
 /*# sourceMappingURL=ln-style.css.map */

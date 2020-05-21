@@ -39,21 +39,21 @@ db = scoped_session(sessionmaker(bind=engine))
 # Set reviews configuration
 rating_min = 1
 rating_max = 5
-ratings_conf = {}
-ratings_conf["min"] = rating_min
-ratings_conf["max"] = rating_max
+ratings_cfg = {}
+ratings_cfg["min"] = rating_min
+ratings_cfg["max"] = rating_max
 
 comment_columns_max = 80
 comment_rows_number = 10
 comment_max_length = comment_columns_max * comment_rows_number
-comments_conf = {}
-comments_conf["columns_max"] = comment_columns_max
-comments_conf["rows_number"] = comment_rows_number
-comments_conf["max_length"] = comment_max_length
+comments_cfg = {}
+comments_cfg["columns_max"] = comment_columns_max
+comments_cfg["rows_number"] = comment_rows_number
+comments_cfg["max_length"] = comment_max_length
 
 reviews_cfg = {}
-reviews_cfg["ratings"] = ratings_conf
-reviews_cfg["comments"] = comments_conf
+reviews_cfg["ratings"] = ratings_cfg
+reviews_cfg["comments"] = comments_cfg
 
 
 @app.route("/")
@@ -227,14 +227,14 @@ def register():
 
         # Get locale
         loc = locale.getlocale(locale.LC_CTYPE)
-        (language_code, encoding ) = loc
+        (language_code, encoding) = loc
         # language_code format returned by getlocale is like 'pt_BR' but 
         # language_code format required by setlocale is like 'pt-BR' 
         language_code = language_code.replace("_", "-", 1)
         session["language_code"] = language_code
 
         # Get local time zone
-        lt = time.localtime() # localtime returns tm_gmtoff in seconds
+        lt = time.localtime()   # localtime returns tm_gmtoff in seconds
         gmt_offset = lt.tm_gmtoff
         session["gmt_offset"] = gmt_offset
 
@@ -290,14 +290,14 @@ def login():
 
         # Get locale
         loc = locale.getlocale(locale.LC_CTYPE)
-        (language_code, encoding ) = loc
+        (language_code, encoding) = loc
         # language_code format returned by getlocale is like 'pt_BR' but 
         # language_code format required by setlocale is like 'pt-BR' 
         language_code = language_code.replace("_", "-", 1)
         session["language_code"] = language_code
 
         # Get local time zone
-        lt = time.localtime() # localtime returns tm_gmtoff in seconds
+        lt = time.localtime()   # localtime returns tm_gmtoff in seconds
         gmt_offset = lt.tm_gmtoff
         session["gmt_offset"] = gmt_offset
 
@@ -349,10 +349,10 @@ def profile():
         password = request.form.get("password")
         confirmation = request.form.get("confirmation")
 
-        if  not name:
+        if not name:
             name = user.name
 
-        if  not username:
+        if not username:
             username = user.username
 
         if not password:
@@ -382,7 +382,8 @@ def profile():
 
             # Ensure profile was changed
             user = db.execute("SELECT * FROM users WHERE id = :user_id",
-                          {"user_id": user_id}).fetchone()
+                              {"user_id": user_id}).fetchone()
+
             if not user:
                 return apology("internal server error", 500)
 
@@ -640,49 +641,3 @@ def unregister():
     # User reached route not via GET neither via POST
     else:
         return apology("invalid method", 403)
-
-
-@app.route("/unregisterall")
-@login_required
-def unregister_all():
-    """Unregister all users"""
-
-    # Query database for all users
-    users = db.execute("SELECT * FROM users").fetchall()
-
-    # Repeat for each user
-    for user in users:
-
-        # Delete user reviews from database
-        db.execute("DELETE FROM reviews WHERE reviewer_id = :reviewer_id", {"reviewer_id": user.id})
-        db.commit()
-
-        # Delete user from database
-        db.execute("DELETE FROM users WHERE id = :user_id", {"user_id": user.id})
-        db.commit()
-
-    # Forget any user_id
-    session.clear()
-
-    # Redirect user to home page
-    return redirect("/")
-
-
-@app.route("/allusers")
-def all_users():
-    """ Show all users"""
-
-    # Query database for all users
-    users = db.execute("SELECT * FROM users").fetchall()
-
-    return render_template("allusers.html", users=users)
-
-
-@app.route("/allreviews")
-def all_reviews():
-    """ Show all reviews"""
-
-    # Query database for all reviews
-    reviews = db.execute("SELECT * FROM reviews").fetchall()
-
-    return render_template("allreviews.html", reviews=reviews)
