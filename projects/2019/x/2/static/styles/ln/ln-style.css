@@ -1,0 +1,114 @@
+/*
+   Tons de cores
+     100 - 100% claro
+     000 -   0% claro
+*/
+.ln-brand-color {
+  color: #ffa600;
+}
+
+.ln-brand-background-color {
+  color: black;
+}
+
+.ln-brand-name {
+  color: #ffa600;
+  background-color: black;
+  font-size: xx-large;
+}
+
+.ln-product-name {
+  font-size: x-large;
+}
+
+.ln-navbar {
+  background-color: #ffedcc;
+}
+
+.ln-group-center {
+  text-align: center;
+}
+
+.ln-group-item-center {
+  display: inline-block;
+}
+
+.ln-group-width-auto {
+  width: auto;
+  display: inline-block;
+}
+
+.ln-group-divider {
+  height: 0;
+}
+
+.ln-btn-dropdown-toggle {
+  background-color: #b37400;
+}
+
+.ln-btn-dark {
+  background-color: #805300;
+}
+
+.ln-container00 {
+  background-color: #ffdb99;
+}
+
+.ln-container01 {
+  background-color: #ffc966;
+}
+
+.ln-container02 {
+  background-color: #ffb833;
+}
+
+.ln-container03 {
+  background-color: #ffa600;
+}
+
+.ln-h01 {
+  font-size: xx-large;
+}
+
+.ln-h02 {
+  font-size: x-large;
+}
+
+.ln-h03 {
+  font-size: large;
+}
+
+.ln-h04 {
+  font-size: medium;
+}
+
+.ln-h05 {
+  font-size: small;
+}
+
+.ln-h06 {
+  font-size: x-small;
+}
+
+.ln-h07 {
+  font-size: xx-small;
+}
+
+.ln-em {
+  font-style: italic;
+}
+
+.ln-strong {
+  font-weight: bold;
+}
+
+.ln-highlight {
+  font-weight: bold;
+  font-style: italic;
+}
+
+.ln-label {
+  font-style: italic;
+}
+
+/*# sourceMappingURL=ln-style.css.map */

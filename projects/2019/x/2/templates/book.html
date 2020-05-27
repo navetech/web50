@@ -1,0 +1,112 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Book
+{% endblock %}
+
+{% block main %}
+    <ul class="list-group ln-group-width-auto">
+        <li class="list-group-item ln-container01 ln-h03">
+            <span class="ln-highlight">{{ book.title }}</span>
+            by
+            <a class="ln-highlight" href="{{ url_for('books_by_author', author=book['author']) }}">{{ book.author }}</a>
+            in
+            <a class="ln-highlight" href="{{ url_for('books_in_year', year=book['year']) }}">{{ book.year }}</a>
+        </li>
+
+        <li class="list-group-item ln-container01">
+            <ul class="list-group">
+                <li class="list-group-item ln-container02">
+                    <span class="ln-label">ISBN:</span>
+                    <span class="ln-strong">{{ book.isbn }}</span>
+                </li>
+
+                {% if reviews or review_adds %}
+                    {% if reviews %}
+                        <li class="list-group-item ln-container02">
+                        <span class="ln-label">Reviews Count:</span>
+                        <span class="ln-strong">{{ reviews_count }}</span>
+                        </li>
+                    {% endif %}
+
+                    {% if comments_count > 0%}
+                        <li class="list-group-item ln-container02">
+                            <span class="ln-label">Comments Count:</span>
+                            <span class="ln-strong">{{ comments_count }}</span>
+                        </li>
+                    {% endif %}
+
+                    {% if ratings_count > 0 %}
+                        <li class="list-group-item ln-container02">
+                            <span class="ln-label">Average Rating:</span>
+                            <span class="ln-strong">{{ average_rating }}</span>
+                        </li>
+
+                        <li class="list-group-item ln-container02">
+                            <span class="ln-label">Ratings Count:</span>
+                            <span class="ln-strong">{{ ratings_count }}</span>
+                        </li>
+                    {% endif %}
+            
+                    {% if review_adds %}
+                        <li class="list-group-item ln-container02">
+                            <span class="ln-label">From Goodreads</span>
+                            <ul class="list-group">
+                                <li class="list-group-item ln-container03">
+                                    <span class="ln-label">Average Rating:</span>
+                                    <span class="ln-strong">{{ review_adds.average_rating }}</span>
+                                </li>
+
+                                <li class="list-group-item ln-container03">
+                                    <span class="ln-label">Ratings Count:</span>
+                                    <span class="ln-strong">{{ review_adds.work_ratings_count }}</span>
+                                </li>
+                            </ul>
+                        </li>
+                    {% endif %}
+                {% endif %}
+            </ul>
+        </li>
+    </ul>
+
+    <div class="ln-group-divider"></div>
+
+    <ul class="list-group pt-4 ln-group-width-auto">
+        <li class="list-group-item ln-container01">
+            <a class="btn btn-dark" role="button" href="{{ url_for('review', book_isbn=book['isbn'], user_id=session['user_id']) }}">Do a Review</a>
+        </li>
+    </ul>
+
+    {% for review in reviews %}
+        <ul class="list-group pt-4">
+            <li class="list-group-item ln-container01">
+                by
+                <span class="ln-highlight">{{ review.reviewer }}</span>
+                on
+                <span class="ln-highlight">{{ review.datetime }}</span>
+            </li>
+
+            {% if review.rating %}
+                <li class="list-group-item ln-container01">
+                    <span class="ln-label">Rating:</span>
+                    <span class="ln-strong">{{ review.rating }}</span>
+                </li>
+
+            {% else %}
+                <li class="list-group-item ln-container01">
+                    <span class="ln-strong">No rating</span>
+                </li>
+            {% endif %}
+
+            {% if review.comment %}
+                <li class="list-group-item ln-container01">
+                    <textarea readonly class="comment-out" rows= {{ reviews_cfg.comments.rows_number }}>{{ review.comment }}</textarea>
+                </li>
+            {% else %}
+                <li class="list-group-item ln-container01">
+                    <span class="ln-strong">No comment</span>
+                </li>
+            {% endif %}
+        </ul>
+    {% endfor %}
+{% endblock %}

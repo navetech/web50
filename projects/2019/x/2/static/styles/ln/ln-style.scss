@@ -1,0 +1,189 @@
+/*
+   Tons de cores
+     100 - 100% claro
+     000 -   0% claro
+*/
+$orange100: hsl(0, 0%, 100%);
+$orange095: hsl(39, 100%, 95%);
+$orange090: hsl(39, 100%, 90%);
+$orange085: hsl(39, 100%, 85%);
+$orange080: hsl(39, 100%, 80%);
+$orange075: hsl(39, 100%, 75%);
+$orange070: hsl(39, 100%, 70%);
+$orange065: hsl(39, 100%, 65%);
+$orange060: hsl(39, 100%, 60%);
+$orange055: hsl(39, 100%, 55%);
+$orange050: hsl(39, 100%, 50%);
+$orange045: hsl(39, 100%, 45%);
+$orange040: hsl(39, 100%, 40%);
+$orange035: hsl(39, 100%, 35%);
+$orange030: hsl(39, 100%, 30%);
+$orange025: hsl(39, 100%, 25%);
+$orange020: hsl(39, 100%, 20%);
+$orange015: hsl(39, 100%, 15%);
+$orange010: hsl(39, 100%, 10%);
+$orange005: hsl(39, 100%, 5%);
+$orange000: hsl(0, 0%, 0%);
+
+$gray000: hsl(0, 0%, 0%);
+
+$brown020: hsl(0, 59%, 20%);
+$brown050: hsl(0, 59%, 50%);
+$brown095: hsl(0, 59%, 95%);
+
+
+$brand-color: $orange050;
+$brand-background-color: black;
+
+.ln-brand-color
+{
+    color: $brand-color;
+}
+
+.ln-brand-background-color
+{
+    color: $brand-background-color;
+}
+
+.ln-brand-name
+{
+    color: $brand-color;
+    background-color: $brand-background-color;
+    font-size: xx-large;
+}
+
+
+.ln-product-name
+{
+    font-size: x-large;
+}
+
+
+$navbar-background-color: $orange090;
+
+.ln-navbar
+{
+    background-color: $navbar-background-color;
+}
+
+
+.ln-group-center
+{
+    text-align: center;
+}
+
+.ln-group-item-center
+{
+    display: inline-block;
+}
+
+.ln-group-width-auto
+{
+    width:auto;
+    display: inline-block;
+}
+
+.ln-group-divider
+{
+    height: 0;
+}
+
+
+$btn-dropdown-toggle-background-color: $orange035;
+
+.ln-btn-dropdown-toggle
+{
+    background-color: $btn-dropdown-toggle-background-color;
+}
+
+$btn-dark-background-color: $orange025;
+
+.ln-btn-dark
+{
+    background-color: $btn-dark-background-color;
+}
+
+
+$container00: $orange080;
+$container01: $orange070;
+$container02: $orange060;
+$container03: $orange050;
+
+.ln-container00
+{
+    background-color: $container00;
+}
+
+.ln-container01
+{
+    background-color: $container01;
+}
+
+.ln-container02
+{
+    background-color: $container02;
+}
+
+.ln-container03
+{
+    background-color: $container03;
+}
+
+
+.ln-h01
+{
+    font-size: xx-large;
+}
+
+.ln-h02
+{
+    font-size: x-large;
+}
+
+.ln-h03
+{
+    font-size: large;
+}
+
+.ln-h04
+{
+    font-size: medium;
+}
+
+.ln-h05
+{
+    font-size: small;
+}
+
+.ln-h06
+{
+    font-size: x-small;
+}
+
+.ln-h07
+{
+    font-size: xx-small;
+}
+
+
+.ln-em
+{
+    font-style: italic;
+}
+
+.ln-strong
+{
+    font-weight: bold;
+}
+
+.ln-highlight
+{
+    font-weight: bold;
+    font-style: italic;
+}
+
+
+.ln-label
+{
+    font-style: italic;
+}

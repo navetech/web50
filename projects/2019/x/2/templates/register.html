@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Register
+{% endblock %}
+
+{% block main %}
+    <ul class="list-group">
+        <li class="list-group-item ln-container01">
+            <form action="/register" method="post">
+                <div class="form-group">
+                    <label for="name">Name</label>
+                    <textarea required autofocus name="name" id="name" class="form-control" rows= 1 placeholder="Name"></textarea>
+                </div>
+
+                <button class="btn btn-dark" type="submit">Register</button>
+            </form>
+        </li>
+    </ul>
+{% endblock %}

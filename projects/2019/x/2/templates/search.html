@@ -1,0 +1,41 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Search
+{% endblock %}
+
+{% block main %}
+    <ul class="list-group">
+        <li class="list-group-item ln-container01">
+            <form action="/search" method="post">
+                <div class="form-group">
+                    <label for="search-key">ISBN/Title/Author/Year</label>
+
+                    <input autocomplete="on" autofocus class="form-control"  type="text" id="search-key" name="search-key" placeholder="ISBN/Title/Author/Year">
+                </div>
+        
+                <button class="btn btn-dark" type="submit">Search</button>
+            </form>
+        </li>
+    </ul>
+
+    {% if searched or books %}
+        <ul class="list-group pt-4 ln-group-width-auto">
+            {% if not books %}
+                <li class="list-group-item ln-container01">No matches</li>
+            {% else %}
+                {% for book in books %}
+                    <li class="list-group-item ln-container01">
+                        <a class="ln-highlight" href="{{ url_for('book', isbn=book['isbn']) }}">{{ book.title }}</a>
+                        by
+                        <a class="ln-highlight" href="{{ url_for('books_by_author', author=book['author']) }}">{{ book.author }}</a>
+                        in
+                        <a class="ln-highlight" href="{{ url_for('books_in_year', year=book['year']) }}">{{ book.year }}</a>
+                    </li>
+
+                    <div class="ln-group-divider"></div>
+                {% endfor %}
+            {% endif %}
+        </ul>
+    {% endif %}
+{% endblock %}

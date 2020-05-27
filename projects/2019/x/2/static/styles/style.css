@@ -1,0 +1,32 @@
+main
+{
+    /* scroll horizontally as needed */
+    overflow-x: auto;
+
+    /* center contents */
+    text-align: center;
+}
+
+main img
+{
+    /* constrain images on small screens */
+    max-width: 100%;
+}
+
+main form label
+{
+    font-style: oblique;
+}
+
+
+.comment-out
+{
+    width: 100%;
+    background-color: white;
+}
+
+.rating-in
+{ 
+    text-align: center;
+    width: auto;
+}
