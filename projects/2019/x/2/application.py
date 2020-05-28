@@ -19,6 +19,7 @@ app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 socketio = SocketIO(app)
 
 users=[]
+channels = []
 
 
 @app.route("/")
@@ -57,11 +58,11 @@ def register():
         users.append(user)
 
         # Remember which user has logged in
-        session["user_id"] = name
+        session["user"] = user
 
         # Report message
         flash('You were successfully logged in')
-        flash(name)
+        flash(user["name"])
 
         # Redirect user to home page
         return redirect("/")
@@ -98,11 +99,11 @@ def login():
             return apology("user does not exist", 403)
 
         # Remember which user has logged in
-        session["user_id"] = name
+        session["user"] = user
 
         # Report message
         flash('You were successfully logged in')
-        flash(name)
+        flash(user["name"])
 
         # Redirect user to home page
         return redirect("/")
@@ -118,7 +119,7 @@ def logout():
     """Log user out"""
 
     # Forget which user had logged in
-    session["user_id"] = None
+    session["user"] = None
 
     # Redirect user to home page
     return redirect("/")
@@ -139,21 +140,14 @@ def unregister():
         if request.form.get("confirm"):
 
             # Unregister user
-            name = session["user_id"]
-            users = session["users"]
-            found = False
-            for user in users:
-                if user["name"] == name:
-                    found = True
-                    break
-        
-            if not found:
+            user = session["user"]
+            try:
+                users.remove(user)
+            except:
                 return apology("user does not exist", 403)
 
-            session["users"].remove(user)
-
             # Forget which user had logged in
-            session["user_id"] = None
+            session["user"] = None
 
         # Redirect user to home page
         return redirect("/")
@@ -161,3 +155,128 @@ def unregister():
     # User reached route not via GET neither via POST
     else:
         return apology("invalid method", 403)
+
+
+@app.route("/channels", methods=["GET", "POST"])
+@login_required
+def channels_():
+    """ Show channels / Create a channel """
+
+    # User reached route via GET (as by clicking a link or via redirect)
+    if request.method == "GET":
+        return render_template("channels.html", channels=channels)
+
+    # User reached route via POST (as by submitting a form via POST)
+    elif request.method == "POST":
+
+        name = request.form.get("name")
+
+        if not name:
+            return render_template("channels.html", channels=channels)
+
+        # Ensure channel does not exists
+        for channel in channels:
+            if channel["name"] == name:
+                return apology("channel already exists", 403)
+
+        # Create channel
+        channel = {}
+        channel["name"] = name
+        channel["owner"] = session["user"]
+        channel["timestamp"] = "28/05/2020 13:00"
+        channel["messages"] = []
+        channels.append(channel)
+
+        return render_template("channels.html", channels=channels)
+
+    else:
+        return apology("invalid method", 403)
+
+
+@app.route("/channel/<string:name>")
+@login_required
+def channel(name):
+    """Show channel's messages """
+
+    # Ensure channel exists
+    for channel in channels:
+        if channel["name"] == name:
+            return render_template("channel.html", channel=channel)
+
+    return apology("channel does not exists", 403)
+
+    """
+    # Query database for book
+    book = db.execute("SELECT * FROM books WHERE isbn = :isbn", {"isbn": isbn}).fetchone()
+
+    # Set database timezone
+    gmt_offset = session["gmt_offset"]
+    minutes_offset = (int(abs(gmt_offset) / 60)) % 60
+    h = gmt_offset // 3600
+    hours_offset = ((h > 0) - (h < 0)) * (abs(h) % 24)
+    db.execute(f"SET LOCAL TIME ZONE INTERVAL \'{hours_offset:+03}:{minutes_offset:02}\' \
+                HOUR TO MINUTE")
+    
+    # Query database for book reviews
+    reviews = db.execute("SELECT * FROM reviews WHERE book_id = :book_id ORDER BY timestamp DESC",
+                         {"book_id": book.id}).fetchall()
+
+    reviews_count = len(reviews)
+
+    # Build reviews data
+    reviews_data = []
+    s = 0
+    ratings_count = 0
+    comments_count = 0
+    for review in reviews:
+        rating = review["rating"]
+        if rating:
+            if rating >= rating_min and rating <= rating_max:
+                ratings_count += 1
+                s += rating
+            else:
+                rating = None
+
+        comment = review.comment
+        if comment:
+            if comment.strip():
+                comments_count += 1
+            else:
+                comment = None
+
+        # Query database for book reviewer
+        reviewer = db.execute("SELECT * FROM users WHERE id = :reviewer_id",
+                              {"reviewer_id": review.reviewer_id}).fetchone()
+
+        review_data = {}
+        review_data["reviewer"] = reviewer.name
+        review_data["rating"] = rating
+        review_data["comment"] = comment
+
+        dt = datetime.fromisoformat(str(review.timestamp))
+
+        # Set locale for formatting datetime according local language
+        language_code = session["language_code"]
+        locale.setlocale(locale.LC_TIME, language_code)
+
+        review_data["datetime"] = dt.strftime("%a, %d %b %Y %H:%M:%S %Z")
+
+        reviews_data.append(review_data)
+
+    if ratings_count != 0:
+        average_rating = f"{s / ratings_count:.2f}"
+    else:
+        average_rating = None
+ 
+    res = requests.get("https://www.goodreads.com/book/review_counts.json", params={"key": f"{apikey}", "isbns": f"{isbn}"})
+
+    if res.status_code != 200:
+        raise Exception("ERROR: API request unsuccessful.")
+      
+    review_adds = res.json()["books"][0]
+
+    return render_template("book.html", book=book, average_rating=average_rating,
+                           ratings_count=ratings_count, comments_count=comments_count,
+                           reviews_count=reviews_count, reviews=reviews_data,
+                           review_adds=review_adds, reviews_cfg=reviews_cfg)
+    """

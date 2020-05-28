@@ -13,7 +13,7 @@
 
 {% block product_navbar %}
     <div class="collapse navbar-collapse" id="navbar">
-        {% if session.user_id %}
+        {% if session.user %}
             <ul class="navbar-nav mr-auto mt-2">
                 <li class="nav-item"><a class="nav-link" href="/">Channels</a></li>
             </ul>
@@ -23,7 +23,7 @@
 
                 <!-- Default dropleft button -->
                 <div class="btn-group dropleft">
-                    <button type="button" class="btn btn-dark dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{ session["user_id"] }}</button>
+                    <button type="button" class="btn btn-dark dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{ session.user.name }}</button>
 
                     <div class="dropdown-menu">
                         <a class="dropdown-item" href="/unregister">Unregister</a>
