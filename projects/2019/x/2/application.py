@@ -34,8 +34,9 @@ messages_config = {}
 messages_config["texts"] = texts_config
 
 
-users_gl=[]
-channels_gl = []
+users=[]
+channels = []
+messages = []
 
 
 @app.route("/")
@@ -63,9 +64,6 @@ def register():
         if not name:
             return apology("must provide name", 403)
 
-        # Get users
-        users = users_gl
-
         # Ensure user does not exists
         for user in users:
             if user["name"] == name:
@@ -76,16 +74,15 @@ def register():
         user["name"] = name
         dt = datetime.now(timezone.utc)
         user["timestamp"] = dt.strftime("%a, %d %b %Y %H:%M:%S %Z")
-        user["messages"] = []
-        users_gl.append(user)
+        users.append(user)
 
         # Login user
         login = {}
         dt = datetime.now(timezone.utc)
         login["timestamp"] = dt.strftime("%a, %d %b %Y %H:%M:%S %Z")
-        user_index = users_gl.index(user)
-        users_gl[user_index]["login"] = login
-        user = users_gl[user_index]
+        user_index = users.index(user)
+        users[user_index]["login"] = login
+        user = users[user_index]
 
         # Remember which user has logged in
         session.clear()
@@ -132,9 +129,6 @@ def login():
         if not name:
             return apology("must provide name", 403)
 
-        # Get users
-        users = users_gl
-
         # Ensure user exists
         found = False
         for user in users:
@@ -149,9 +143,9 @@ def login():
         login = {}
         dt = datetime.now(timezone.utc)
         login["timestamp"] = dt.strftime("%a, %d %b %Y %H:%M:%S %Z")
-        user_index = users_gl.index(user)
-        users_gl[user_index]["login"] = login
-        user = users_gl[user_index]
+        user_index = users.index(user)
+        users[user_index]["login"] = login
+        user = users[user_index]
 
         # Remember which user has logged in
         session.clear()
@@ -198,8 +192,9 @@ def logout():
 def clear_all():
     """Clear all """
 
-    users_gl = []
-    channels_gl = []
+    users = []
+    channels = []
+    messages = []
     session.clear()
 
     # Redirect user to home page
@@ -222,14 +217,16 @@ def unregister():
             
             # For each channel, delete all messages from user
             user = session["user"]
-            for channel in channels_gl:
-                for message in channel["messages"]:
-                    if message["sender"] == user:
-                        channel["messages"].remove(message)
+            name = user["name"]
+            for message in messages:
+                sender = message["sender"]["name"]
+                receiver = message["receiver"]["user"]["name"]
+                if sender == name or receiver == name:
+                        messages.remove(message)
 
             # Unregister user
             try:
-                users_gl.remove(user)
+                users.remove(user)
             except:
                 return apology("user does not exist", 403)
             session.clear()
@@ -247,18 +244,13 @@ def unregister():
 def channels_():
     """ Show channels / Create a channel """
 
-    # Get channels
-    channels = channels_gl
-
     # User reached route via GET (as by clicking a link or via redirect)
     if request.method == "GET":
         return render_template("channels.html", channels=channels)
 
     # User reached route via POST (as by submitting a form via POST)
     elif request.method == "POST":
-
         name = request.form.get("name")
-
         if not name:
             return render_template("channels.html", channels=channels)
 
@@ -276,10 +268,8 @@ def channels_():
         channel["name"] = name
         dt = datetime.now(timezone.utc)
         channel["timestamp"] = dt.strftime("%a, %d %b %Y %H:%M:%S %Z")
-        channel["messages"] = []
-        channels_gl.append(channel)
+        channels.append(channel)
 
-        channels = channels_gl
         return render_template("channels.html", channels=channels)
 
     else:
@@ -291,24 +281,29 @@ def channels_():
 def channel_messages(channel_name):
     """Show channel's messages """
 
-    # Get channels
-    channels = channels_gl
-
     # Ensure channel exists
+    found = False
     for channel in channels:
         if channel["name"] == channel_name:
-            return render_template("channel-messages.html", channel=channel,
-                                   messages_config=messages_config)
-    return apology("channel does not exists", 403)
+            found = True
+            break
+
+    if not found:
+        return apology("channel does not exists", 403)
+
+    ms = []
+    for message in messages:
+        if message["receiver"]["channel"]["name"] == channel["name"]:
+            ms.append(message)
+
+    return render_template("channel-messages.html", channel=channel,
+                           messages=ms, messages_config=messages_config)
 
 
 @app.route("/message-to-channel/<string:channel_name>", methods=["GET", "POST"])
 @login_required
 def message_to_channel(channel_name):
     """ Send a message to a channel"""
-
-    # Get channels
-    channels = channels_gl
 
     # Get channel
     found = False
@@ -343,10 +338,12 @@ def message_to_channel(channel_name):
             message = {}
             message["text"] = text_stripped
             message["sender"] = session["user"]
+            message["receiver"] = {}
+            message["receiver"]["channel"] = channel
+            message["receiver"]["user"] = {}
             dt = datetime.now(timezone.utc)
             message["timestamp"] = dt.strftime("%a, %d %b %Y %H:%M:%S %Z")
-            channel_index = channels.index(channel)
-            channels_gl[channel_index]["messages"].append(message)
+            messages.append(message)
             
         # Redirect user to channel messages page
         return redirect(url_for('channel_messages', channel_name=channel['name']))
@@ -361,9 +358,6 @@ def message_to_channel(channel_name):
 def users_():
     """ Show users """
 
-    # Get users
-    users = users_gl
-
     # User reached route via GET (as by clicking a link or via redirect)
     if request.method == "GET":
         return render_template("users.html", users=users)
@@ -372,29 +366,58 @@ def users_():
         return apology("invalid method", 403)
 
 
-@app.route("/user-messages/<string:user_name>")
+@app.route("/user-messages-received/<string:user_name>")
 @login_required
-def user_messages(user_name):
-    """Show user's messages """
-
-    # Get users
-    users = users_gl
+def user_messages_received(user_name):
+    """Show user's received messages """
 
     # Ensure user exists
+    found = False
     for user in users:
         if user["name"] == user_name:
-            return render_template("user-messages.html", user=user,
-                                   messages_config=messages_config)
-    return apology("user does not exists", 403)
+            found = True
+            break
+    if not found:
+        return apology("user does not exists", 403)
+
+    # Get messages received by user
+    ms = []
+    for message in messages:
+        if message["receiver"]["user"]["name"] == user["name"]:
+            ms.append(message)
+
+    return render_template("user-messages.html", user=user, messages=ms,
+                           messages_config=messages_config)
+
+
+@app.route("/user-messages-sent/<string:user_name>")
+@login_required
+def user_messages_sent(user_name):
+    """Show user's sent messages """
+
+    # Ensure user exists
+    found = False
+    for user in users:
+        if user["name"] == user_name:
+            found = True
+            break
+    if not found:
+        return apology("user does not exists", 403)
+
+    # Get messages sent by user
+    ms = []
+    for message in messages:
+        if message["sender"]["name"] == user["name"]:
+            ms.append(message)
+
+    return render_template("user-messages.html", user=user, messages=ms,
+                           messages_config=messages_config)
 
 
 @app.route("/message-to-user/<string:user_name>", methods=["GET", "POST"])
 @login_required
 def message_to_user(user_name):
     """ Send a message to a user"""
-
-    # Get users
-    users = users_gl
 
     # Get user
     found = False
@@ -429,13 +452,15 @@ def message_to_user(user_name):
             message = {}
             message["text"] = text_stripped
             message["sender"] = session["user"]
+            message["receiver"] = {}
+            message["receiver"]["user"] = user
+            message["receiver"]["channel"] = {}
             dt = datetime.now(timezone.utc)
             message["timestamp"] = dt.strftime("%a, %d %b %Y %H:%M:%S %Z")
-            user_index = users.index(user)
-            users_gl[user_index]["messages"].append(message)
+            messages.append(message)
             
         # Redirect user to channel page
-        return redirect(url_for('user', name=session["user"]['name']))
+        return redirect(url_for('user_messages_sent', user_name=session["user"]['name']))
 
     # User reached route not via GET neither via POST
     else:

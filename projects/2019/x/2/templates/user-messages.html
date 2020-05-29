@@ -1,33 +1,39 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    Channel Messages
+    User Messages
 {% endblock %}
 
 {% block main %}
     <ul class="list-group ln-group-width-auto">
         <li class="list-group-item ln-container01 ln-h03">
-            <span class="ln-highlight">{{ channel.name }}</span>
-            created on
-            <span class="ln-highlight">{{ channel.timestamp }}</span>
+            {% if user.name == session.user.name %}
+                <span class="ln-highlight">{{ user.name }}</span>
+            {% else %}
+                <a class="ln-highlight" href="{{ url_for('message_to_user', user_name=user['name']) }}">{{ user.name }}</a>
+            {% endif %}
+            registered on
+            <span class="ln-highlight">{{ user.timestamp }}</span>,
+            logged on
+            <span class="ln-highlight">{{ user.login.timestamp }}</span>
         </li>
     </ul>
 
     <div class="ln-group-divider"></div>
 
-    <ul class="list-group pt-4 ln-group-width-auto">
-        <li class="list-group-item ln-container01">
-            <a class="btn btn-dark" role="button" href="{{ url_for('message_to_channel', channel_name=channel['name']) }}">Send a Message</a>
-        </li>
-    </ul>
+    {% if user.name != session.user.name %}
+        <ul class="list-group pt-4 ln-group-width-auto">
+            <li class="list-group-item ln-container01">
+                <a class="btn btn-dark" role="button" href="{{ url_for('message_to_user', user_name=user['name']) }}">Send a Message</a>
+            </li>
+        </ul>
+    {% endif %}
 
     {% for message in messages %}
         <ul class="list-group pt-4">
             <li class="list-group-item ln-container01">
-                from
+                by
                 <span class="ln-highlight">{{ message.sender.name }}</span>
-                to channel
-                <span class="ln-highlight">{{ message.receiver.channel.name }}</span>
                 on
                 <span class="ln-highlight">{{ message.timestamp }}</span>
             </li>

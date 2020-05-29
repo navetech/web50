@@ -19,14 +19,8 @@ main form label
 }
 
 
-.comment-out
+.message-text-out
 {
     width: 100%;
     background-color: white;
-}
-
-.rating-in
-{ 
-    text-align: center;
-    width: auto;
 }

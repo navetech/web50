@@ -17,6 +17,12 @@
             <ul class="navbar-nav mr-auto mt-2">
                 <li class="nav-item"><a class="nav-link" href="/channels">Channels</a></li>
                 <li class="nav-item"><a class="nav-link" href="/users">Users</a></li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('user_messages_received', user_name=session.user.name) }}">MessagesRec</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('user_messages_sent', user_name=session.user.name) }}">MessagesSent</a>
+                </li>
             </ul>
 
             <ul class="navbar-nav ml-auto mt-2">

@@ -11,7 +11,11 @@
         {% else %}
             {% for user in users %}
                 <li class="list-group-item ln-container01">
-                    {{ user.name }}
+                    {% if user.name == session.user.name %}
+                        <span class="ln-highlight">{{ user.name }}</span>
+                    {% else %}
+                        <a class="ln-highlight" href="{{ url_for('message_to_user', user_name=user['name']) }}">{{ user.name }}</a>
+                    {% endif %}
                     registered on
                     <span class="ln-highlight">{{ user.timestamp }}</span>,
                     logged on
