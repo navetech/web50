@@ -32,10 +32,20 @@
     {% for message in messages %}
         <ul class="list-group pt-4">
             <li class="list-group-item ln-container01">
-                by
+                from
                 <span class="ln-highlight">{{ message.sender.name }}</span>
+                {% if message.receiver.user %}
+                    to
+                    <span class="ln-highlight">{{ message.receiver.user.name }}</span>
+                {% elif message.receiver.channel %}
+                    to channel
+                    <span class="ln-highlight">{{ message.receiver.channel.name }}</span>
+                {% endif %}
                 on
                 <span class="ln-highlight">{{ message.timestamp }}</span>
+                {% if message.sender.name == session.user.name %}
+                    <a class="btn btn-dark" role="button" href="{{ url_for('message_delete', message_id=message['id']) }}">Delete</a>
+                {% endif %}
             </li>
 
             <li class="list-group-item ln-container01">

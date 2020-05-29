@@ -32,11 +32,13 @@ texts_config["max_length"] = text_max_length
 
 messages_config = {}
 messages_config["texts"] = texts_config
+messages_config["max_count"] = 1000000000
 
 
 users=[]
 channels = []
 messages = []
+messages_count = 0
 
 
 @app.route("/")
@@ -135,7 +137,6 @@ def login():
             if user["name"] == name:
                 found = True
                 break
-        
         if not found:
             return apology("user does not exist", 403)
 
@@ -206,6 +207,16 @@ def clear_all():
 def unregister():
     """Unregister the user"""
 
+    # Ensure user exists
+    name = session["user"]["name"]
+    found = False
+    for user in users:
+        if user["name"] == name:
+            found = True
+            break
+    if not found:
+        return apology("user does not exist", 403)
+
     # User reached route via GET (as by clicking a link or via redirect)
     if request.method == "GET":
         return render_template("unregister.html")
@@ -216,13 +227,11 @@ def unregister():
         if request.form.get("confirm"):
             
             # For each channel, delete all messages from user
-            user = session["user"]
-            name = user["name"]
             for message in messages:
-                sender = message["sender"]["name"]
-                receiver = message["receiver"]["user"]["name"]
-                if sender == name or receiver == name:
-                        messages.remove(message)
+                s = message["sender"]
+                r = message["receiver"]
+                if (s["name"] == user["name"]) or (r["user"] and r["user"]["name"] == user["name"]):
+                    messages.remove(message)
 
             # Unregister user
             try:
@@ -287,17 +296,17 @@ def channel_messages(channel_name):
         if channel["name"] == channel_name:
             found = True
             break
-
     if not found:
         return apology("channel does not exists", 403)
 
-    ms = []
+    m = []
     for message in messages:
-        if message["receiver"]["channel"]["name"] == channel["name"]:
-            ms.append(message)
+        r = message["receiver"]
+        if r["channel"] and r["channel"]["name"] == channel["name"]:
+            m.append(message)
 
     return render_template("channel-messages.html", channel=channel,
-                           messages=ms, messages_config=messages_config)
+                           messages=m, messages_config=messages_config)
 
 
 @app.route("/message-to-channel/<string:channel_name>", methods=["GET", "POST"])
@@ -305,7 +314,7 @@ def channel_messages(channel_name):
 def message_to_channel(channel_name):
     """ Send a message to a channel"""
 
-    # Get channel
+    # Ensure channel exists
     found = False
     for channel in channels:
         if channel["name"] == channel_name:
@@ -336,6 +345,12 @@ def message_to_channel(channel_name):
         # Send message
         if text_stripped:
             message = {}
+
+            message["id"] = messages_count
+            messages_count += 1
+            if messages_count >= messages_config["max_count"]:
+                return apology("max number of messages reached", 403)
+
             message["text"] = text_stripped
             message["sender"] = session["user"]
             message["receiver"] = {}
@@ -361,7 +376,6 @@ def users_():
     # User reached route via GET (as by clicking a link or via redirect)
     if request.method == "GET":
         return render_template("users.html", users=users)
-
     else:
         return apology("invalid method", 403)
 
@@ -381,12 +395,13 @@ def user_messages_received(user_name):
         return apology("user does not exists", 403)
 
     # Get messages received by user
-    ms = []
+    m = []
     for message in messages:
-        if message["receiver"]["user"]["name"] == user["name"]:
-            ms.append(message)
+        r = message["receiver"]
+        if r["user"] and r["user"]["name"] == user["name"]:
+            m.append(message)
 
-    return render_template("user-messages.html", user=user, messages=ms,
+    return render_template("user-messages.html", user=user, messages=m,
                            messages_config=messages_config)
 
 
@@ -405,12 +420,12 @@ def user_messages_sent(user_name):
         return apology("user does not exists", 403)
 
     # Get messages sent by user
-    ms = []
+    m = []
     for message in messages:
         if message["sender"]["name"] == user["name"]:
-            ms.append(message)
+            m.append(message)
 
-    return render_template("user-messages.html", user=user, messages=ms,
+    return render_template("user-messages.html", user=user, messages=m,
                            messages_config=messages_config)
 
 
@@ -419,7 +434,7 @@ def user_messages_sent(user_name):
 def message_to_user(user_name):
     """ Send a message to a user"""
 
-    # Get user
+    # Ensure user exists
     found = False
     for user in users:
         if user["name"] == user_name:
@@ -450,6 +465,12 @@ def message_to_user(user_name):
         # Send message
         if text_stripped:
             message = {}
+
+            message["id"] = messages_count
+            messages_count += 1
+            if messages_count >= messages_config["max_count"]:
+                return apology("max number of messages reached", 403)
+
             message["text"] = text_stripped
             message["sender"] = session["user"]
             message["receiver"] = {}
@@ -465,3 +486,34 @@ def message_to_user(user_name):
     # User reached route not via GET neither via POST
     else:
         return apology("invalid method", 403)
+
+
+@app.route("/message-delete/<int:message_id>")
+@login_required
+def message_delete(message_id):
+    """ Delete a message """
+
+    # Ensure message exists
+    found = False
+    for message in messages:
+        if message["id"] == message_id:
+            found = True
+            break
+    if not found:
+        return apology("message does not exist", 403)
+
+    # Delete message
+    messages.remove(message)
+
+    # Redirect user to previous page
+    s = message["sender"]
+    r = message["receiver"]
+    if r["channel"]:
+        return redirect(url_for('channel_messages', channel_name=r['channel']['name']))
+    elif r["user"] and r['user']['name'] == session['user']['name']:
+        return redirect(url_for('user_messages_received', user_name=session["user"]['name']))
+    elif s['name'] == session['user']['name']:
+        return redirect(url_for('user_messages_sent', user_name=session["user"]['name']))
+    else:
+        return redirect("/")
+

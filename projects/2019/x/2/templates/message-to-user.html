@@ -7,11 +7,10 @@
 {% block main %}
     <ul class="list-group ln-group-width-auto">
         <li class="list-group-item ln-container01 ln-h03">
+            from
+            <span class="ln-highlight">{{ session.user.name }}</span>
+            to
             <span class="ln-highlight">{{ user.name }}</span>
-            registered on
-            <span class="ln-highlight">{{ user.timestamp }}</span>,
-            logged on
-            <span class="ln-highlight">{{ user.login.timestamp }}</span>
         </li>
     </ul>
 
@@ -23,7 +22,7 @@
                     <textarea autofocus name="text" id="text" class="form-control" rows= {{ messages_config.texts.rows_number }} maxlength={{ messages_config.texts.max_length }} placeholder="Text"></textarea>
                 </div>
             
-                <button class="btn btn-dark" type="submit">Sumbit</button>
+                <button class="btn btn-dark" type="submit">Send</button>
             </form>
         </li>
     </ul>

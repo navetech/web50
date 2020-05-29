@@ -30,6 +30,9 @@
                 <span class="ln-highlight">{{ message.receiver.channel.name }}</span>
                 on
                 <span class="ln-highlight">{{ message.timestamp }}</span>
+                {% if message.sender.name == session.user.name %}
+                    <a class="btn btn-dark" role="button" href="{{ url_for('message_delete', message_id=message['id']) }}">Delete</a>
+                {% endif %}
             </li>
 
             <li class="list-group-item ln-container01">
