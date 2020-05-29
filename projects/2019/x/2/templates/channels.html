@@ -25,9 +25,7 @@
             {% for channel in channels %}
                 <li class="list-group-item ln-container01">
                     <a class="ln-highlight" href="{{ url_for('channel', name=channel['name']) }}">{{ channel.name }}</a>
-                    by
-                    <span class="ln-highlight">{{ channel.owner.name }}</span>
-                    in
+                    on
                     <span class="ln-highlight">{{ channel.timestamp }}</span>
                 </li>
 
