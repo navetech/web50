@@ -1,14 +1,14 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    Channel
+    Channel Messages
 {% endblock %}
 
 {% block main %}
     <ul class="list-group ln-group-width-auto">
         <li class="list-group-item ln-container01 ln-h03">
             <span class="ln-highlight">{{ channel.name }}</span>
-            on
+            created on
             <span class="ln-highlight">{{ channel.timestamp }}</span>
         </li>
     </ul>
@@ -17,7 +17,7 @@
 
     <ul class="list-group pt-4 ln-group-width-auto">
         <li class="list-group-item ln-container01">
-            <a class="btn btn-dark" role="button" href="{{ url_for('message', channel_name=channel['name']) }}">Send a Message</a>
+            <a class="btn btn-dark" role="button" href="{{ url_for('message_to_channel', channel_name=channel['name']) }}">Send a Message</a>
         </li>
     </ul>
 

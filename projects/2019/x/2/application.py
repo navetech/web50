@@ -74,7 +74,18 @@ def register():
         # Register user
         user = {}
         user["name"] = name
+        dt = datetime.now(timezone.utc)
+        user["timestamp"] = dt.strftime("%a, %d %b %Y %H:%M:%S %Z")
+        user["messages"] = []
         users_gl.append(user)
+
+        # Login user
+        login = {}
+        dt = datetime.now(timezone.utc)
+        login["timestamp"] = dt.strftime("%a, %d %b %Y %H:%M:%S %Z")
+        user_index = users_gl.index(user)
+        users_gl[user_index]["login"] = login
+        user = users_gl[user_index]
 
         # Remember which user has logged in
         session.clear()
@@ -133,6 +144,14 @@ def login():
         
         if not found:
             return apology("user does not exist", 403)
+
+        # Login user
+        login = {}
+        dt = datetime.now(timezone.utc)
+        login["timestamp"] = dt.strftime("%a, %d %b %Y %H:%M:%S %Z")
+        user_index = users_gl.index(user)
+        users_gl[user_index]["login"] = login
+        user = users_gl[user_index]
 
         # Remember which user has logged in
         session.clear()
@@ -267,9 +286,9 @@ def channels_():
         return apology("invalid method", 403)
 
 
-@app.route("/channel/<string:name>")
+@app.route("/channel-messages/<string:channel_name>")
 @login_required
-def channel(name):
+def channel_messages(channel_name):
     """Show channel's messages """
 
     # Get channels
@@ -277,16 +296,16 @@ def channel(name):
 
     # Ensure channel exists
     for channel in channels:
-        if channel["name"] == name:
-            return render_template("channel.html", channel=channel,
+        if channel["name"] == channel_name:
+            return render_template("channel-messages.html", channel=channel,
                                    messages_config=messages_config)
     return apology("channel does not exists", 403)
 
 
-@app.route("/message/<string:channel_name>", methods=["GET", "POST"])
+@app.route("/message-to-channel/<string:channel_name>", methods=["GET", "POST"])
 @login_required
-def message(channel_name):
-    """ Send a message """
+def message_to_channel(channel_name):
+    """ Send a message to a channel"""
 
     # Get channels
     channels = channels_gl
@@ -302,7 +321,7 @@ def message(channel_name):
 
     # User reached route via GET (as by clicking a link or via redirect)
     if request.method == "GET":
-        return render_template("message.html", channel=channel,
+        return render_template("message-to-channel.html", channel=channel,
                                messages_config=messages_config)
 
     # User reached route via POST (as by submitting a form via POST)
@@ -329,8 +348,94 @@ def message(channel_name):
             channel_index = channels.index(channel)
             channels_gl[channel_index]["messages"].append(message)
             
+        # Redirect user to channel messages page
+        return redirect(url_for('channel_messages', channel_name=channel['name']))
+
+    # User reached route not via GET neither via POST
+    else:
+        return apology("invalid method", 403)
+
+
+@app.route("/users", methods=["GET"])
+@login_required
+def users_():
+    """ Show users """
+
+    # Get users
+    users = users_gl
+
+    # User reached route via GET (as by clicking a link or via redirect)
+    if request.method == "GET":
+        return render_template("users.html", users=users)
+
+    else:
+        return apology("invalid method", 403)
+
+
+@app.route("/user-messages/<string:user_name>")
+@login_required
+def user_messages(user_name):
+    """Show user's messages """
+
+    # Get users
+    users = users_gl
+
+    # Ensure user exists
+    for user in users:
+        if user["name"] == user_name:
+            return render_template("user-messages.html", user=user,
+                                   messages_config=messages_config)
+    return apology("user does not exists", 403)
+
+
+@app.route("/message-to-user/<string:user_name>", methods=["GET", "POST"])
+@login_required
+def message_to_user(user_name):
+    """ Send a message to a user"""
+
+    # Get users
+    users = users_gl
+
+    # Get user
+    found = False
+    for user in users:
+        if user["name"] == user_name:
+            found = True
+            break
+    if not found:
+        return apology("user does not exists", 403)
+
+    # User reached route via GET (as by clicking a link or via redirect)
+    if request.method == "GET":
+        return render_template("message-to-user.html", user=user,
+                               messages_config=messages_config)
+
+    # User reached route via POST (as by submitting a form via POST)
+    elif request.method == "POST":
+
+        # Get message
+        text = request.form.get("text")
+        if text:
+            text_stripped = text.strip()
+        else:
+            text_stripped = None
+
+        # Set locale for formatting datetime according local language
+        language_code = session["language_code"]
+        locale.setlocale(locale.LC_TIME, language_code)
+
+        # Send message
+        if text_stripped:
+            message = {}
+            message["text"] = text_stripped
+            message["sender"] = session["user"]
+            dt = datetime.now(timezone.utc)
+            message["timestamp"] = dt.strftime("%a, %d %b %Y %H:%M:%S %Z")
+            user_index = users.index(user)
+            users_gl[user_index]["messages"].append(message)
+            
         # Redirect user to channel page
-        return redirect(url_for('channel', name=channel['name']))
+        return redirect(url_for('user', name=session["user"]['name']))
 
     # User reached route not via GET neither via POST
     else:
