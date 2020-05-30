@@ -33,17 +33,27 @@
         <ul class="list-group pt-4">
             <li class="list-group-item ln-container01">
                 from
-                <span class="ln-highlight">{{ message.sender.name }}</span>
+                {% if message.sender.name == session.user.name %}
+                    <span class="ln-highlight">{{ message.sender.name }}</span>
+                {% else %}
+                    <a class="ln-highlight" href="{{ url_for('message_to_user', user_name=message.sender.name) }}">{{ message.sender.name }}</a>
+                {% endif %}
                 {% if message.receiver.user %}
                     to
-                    <span class="ln-highlight">{{ message.receiver.user.name }}</span>
+                    {% if message.receiver.user.name == session.user.name %}
+                        <span class="ln-highlight">{{ message.receiver.user.name }}</span>
+                    {% else %}
+                        <a class="ln-highlight" href="{{ url_for('message_to_user', user_name=message.receiver.user.name) }}">{{ message.receiver.user.name }}</a>
+                    {% endif %}
                 {% elif message.receiver.channel %}
                     to channel
-                    <span class="ln-highlight">{{ message.receiver.channel.name }}</span>
+                    <a class="ln-highlight" href="{{ url_for('channel_messages', channel_name=message.receiver.channel.name) }}">{{ message.receiver.channel.name }}</a>
+                    <!--<span class="ln-highlight">{{ message.receiver.channel.name }}</span>-->
                 {% endif %}
                 on
                 <span class="ln-highlight">{{ message.timestamp }}</span>
-                {% if message.sender.name == session.user.name %}
+                {% if message.sender.name == session.user.name
+                      or (message.receiver.user and message.receiver.user.name == session.user.name) %}
                     <a class="btn btn-dark" role="button" href="{{ url_for('message_delete', message_id=message['id']) }}">Delete</a>
                 {% endif %}
             </li>

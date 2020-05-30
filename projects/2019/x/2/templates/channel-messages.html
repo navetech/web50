@@ -25,7 +25,11 @@
         <ul class="list-group pt-4">
             <li class="list-group-item ln-container01">
                 from
-                <span class="ln-highlight">{{ message.sender.name }}</span>
+                {% if message.sender.name == session.user.name %}
+                    <a class="ln-highlight" href="{{ url_for('user_messages_sent', user_name=message.sender.name) }}">{{ message.sender.name }}</a>
+                {% else %}
+                    <a class="ln-highlight" href="{{ url_for('message_to_user', user_name=message.sender.name) }}">{{ message.sender.name }}</a>
+                {% endif %}
                 to channel
                 <span class="ln-highlight">{{ message.receiver.channel.name }}</span>
                 on

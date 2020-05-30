@@ -1,4 +1,5 @@
 import os
+import sys
 
 from datetime import datetime, timezone
 import time
@@ -32,13 +33,13 @@ texts_config["max_length"] = text_max_length
 
 messages_config = {}
 messages_config["texts"] = texts_config
-messages_config["max_count"] = 1000000000
+messages_config["max_seq_number"] = sys.maxsize - 1
 
 
 users=[]
 channels = []
 messages = []
-messages_count = 0
+messages_seq_number = 0
 
 
 @app.route("/")
@@ -207,16 +208,6 @@ def clear_all():
 def unregister():
     """Unregister the user"""
 
-    # Ensure user exists
-    name = session["user"]["name"]
-    found = False
-    for user in users:
-        if user["name"] == name:
-            found = True
-            break
-    if not found:
-        return apology("user does not exist", 403)
-
     # User reached route via GET (as by clicking a link or via redirect)
     if request.method == "GET":
         return render_template("unregister.html")
@@ -226,12 +217,23 @@ def unregister():
 
         if request.form.get("confirm"):
             
-            # For each channel, delete all messages from user
-            for message in messages:
-                s = message["sender"]
-                r = message["receiver"]
-                if (s["name"] == user["name"]) or (r["user"] and r["user"]["name"] == user["name"]):
+            # Delete all user's messages
+            user = session["user"]
+            name = session["user"]["name"]
+
+            while True:
+                found = False
+                for message in messages:
+                    s = message["sender"]
+                    r = message["receiver"]
+                    if (s["name"] == name) or (r["user"] and r["user"]["name"] == name):
+                        found = True
+                        break
+
+                if found:
                     messages.remove(message)
+                else:
+                    break
 
             # Unregister user
             try:
@@ -299,6 +301,7 @@ def channel_messages(channel_name):
     if not found:
         return apology("channel does not exists", 403)
 
+    # Get channel's messages
     m = []
     for message in messages:
         r = message["receiver"]
@@ -346,10 +349,11 @@ def message_to_channel(channel_name):
         if text_stripped:
             message = {}
 
-            message["id"] = messages_count
-            messages_count += 1
-            if messages_count >= messages_config["max_count"]:
-                return apology("max number of messages reached", 403)
+            global messages_seq_number
+            message["id"] = messages_seq_number
+            messages_seq_number += 1
+            if messages_seq_number > messages_config["max_seq_number"]:
+                raise RuntimeError("Max number of messages reached")
 
             message["text"] = text_stripped
             message["sender"] = session["user"]
@@ -466,10 +470,11 @@ def message_to_user(user_name):
         if text_stripped:
             message = {}
 
-            message["id"] = messages_count
-            messages_count += 1
-            if messages_count >= messages_config["max_count"]:
-                return apology("max number of messages reached", 403)
+            global messages_seq_number
+            message["id"] = messages_seq_number
+            messages_seq_number += 1
+            if messages_seq_number > messages_config["max_seq_number"]:
+                raise RuntimeError("Max number of messages reached")
 
             message["text"] = text_stripped
             message["sender"] = session["user"]
