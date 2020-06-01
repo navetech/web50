@@ -74,7 +74,7 @@ class Channel(Receiver):
 
     def __init__(self, name):
         super().__init__(name)
-        Channel.channels.append(self)
+        Channel.channels.insert(0, self)
 
 
 class Login:
@@ -113,11 +113,11 @@ class User(Sender, Receiver):
     def __init__(self, name):
         super().__init__(name)
         self.logins = []
-        User.users.append(self)
+        User.users.insert(0, self)
 
 
     def login(self):
-        self.logins.append(Login())
+        self.logins.insert(0, Login())
 
     
     def remove(self):
@@ -174,7 +174,7 @@ class Message:
         dt = datetime.now(timezone.utc)
         self.timestamp = dt.strftime("%a, %d %b %Y %H:%M:%S %Z")
 
-        Message.messages.append(self)
+        Message.messages.insert(0, self)
 
 
     def remove(self):
@@ -206,7 +206,7 @@ class File:
         dt = datetime.now(timezone.utc)
         self.timestamp = dt.strftime("%a, %d %b %Y %H:%M:%S %Z")
 
-        File.files.append(self)
+        File.files.insert(0, self)
 
 
     def remove(self):
@@ -512,7 +512,7 @@ def user_messages_received(id):
         if message.receiver == user:
             m.append(message)
 
-    return render_template("user-messages.html", user=user, messages=m,
+    return render_template("user-messages-received.html", user=user, messages=m,
                            text_config=Text.config)
 
 
@@ -532,7 +532,7 @@ def user_messages_sent(id):
         if message.sender == user:
             m.append(message)
 
-    return render_template("user-messages.html", user=user, messages=m,
+    return render_template("user-messages-sent.html", user=user, messages=m,
                            text_config=Text.config)
 
 

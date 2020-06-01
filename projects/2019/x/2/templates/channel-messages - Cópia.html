@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Channel Messages
+{% endblock %}
+
+{% block main %}
+    <ul class="list-group ln-group-width-auto">
+        <li class="list-group-item ln-container01 ln-h03">
+            <span class="ln-highlight">{{ channel.name }}</span>
+            created on
+            <span class="ln-highlight">{{ channel.timestamp }}</span>
+        </li>
+    </ul>
+
+    <div class="ln-group-divider"></div>
+
+    <ul class="list-group pt-4 ln-group-width-auto">
+        <li class="list-group-item ln-container01">
+            <a class="btn btn-dark" role="button" href="{{ url_for('message_to_channel', id=channel.id) }}">Send a Message</a>
+        </li>
+    </ul>
+
+    {% for message in messages %}
+        <ul class="list-group pt-4">
+            <li class="list-group-item ln-container01">
+                from
+                {% if message.sender.id == session.user.id %}
+                    <a class="ln-highlight" href="{{ url_for('user_messages_sent', id=message.sender.id) }}">{{ message.sender.name }}</a>
+                {% else %}
+                    <a class="ln-highlight" href="{{ url_for('message_to_user', id=message.sender.id) }}">{{ message.sender.name }}</a>
+                {% endif %}
+                to channel
+                <span class="ln-highlight">{{ message.receiver.name }}</span>
+                on
+                <span class="ln-highlight">{{ message.timestamp }}</span>
+                {% if message.sender.id == session.user.id %}
+                    <a class="btn btn-dark" role="button" href="{{ url_for('message_delete', id=message.id) }}">Delete</a>
+                {% endif %}
+            </li>
+
+            {% for file in files %}
+                <li class="list-group-item ln-container01">
+                    <span class="ln-highlight">{{ file }}</span>
+                    {% if message.sender.name == session.user.name %}
+                        <a class="btn btn-dark" role="button" href="{{ url_for('uploaded_file', filename=file) }}">Show</a>
+                    {% endif %}
+                </li>
+            {% endfor %}
+
+            <li class="list-group-item ln-container01">
+                <textarea readonly class="message-text-out" rows= {{ text_config["rows_number"] }}>{{ message.text }}</textarea>
+            </li>
+        </ul>
+        {% else %}
+        <ul class="list-group pt-4">
+            <li class="list-group-item ln-container01">No messages</li>
+        </ul>
+        {% endfor %}
+{% endblock %}
