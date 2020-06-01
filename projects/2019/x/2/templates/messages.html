@@ -35,7 +35,7 @@
                 on
                 <span class="ln-highlight">{{ message.timestamp }}</span>
                 {% if message.sender.id == session.user.id %}
-                    <a class="btn btn-dark" role="button" href="{{ url_for('message_delete', message_id=message['id']) }}">Delete</a>
+                    <a class="btn btn-dark" role="button" href="{{ url_for('message_delete', id=message.id) }}">Delete</a>
                 {% endif %}
             </li>
 
@@ -49,7 +49,7 @@
             {% endfor %}
 
             <li class="list-group-item ln-container01">
-                <textarea readonly class="message-text-out" rows= {{ messages_config.texts.rows_number }}>{{ message.text }}</textarea>
+                <textarea readonly class="message-text-out" rows= {{ text_config["rows_number"] }}>{{ message.text }}</textarea>
             </li>
         </ul>
         {% else %}

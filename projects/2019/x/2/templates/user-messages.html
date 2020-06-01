@@ -10,7 +10,7 @@
             {% if user.name == session.user.name %}
                 <span class="ln-highlight">{{ user.name }}</span>
             {% else %}
-                <a class="ln-highlight" href="{{ url_for('message_to_user', user_name=user['name']) }}">{{ user.name }}</a>
+                <a class="ln-highlight" href="{{ url_for('message_to_user', id=user.id) }}">{{ user.name }}</a>
             {% endif %}
             registered on
             <span class="ln-highlight">{{ user.timestamp }}</span>,
@@ -24,7 +24,7 @@
     {% if user.name != session.user.name %}
         <ul class="list-group pt-4 ln-group-width-auto">
             <li class="list-group-item ln-container01">
-                <a class="btn btn-dark" role="button" href="{{ url_for('message_to_user', user_name=user['name']) }}">Send a Message</a>
+                <a class="btn btn-dark" role="button" href="{{ url_for('message_to_user', id=user.id) }}">Send a Message</a>
             </li>
         </ul>
     {% endif %}
@@ -36,30 +36,30 @@
                 {% if message.sender.name == session.user.name %}
                     <span class="ln-highlight">{{ message.sender.name }}</span>
                 {% else %}
-                    <a class="ln-highlight" href="{{ url_for('message_to_user', user_name=message.sender.name) }}">{{ message.sender.name }}</a>
+                    <a class="ln-highlight" href="{{ url_for('message_to_user', id=message.sender.id) }}">{{ message.sender.name }}</a>
                 {% endif %}
-                {% if message.receiver.user %}
+                {% if message.receiver is user %}
                     to
-                    {% if message.receiver.user.name == session.user.name %}
-                        <span class="ln-highlight">{{ message.receiver.user.name }}</span>
+                    {% if message.receiver.id == session.user.id %}
+                        <span class="ln-highlight">{{ message.receiver.name }}</span>
                     {% else %}
-                        <a class="ln-highlight" href="{{ url_for('message_to_user', user_name=message.receiver.user.name) }}">{{ message.receiver.user.name }}</a>
+                        <a class="ln-highlight" href="{{ url_for('message_to_user', id=message.receiver.id) }}">{{ message.receiver.name }}</a>
                     {% endif %}
-                {% elif message.receiver.channel %}
+                {% elif message.receiver is channel %}
                     to channel
-                    <a class="ln-highlight" href="{{ url_for('channel_messages', channel_name=message.receiver.channel.name) }}">{{ message.receiver.channel.name }}</a>
-                    <!--<span class="ln-highlight">{{ message.receiver.channel.name }}</span>-->
+                    <a class="ln-highlight" href="{{ url_for('channel_messages', id=message.receiver.id) }}">{{ message.receiver.name }}</a>
+                    <!--<span class="ln-highlight">{{ message.receiver.name }}</span>-->
                 {% endif %}
                 on
                 <span class="ln-highlight">{{ message.timestamp }}</span>
                 {% if message.sender.name == session.user.name
-                      or (message.receiver.user and message.receiver.user.name == session.user.name) %}
-                    <a class="btn btn-dark" role="button" href="{{ url_for('message_delete', message_id=message['id']) }}">Delete</a>
+                      or (message.receiver is user and message.receiver.name == session.user.name) %}
+                    <a class="btn btn-dark" role="button" href="{{ url_for('message_delete', id=message.id) }}">Delete</a>
                 {% endif %}
             </li>
 
             <li class="list-group-item ln-container01">
-                <textarea readonly class="message-text-out" rows= {{ messages_config.texts.rows_number }}>{{ message.text }}</textarea>
+                <textarea readonly class="message-text-out" rows= {{ text_config["rows_number"] }}>{{ message.text }}</textarea>
             </li>
         </ul>
         {% else %}

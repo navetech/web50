@@ -18,10 +18,10 @@
                 <li class="nav-item"><a class="nav-link" href="/channels">Channels</a></li>
                 <li class="nav-item"><a class="nav-link" href="/users">Users</a></li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('user_messages_received', user_name=session.user.name) }}">MessagesRec</a>
+                    <a class="nav-link" href="{{ url_for('user_messages_received', id=session.user.id) }}">MessagesRec</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('user_messages_sent', user_name=session.user.name) }}">MessagesSent</a>
+                    <a class="nav-link" href="{{ url_for('user_messages_sent', id=session.user.id) }}">MessagesSent</a>
                 </li>
             </ul>
 
@@ -34,7 +34,6 @@
 
                     <div class="dropdown-menu">
                         <a class="dropdown-item" href="/unregister">Unregister</a>
-                        <a class="dropdown-item" href="/clear-all">Clear All</a>
 
                         <div class="dropdown-divider"></div>
 

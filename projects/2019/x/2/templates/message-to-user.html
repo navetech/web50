@@ -16,10 +16,10 @@
 
     <ul class="list-group pt-4">
         <li class="list-group-item ln-container01">
-            <form action="{{ url_for('message_to_user', user_name=user['name']) }}" method="post">
+            <form action="{{ url_for('message_to_user', id=user.id) }}" method="post">
                 <div class="form-group">
                     <label for="text">Text</label>
-                    <textarea autofocus name="text" id="text" class="form-control" rows= {{ messages_config.texts.rows_number }} maxlength={{ messages_config.texts.max_length }} placeholder="Text"></textarea>
+                    <textarea autofocus name="text" id="text" class="form-control" rows= {{ text_config["rows_number"] }} maxlength={{ text_config["max_length"] }} placeholder="Text"></textarea>
                 </div>
             
                 <button class="btn btn-dark" type="submit">Send</button>
