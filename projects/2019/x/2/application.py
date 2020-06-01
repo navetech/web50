@@ -454,7 +454,7 @@ def message_to_channel(id):
 
     # User reached route via GET (as by clicking a link or via redirect)
     if request.method == "GET":
-        return render_template("message-to-channel.html", channel=channel,
+        return render_template("message-to-any.html", channel=channel,
                                text_config=Text.config)
 
     # User reached route via POST (as by submitting a form via POST)
@@ -548,7 +548,7 @@ def message_to_user(id):
 
     # User reached route via GET (as by clicking a link or via redirect)
     if request.method == "GET":
-        return render_template("message-to-user.html", user=user,
+        return render_template("message-to-any.html", user=user,
                                text_config=Text.config)
 
     # User reached route via POST (as by submitting a form via POST)
