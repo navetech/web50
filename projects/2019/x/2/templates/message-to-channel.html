@@ -16,9 +16,12 @@
 
     <ul class="list-group pt-4">
         <li class="list-group-item ln-container01">
-            <form action="{{ url_for('message_to_channel', channel_name=channel['name']) }}" method="post">
-                <div class="form-group">
-                    <label for="text">Text</label>
+                <form enctype="multipart/form-data" action="{{ url_for('message_to_channel', id=channel.id) }}" method="post">
+                    <div class="form-group">
+                        <input class="form-control" type="file" name="file" multiple="">
+                    </div>
+                    <div class="form-group">
+                        <label for="text">Text</label>
                     <textarea autofocus name="text" id="text" class="form-control" rows= {{ messages_config.texts.rows_number }} maxlength={{ messages_config.texts.max_length }} placeholder="Text"></textarea>
                 </div>
             

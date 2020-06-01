@@ -24,7 +24,7 @@
         {% else %}
             {% for channel in channels %}
                 <li class="list-group-item ln-container01">
-                    <a class="ln-highlight" href="{{ url_for('channel_messages', channel_name=channel['name']) }}">{{ channel.name }}</a>
+                    <a class="ln-highlight" href="{{ url_for('channel_messages', id=channel.id) }}">{{ channel.name }}</a>
                     created on
                     <span class="ln-highlight">{{ channel.timestamp }}</span>
                 </li>
