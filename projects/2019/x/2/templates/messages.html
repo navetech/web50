@@ -60,10 +60,11 @@
                 {% endif %}
             </li>
 
-            {% for file in files %}
+            {% for file in message.files %}
                 <li class="list-group-item ln-container01">
-                    {% if message.sender.name == session.user.name %}
-                        <a class="ln-highlight" href="{{ url_for('uploaded_file', filename=file.name) }}">{{ file.name }}</a>
+                    {% if message.sender.id == session.user.id or channel is defined
+                        or (message.receiver is user and message.receiver.id == session.user.id) %}
+                        <a class="ln-highlight" href="{{ url_for('uploaded_file', file_id=file.id, filename=file.name) }}">{{ file.name }}</a>
                     {% else %}
                         <span class="ln-highlight">{{ file.name }}</span>
                     {% endif %}

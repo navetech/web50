@@ -8,6 +8,7 @@ import locale
 from flask import Flask, session, redirect, request, render_template, flash, url_for, send_from_directory
 from flask_session import Session
 from flask_socketio import SocketIO, emit
+from werkzeug import secure_filename
 
 from helpers import login_required, apology
 
@@ -22,10 +23,6 @@ Session(app)
 # Configure socket
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 socketio = SocketIO(app)
-
-# Configure upload
-UPLOAD_FOLDER = 'static/uploads'
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
 class Communicator:
@@ -194,9 +191,8 @@ class File:
     max_seq_number = sys.maxsize - 1
     seq_number = 0
 
-    def __init__(self, name, message):
+    def __init__(self, name):
         self.name = name
-        self.message = message
 
         if File.seq_number > File.max_seq_number:
             raise RuntimeError("Max number of files exceeded")
@@ -225,6 +221,25 @@ def is_channel(receiver):
 @app.template_test('user')
 def is_user(receiver):
     return isinstance(receiver, User)
+
+
+UPLOAD_FOLDER = 'static/uploads'
+
+# Create upload directory
+try:
+    files = os.listdir(UPLOAD_FOLDER)
+except FileNotFoundError:
+    os.mkdir(UPLOAD_FOLDER)
+
+# This is the path to the upload directory
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+# These are the extension that we are accepting to be uploaded
+app.config['ALLOWED_EXTENSIONS'] = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
+
+# For a given file, return whether it's an allowed type or not
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1] in app.config['ALLOWED_EXTENSIONS']
 
 
 @app.route("/")
@@ -431,15 +446,60 @@ def channel_messages(id):
         if message.receiver == channel:
             m.append(message)
 
-    files = []
-    for filename in os.listdir(UPLOAD_FOLDER):
-        path = os.path.join(UPLOAD_FOLDER, filename)
-        if os.path.isfile(path):
-            files.append(filename)
-    files = []
-
     return render_template("channel-messages.html", channel=channel,
-                           messages=m, files=files, text_config=Text.config)
+                           messages=m, text_config=Text.config)
+
+
+
+def append_id_to_filename(file_id, filename):
+
+    # Append file id precededed by zeros to the beginning of filename
+    d = 0
+    n = File.max_seq_number
+    while n > 0:
+        d += 1
+        n //= 10
+    f = "0" + str(d)
+    p = "{:" + f + "}"
+    x = f"{p}".format(file_id)
+    appended_name = x + "-" + filename
+
+    return appended_name
+
+
+def message_to_any(receiver):
+
+    # Get the name of the uploaded files
+    uploaded_files = request.files.getlist("file")
+    files_obj = []
+    for file in uploaded_files:
+        # Check if the file is one of the allowed types/extensions
+        if file and allowed_file(file.filename):
+            # Make the filename safe, remove unsupported chars
+            filename = secure_filename(file.filename)
+
+            # Instatiate file
+            file_obj = File(filename)
+
+            # Append file id precededed by zeros to the beginning of filename
+            filename = append_id_to_filename(file_obj.id, filename)
+ 
+            # Move the file form the temporal folder to the upload
+            # folder we setup
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            # Save the filename into a list, we'll use it later
+            files_obj.append(file_obj)
+
+    # Get message text
+    text = request.form.get("text")
+    if text:
+        text = text.strip()
+
+    # Create message
+    sender = User.get_by_id(session["user"].id)
+    message = Message(sender, receiver, text, files_obj)
+
+    return message
 
 
 @app.route("/message-to-channel/<int:id>", methods=["GET", "POST"])
@@ -460,21 +520,9 @@ def message_to_channel(id):
     # User reached route via POST (as by submitting a form via POST)
     elif request.method == "POST":
 
-        # Get files
-        files = request.files.getlist("file")
-        files = []
-        for file in files:
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
-
-        # Get message text
-        text = request.form.get("text")
-        if text:
-            text = text.strip()
-
-        # Create message
-        sender = User.get_by_id(session["user"].id)
+        # Get and send message to receiver
         receiver = channel
-        message = Message(sender, receiver, text, files)
+        message_to_any(receiver)
 
         # Redirect user to channel messages page
         return redirect(url_for('channel_messages', id=channel.id))
@@ -554,16 +602,9 @@ def message_to_user(id):
     # User reached route via POST (as by submitting a form via POST)
     elif request.method == "POST":
 
-        # Get message text
-        text = request.form.get("text")
-        if text:
-            text = text.strip()
-
-        # Create message
-        files = []
-        sender = User.get_by_id(session["user"].id)
+        # Get and send message to receiver
         receiver = user
-        message = Message(sender, receiver, text, files)
+        message_to_any(receiver)
 
         # Redirect to user messages page
         return redirect(url_for('user_messages_sent', id=session["user"].id))
@@ -599,7 +640,15 @@ def message_delete(id):
         return redirect("/")
 
 
-@app.route('/uploads/<filename>')
-def uploaded_file(filename):
+# This route is expecting a parameter containing the name
+# of a file. Then it will locate that file on the upload
+# directory and show it on the browser, so if the user uploads
+# an image, that image is going to be show after the upload
+@app.route('/uploads/<int:file_id>/<filename>')
+def uploaded_file(file_id, filename):
+
+    # Append file id precededed by zeros to the beginning of filename
+    filename = append_id_to_filename(file_id, filename)
+
     return send_from_directory(app.config['UPLOAD_FOLDER'],
                                filename)
