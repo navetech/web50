@@ -1,36 +1,34 @@
-#import os
+import os
 import sys
 
 from datetime import datetime, timezone
+import time
+import locale
 
-from flask import Flask, redirect, request, render_template, session, flash
+from flask import Flask, session, redirect, request, render_template, flash, url_for, send_from_directory
 from flask_session import Session
 from flask_socketio import SocketIO, emit
+from werkzeug import secure_filename
 
-import my_application
 from helpers import login_required, apology
 
 
-
 app = Flask(__name__)
-app.config.from_object('my_application.default_settings')
-print(app.config["SECRET_KEY"])
-app.config.from_envvar('APPLICATION_SETTINGS')
-print(app.config["SECRET_KEY"])
 
 # Configure session to use filesystem
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
-#app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 # Configure socket
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 socketio = SocketIO(app)
 
 
 class Communicator:
     max_seq_number = sys.maxsize - 1
     seq_number = 0
+
 
     def __init__(self, name):
         self.name = name
@@ -41,19 +39,15 @@ class Communicator:
         Communicator.seq_number += 1
 
         dt = datetime.now(timezone.utc)
-        self.timestamp = dt.isoformat()
+        self.timestamp = dt.strftime("%a, %d %b %Y %H:%M:%S %Z")
 
 
 class Sender(Communicator):
-    def __init__(self, name):
-        super().__init__(name)
-        self.messages_sent = []
+    pass
 
 
 class Receiver(Communicator):
-    def __init__(self, name):
-        super().__init__(name)
-        self.messages_received = []
+    pass
 
 
 class Channel(Receiver):
@@ -78,6 +72,20 @@ class Channel(Receiver):
     def __init__(self, name):
         super().__init__(name)
         Channel.channels.insert(0, self)
+
+
+class Login:
+    max_seq_number = sys.maxsize - 1
+    seq_number = 0
+
+    def __init__(self):
+        if Login.seq_number > Login.max_seq_number:
+            raise RuntimeError("Max number of logins exceeded")
+        self.id = Login.seq_number
+        Login.seq_number += 1
+
+        dt = datetime.now(timezone.utc)
+        self.timestamp = dt.strftime("%a, %d %b %Y %H:%M:%S %Z")
 
 
 class User(Sender, Receiver):
@@ -112,9 +120,6 @@ class User(Sender, Receiver):
     def remove(self):
 
         # Remove all user's messages
-        self.messages_sent = []
-        self.messages_received = []
-
         to_remove = []
         for message in Message.messages:
             if message.sender == self or message.receiver == self:
@@ -132,18 +137,11 @@ class User(Sender, Receiver):
             raise RuntimeError("remove(): User does not exist")
 
 
-class Login:
-    max_seq_number = sys.maxsize - 1
-    seq_number = 0
-
-    def __init__(self):
-        if Login.seq_number > Login.max_seq_number:
-            raise RuntimeError("Max number of logins exceeded")
-        self.id = Login.seq_number
-        Login.seq_number += 1
-
-        dt = datetime.now(timezone.utc)
-        self.timestamp = dt.isoformat()
+class Text:
+    config = {}
+    config["columns_max"] = 80
+    config["rows_number"] = 5
+    config["max_length"] = config["columns_max"] * config["rows_number"]
 
 
 class Message:
@@ -171,7 +169,7 @@ class Message:
         Message.seq_number += 1
 
         dt = datetime.now(timezone.utc)
-        self.timestamp = dt.isoformat()
+        self.timestamp = dt.strftime("%a, %d %b %Y %H:%M:%S %Z")
 
         Message.messages.insert(0, self)
 
@@ -188,11 +186,60 @@ class Message:
             raise RuntimeError("remove(): Message does not exist")
 
 
-class Text:
-    config = {}
-    config["columns_max"] = 80
-    config["rows_number"] = 5
-    config["max_length"] = config["columns_max"] * config["rows_number"]
+class File:
+    files = []
+    max_seq_number = sys.maxsize - 1
+    seq_number = 0
+
+    def __init__(self, name):
+        self.name = name
+
+        if File.seq_number > File.max_seq_number:
+            raise RuntimeError("Max number of files exceeded")
+        self.id = File.seq_number
+        File.seq_number += 1
+
+        dt = datetime.now(timezone.utc)
+        self.timestamp = dt.strftime("%a, %d %b %Y %H:%M:%S %Z")
+
+        File.files.insert(0, self)
+
+
+    def remove(self):
+
+        # Remove file
+        try:
+            File.files.remove(self)
+        except:
+            raise RuntimeError("remove(): File does not exist")
+
+
+@app.template_test('channel')
+def is_channel(receiver):
+    return isinstance(receiver, Channel)
+
+@app.template_test('user')
+def is_user(receiver):
+    return isinstance(receiver, User)
+
+
+UPLOAD_FOLDER = 'static/uploads'
+
+# Create upload directory
+try:
+    files = os.listdir(UPLOAD_FOLDER)
+except FileNotFoundError:
+    os.mkdir(UPLOAD_FOLDER)
+
+# This is the path to the upload directory
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+# These are the extension that we are accepting to be uploaded
+app.config['ALLOWED_EXTENSIONS'] = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
+
+# For a given file, return whether it's an allowed type or not
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1] in app.config['ALLOWED_EXTENSIONS']
 
 
 @app.route("/")
@@ -201,7 +248,7 @@ def index():
     """ Home page """
 
     # Redirect user to channels page
-    return redirect("/users")
+    return redirect("/channels")
 
 
 @app.route("/register", methods=["GET", "POST"])
@@ -234,6 +281,19 @@ def register():
         # Remember which user has logged in
         session.clear()
         session["user"] = user
+
+        # Get locale
+        loc = locale.getlocale(locale.LC_CTYPE)
+        (language_code, encoding) = loc
+        # language_code format returned by getlocale is like 'pt_BR' but 
+        # language_code format required by setlocale is like 'pt-BR' 
+        language_code = language_code.replace("_", "-", 1)
+        session["language_code"] = language_code
+
+        # Get local time zone
+        lt = time.localtime()   # localtime returns tm_gmtoff in seconds
+        gmt_offset = lt.tm_gmtoff
+        session["gmt_offset"] = gmt_offset
 
         # Report message
         flash('You were successfully logged in')
@@ -274,6 +334,19 @@ def login():
         # Remember which user has logged in
         session.clear()
         session["user"] = user
+
+        # Get locale
+        loc = locale.getlocale(locale.LC_CTYPE)
+        (language_code, encoding) = loc
+        # language_code format returned by getlocale is like 'pt_BR' but 
+        # language_code format required by setlocale is like 'pt-BR' 
+        language_code = language_code.replace("_", "-", 1)
+        session["language_code"] = language_code
+
+        # Get local time zone
+        lt = time.localtime()   # localtime returns tm_gmtoff in seconds
+        gmt_offset = lt.tm_gmtoff
+        session["gmt_offset"] = gmt_offset
 
         # Report message
         flash('You were successfully logged in')
@@ -378,6 +451,87 @@ def channel_messages(id):
 
 
 
+def append_id_to_filename(file_id, filename):
+
+    # Append file id precededed by zeros to the beginning of filename
+    d = 0
+    n = File.max_seq_number
+    while n > 0:
+        d += 1
+        n //= 10
+    f = "0" + str(d)
+    p = "{:" + f + "}"
+    x = f"{p}".format(file_id)
+    appended_name = x + "-" + filename
+
+    return appended_name
+
+
+def message_to_any(receiver):
+
+    # Get the name of the uploaded files
+    uploaded_files = request.files.getlist("file")
+    files_obj = []
+    for file in uploaded_files:
+        # Check if the file is one of the allowed types/extensions
+        if file and allowed_file(file.filename):
+            # Make the filename safe, remove unsupported chars
+            filename = secure_filename(file.filename)
+
+            # Instatiate file
+            file_obj = File(filename)
+
+            # Append file id precededed by zeros to the beginning of filename
+            filename = append_id_to_filename(file_obj.id, filename)
+ 
+            # Move the file form the temporal folder to the upload
+            # folder we setup
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            # Save the filename into a list, we'll use it later
+            files_obj.append(file_obj)
+
+    # Get message text
+    text = request.form.get("text")
+    if text:
+        text = text.strip()
+
+    # Create message
+    sender = User.get_by_id(session["user"].id)
+    message = Message(sender, receiver, text, files_obj)
+
+    return message
+
+
+@app.route("/message-to-channel/<int:id>", methods=["GET", "POST"])
+@login_required
+def message_to_channel(id):
+    """ Send a message to a channel"""
+
+    # Ensure channel exists
+    channel = Channel.get_by_id(id)
+    if not channel:
+        return apology("channel does not exist", 403)
+
+    # User reached route via GET (as by clicking a link or via redirect)
+    if request.method == "GET":
+        return render_template("message-to-any.html", channel=channel,
+                               text_config=Text.config)
+
+    # User reached route via POST (as by submitting a form via POST)
+    elif request.method == "POST":
+
+        # Get and send message to receiver
+        receiver = channel
+        message_to_any(receiver)
+
+        # Redirect user to channel messages page
+        return redirect(url_for('channel_messages', id=channel.id))
+
+    # User reached route not via GET neither via POST
+    else:
+        return apology("invalid method", 403)
+
+
 @app.route("/users", methods=["GET"])
 @login_required
 def users_():
@@ -388,6 +542,7 @@ def users_():
         return render_template("users.html", users=User.users)
     else:
         return apology("invalid method", 403)
+
 
 @app.route("/user-messages-received/<int:id>")
 @login_required
@@ -457,3 +612,43 @@ def message_to_user(id):
     # User reached route not via GET neither via POST
     else:
         return apology("invalid method", 403)
+
+
+@app.route("/message-delete/<int:id>")
+@login_required
+def message_delete(id):
+    """ Delete a message """
+
+    # Ensure message exists
+    message = Message.get_by_id(id)
+    if not message:
+        return apology("message does not exist", 403)
+
+    # Delete message
+    message.remove()
+
+    # Redirect user to previous page
+    s = message.sender
+    r = message.receiver
+    if isinstance(r, Channel):
+        return redirect(url_for('channel_messages', id=r.id))
+    elif r.id == session['user'].id:
+        return redirect(url_for('user_messages_received', id=session["user"].id))
+    elif s.id == session['user'].id:
+        return redirect(url_for('user_messages_sent', id=session["user"].id))
+    else:
+        return redirect("/")
+
+
+# This route is expecting a parameter containing the name
+# of a file. Then it will locate that file on the upload
+# directory and show it on the browser, so if the user uploads
+# an image, that image is going to be show after the upload
+@app.route('/uploads/<int:file_id>/<filename>')
+def uploaded_file(file_id, filename):
+
+    # Append file id precededed by zeros to the beginning of filename
+    filename = append_id_to_filename(file_id, filename)
+
+    return send_from_directory(app.config['UPLOAD_FOLDER'],
+                               filename)
