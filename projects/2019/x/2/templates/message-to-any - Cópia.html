@@ -12,7 +12,7 @@
     <ul class="list-group ln-group-width-auto">
         <li class="list-group-item ln-container01 ln-h03">
             from
-            <span class="ln-highlight">{{ session.user_name }}</span>
+            <span class="ln-highlight">{{ session.user.name }}</span>
             {% if channel is defined %}
                 to channel
                 <span class="ln-highlight">{{ channel.name }}</span>

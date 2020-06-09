@@ -13,15 +13,15 @@
 
 {% block product_navbar %}
     <div class="collapse navbar-collapse" id="navbar">
-        {% if session.user_id is defined %}
+        {% if session.user %}
             <ul class="navbar-nav mr-auto mt-2">
                 <li class="nav-item"><a class="nav-link" href="/channels">Channels</a></li>
                 <li class="nav-item"><a class="nav-link" href="/users">Users</a></li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('user_messages_received', id=session.user_id) }}">MessagesRec</a>
+                    <a class="nav-link" href="{{ url_for('user_messages_received', id=session.user.id) }}">MessagesRec</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('user_messages_sent', id=session.user_id) }}">MessagesSent</a>
+                    <a class="nav-link" href="{{ url_for('user_messages_sent', id=session.user.id) }}">MessagesSent</a>
                 </li>
             </ul>
 
@@ -30,7 +30,7 @@
 
                 <!-- Default dropleft button -->
                 <div class="btn-group dropleft">
-                    <button type="button" class="btn btn-dark dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{ session.user_name }}</button>
+                    <button type="button" class="btn btn-dark dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{ session.user.name }}</button>
 
                     <div class="dropdown-menu">
                         <a class="dropdown-item" href="/unregister">Unregister</a>

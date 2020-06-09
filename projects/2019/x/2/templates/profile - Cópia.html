@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Profile
+{% endblock %}
+
+{% block main %}
+    <ul class="list-group">
+        <li class="list-group-item ln-container01">
+            <form action="/profile" method="post">
+                <div class="form-group">
+                    <label for="name">Name</label>
+                    <textarea autofocus name="name" id="name" class="form-control" rows= 1 placeholder="Name">{{ user.name }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="username">Username</label>
+
+                    <input autocomplete="on" class="form-control" id= "username" name="username" placeholder="Username" type="text" value={{ user.username }}>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+
+                    <input autocomplete="off" class="form-control" id="password" name="password" placeholder="Password" type="password">
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmation">Password Confirmation</label>
+
+                    <input autocomplete="off" class="form-control" id="confirmation" name="confirmation" placeholder="Password Confirmation" type="password">
+                </div>
+
+                <button class="btn btn-dark" type="submit">Submit</button>
+            </form>
+        </li>
+    </ul>
+{% endblock %}

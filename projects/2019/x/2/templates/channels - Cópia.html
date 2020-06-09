@@ -1,0 +1,36 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Channels
+{% endblock %}
+
+{% block main %}
+    <ul class="list-group">
+        <li class="list-group-item ln-container01">
+            <form action="/channels" method="post">
+                <div class="form-group">
+                    <label for="name">Channel Name</label>
+                    <input autocomplete="on" autofocus class="form-control"  type="text" id="name" name="name" placeholder="Channel Name">
+                </div>
+        
+                <button class="btn btn-dark" type="submit">Create Channel</button>
+            </form>
+        </li>
+    </ul>
+
+    <ul class="list-group pt-4 ln-group-width-auto">
+        {% if not channels %}
+            <li class="list-group-item ln-container01">No channels</li>
+        {% else %}
+            {% for channel in channels %}
+                <li class="list-group-item ln-container01">
+                    <a class="ln-highlight" href="{{ url_for('channel_messages', id=channel.id) }}">{{ channel.name }}</a>
+                    created on
+                    <span class="ln-highlight">{{ channel.timestamp }}</span>
+                </li>
+
+                <div class="ln-group-divider"></div>
+            {% endfor %}
+        {% endif %}
+    </ul>
+{% endblock %}

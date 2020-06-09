@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Apology
+{% endblock %}
+
+{% block main %}
+    <ul class="list-group ln-group-center">
+        <li class="list-group-item py-4 ln-group-item-center ln-container01"><img alt="{{ top }}" class="border" src="http://memegen.link/custom/{{ top | urlencode }}/{{ bottom | urlencode }}.jpg?width=1100&alt=https://media.gettyimages.com/photos/aerial-view-of-rio-de-janeiro-landmarks-picture-id458295627?s=612x612" title="{{ top }}"></li>
+<!--
+        <li class="list-group-item py-4 ln-group-item-center ln-container01"><img alt="{{ top }}" class="border" src="http://memegen.link/custom/{{ top | urlencode }}/{{ bottom | urlencode }}.jpg?alt=https://i.imgur.com/CsCgN7Ll.png" title="{{ top }}"></li>
+-->
+    </ul>
+{% endblock %}

@@ -4,7 +4,7 @@ import sys
 from datetime import datetime, timezone
 
 from flask import Flask, redirect, request, render_template, session, flash
-from flask_session import Session
+#from flask_session import Session
 from flask_socketio import SocketIO, emit
 
 import my_application
@@ -19,9 +19,9 @@ app.config.from_envvar('APPLICATION_SETTINGS')
 print(app.config["SECRET_KEY"])
 
 # Configure session to use filesystem
-app.config["SESSION_PERMANENT"] = False
-app.config["SESSION_TYPE"] = "filesystem"
-Session(app)
+#app.config["SESSION_PERMANENT"] = False
+#app.config["SESSION_TYPE"] = "filesystem"
+#Session(app)
 
 #app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 # Configure socket
@@ -101,12 +101,29 @@ class User(Sender, Receiver):
 
     def __init__(self, name):
         super().__init__(name)
-        self.logins = []
+        self.logs_history = []
+        self.current_logins = []
         User.users.insert(0, self)
 
 
     def login(self):
-        self.logins.insert(0, Login())
+        login = Login()
+        self.logs_history.insert(0, login)
+        self.current_logins.insert(0, login)
+
+
+    def logout(self, login_id):
+        logout = Logout()
+        self.logs_history.insert(0, logout)
+
+        to_remove = None
+        for login in self.current_logins:
+            if login.id == login_id:
+                to_remove = login
+                break
+
+        if to_remove:
+            self.current_logins.remove(to_remove)
 
     
     def remove(self):
@@ -123,7 +140,8 @@ class User(Sender, Receiver):
             message.remove()
 
         # Remove logins
-        self.logins = []
+        self.logs_history = []
+        self.current_logins = []
 
         # Remove user
         try:
@@ -132,18 +150,26 @@ class User(Sender, Receiver):
             raise RuntimeError("remove(): User does not exist")
 
 
-class Login:
+class Log:
     max_seq_number = sys.maxsize - 1
     seq_number = 0
 
     def __init__(self):
-        if Login.seq_number > Login.max_seq_number:
-            raise RuntimeError("Max number of logins exceeded")
-        self.id = Login.seq_number
-        Login.seq_number += 1
+        if Log.seq_number > Log.max_seq_number:
+            raise RuntimeError("Max number of logins/logouts exceeded")
+        self.id = Log.seq_number
+        Log.seq_number += 1
 
         dt = datetime.now(timezone.utc)
         self.timestamp = dt.isoformat()
+
+
+class Login(Log):
+    pass
+
+
+class Logout(Log):
+    pass
 
 
 class Message:
@@ -228,12 +254,19 @@ def register():
         # Register user
         user = User(name)
 
+        # Log out previous user
+        if session.get("user_id"):
+            previous_user = User.get_by_id(session["user_id"])
+            previous_user.logout(session["login_id"])
+
         # Login user
         user.login()
 
         # Remember which user has logged in
         session.clear()
-        session["user"] = user
+        session["user_id"] = user.id
+        session["user_name"] = user.name
+        session["login_id"] = user.current_logins[0].id
 
         # Report message
         flash('You were successfully logged in')
@@ -268,12 +301,19 @@ def login():
         if not user:
             return apology("user does not exist", 403)
 
+        # Log out previous user
+        if session.get("user_id"):
+            previous_user = User.get_by_id(session["user_id"])
+            previous_user.logout(session["login_id"])
+
         # Login user
         user.login()
 
         # Remember which user has logged in
         session.clear()
-        session["user"] = user
+        session["user_id"] = user.id
+        session["user_name"] = user.name
+        session["login_id"] = user.current_logins[0].id
 
         # Report message
         flash('You were successfully logged in')
@@ -291,6 +331,12 @@ def login():
 @login_required
 def logout():
     """Log user out"""
+
+    # Get user
+    user = User.get_by_id(session["user_id"])
+
+    #Log out user
+    user.logout(session["login_id"])
 
     session.clear()
 
@@ -313,7 +359,7 @@ def unregister():
         if request.form.get("confirm"):
 
             # Get user
-            user = User.get_by_id(session["user"].id)
+            user = User.get_by_id(session["user_id"])
 
             # Remove user
             user.remove()
@@ -389,6 +435,7 @@ def users_():
     else:
         return apology("invalid method", 403)
 
+
 @app.route("/user-messages-received/<int:id>")
 @login_required
 def user_messages_received(id):
@@ -452,7 +499,7 @@ def message_to_user(id):
         message_to_any(receiver)
 
         # Redirect to user messages page
-        return redirect(url_for('user_messages_sent', id=session["user"].id))
+        return redirect(url_for('user_messages_sent', id=session["user_id"]))
 
     # User reached route not via GET neither via POST
     else:
