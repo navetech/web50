@@ -8,7 +8,7 @@ from flask import Flask, redirect, request, render_template, session, flash
 from flask_socketio import SocketIO, emit
 
 import my_application
-from helpers import login_required, apology
+from helpers import login_check, apology
 
 
 
@@ -48,11 +48,17 @@ class Sender(Communicator):
     def __init__(self, name):
         super().__init__(name)
         self.messages_sent = []
+        
+    def remove(self):
+        self.messages_sent = []
 
 
 class Receiver(Communicator):
     def __init__(self, name):
         super().__init__(name)
+        self.messages_received = []
+        
+    def remove(self):
         self.messages_received = []
 
 
@@ -75,8 +81,9 @@ class Channel(Receiver):
         return None
 
 
-    def __init__(self, name):
+    def __init__(self, name, creator):
         super().__init__(name)
+        self.creator = creator
         Channel.channels.insert(0, self)
 
 
@@ -110,34 +117,32 @@ class User(Sender, Receiver):
         login = Login()
         self.logs_history.insert(0, login)
         self.current_logins.insert(0, login)
+        return login
 
 
     def logout(self, login_id):
         logout = Logout()
         self.logs_history.insert(0, logout)
 
-        to_remove = None
+        to_remove = []
         for login in self.current_logins:
             if login.id == login_id:
-                to_remove = login
-                break
+                to_remove.append(login)
+        for login in to_remove:
+            self.current_logins.remove(login)
 
-        if to_remove:
-            self.current_logins.remove(to_remove)
+        return logout
 
     
     def remove(self):
 
-        # Remove all user's messages
-        self.messages_sent = []
-        self.messages_received = []
-
+        # Remove created channels
         to_remove = []
-        for message in Message.messages:
-            if message.sender == self or message.receiver == self:
-                to_remove.append(message)
-        for message in to_remove:
-            message.remove()
+        for channel in Channel.channels:
+            if channel.creator == self:
+                to_remove.append(channel)
+        for channel in to_remove:
+            Channel.channels.remove(channel)
 
         # Remove logins
         self.logs_history = []
@@ -148,6 +153,7 @@ class User(Sender, Receiver):
             User.users.remove(self)
         except:
             raise RuntimeError("remove(): User does not exist")
+        super().remove()
 
 
 class Log:
@@ -222,7 +228,8 @@ class Text:
 
 
 @app.route("/")
-@login_required
+#@login_required
+@login_check(User.users)
 def index():
     """ Home page """
 
@@ -248,25 +255,26 @@ def register():
 
         # Ensure user does not exist
         user = User.get_by_name(name)
-        if user:
+        if user is not None:
             return apology("user already exists", 403)
 
         # Register user
         user = User(name)
 
         # Log out previous user
-        if session.get("user_id"):
-            previous_user = User.get_by_id(session["user_id"])
-            previous_user.logout(session["login_id"])
+        previous_user = User.get_by_id(session.get("user_id"))
+        if previous_user is not None:
+            previous_user.logout(session.get("login_id"))
+        session.clear()
 
         # Login user
-        user.login()
+        login = user.login()
 
         # Remember which user has logged in
         session.clear()
         session["user_id"] = user.id
         session["user_name"] = user.name
-        session["login_id"] = user.current_logins[0].id
+        session["login_id"] = login.id
 
         # Report message
         flash('You were successfully logged in')
@@ -298,22 +306,23 @@ def login():
 
         # Ensure user exists
         user = User.get_by_name(name)
-        if not user:
+        if user is None:
             return apology("user does not exist", 403)
 
         # Log out previous user
-        if session.get("user_id"):
-            previous_user = User.get_by_id(session["user_id"])
-            previous_user.logout(session["login_id"])
+        previous_user = User.get_by_id(session.get("user_id"))
+        if previous_user is not None:
+            previous_user.logout(session.get("login_id"))
+        session.clear()
 
         # Login user
-        user.login()
+        login = user.login()
 
         # Remember which user has logged in
         session.clear()
         session["user_id"] = user.id
         session["user_name"] = user.name
-        session["login_id"] = user.current_logins[0].id
+        session["login_id"] = login.id
 
         # Report message
         flash('You were successfully logged in')
@@ -328,16 +337,15 @@ def login():
 
 
 @app.route("/logout")
-@login_required
+#@login_required
+@login_check(User.users)
 def logout():
-    """Log user out"""
+    """ Log user out"""
 
-    # Get user
-    user = User.get_by_id(session["user_id"])
-
-    #Log out user
-    user.logout(session["login_id"])
-
+    # Log out user
+    user = User.get_by_id(session.get("user_id"))
+    if user is not None:
+        user.logout(session.get("login_id"))
     session.clear()
 
     # Redirect user to home page
@@ -345,7 +353,8 @@ def logout():
 
 
 @app.route("/unregister", methods=["GET", "POST"])
-@login_required
+#@login_required
+@login_check(User.users)
 def unregister():
     """Unregister the user"""
 
@@ -358,12 +367,10 @@ def unregister():
 
         if request.form.get("confirm"):
 
-            # Get user
-            user = User.get_by_id(session["user_id"])
-
             # Remove user
-            user.remove()
-
+            user = User.get_by_id(session.get("user_id"))
+            if user is not None:
+                user.remove()
             session.clear()
 
         # Redirect user to home page
@@ -375,7 +382,8 @@ def unregister():
 
 
 @app.route("/channels", methods=["GET", "POST"])
-@login_required
+#@login_required
+@login_check(User.users)
 def channels_():
     """ Show channels / Create a channel """
 
@@ -391,11 +399,16 @@ def channels_():
 
         # Ensure channel does not exist
         channel = Channel.get_by_name(name)
-        if channel:
+        if channel is not None:
             return apology("channel already exists", 403)
 
+        # Ensure user exists
+        user = User.get_by_id(session.get("user_id"))
+        if user is None:
+            return apology("user does not exist", 403)
+
         # Create channel
-        channel = Channel(name)
+        channel = Channel(name, creator=user)
 
         return render_template("channels.html", channels=Channel.channels)
 
@@ -404,7 +417,8 @@ def channels_():
 
 
 @app.route("/channel-messages/<int:id>")
-@login_required
+#@login_required
+@login_check(User.users)
 def channel_messages(id):
     """Show channel's messages """
 
@@ -425,7 +439,8 @@ def channel_messages(id):
 
 
 @app.route("/users", methods=["GET"])
-@login_required
+#@login_required
+@login_check(User.users)
 def users_():
     """ Show users """
 
@@ -437,7 +452,8 @@ def users_():
 
 
 @app.route("/user-messages-received/<int:id>")
-@login_required
+#@login_required
+@login_check(User.users)
 def user_messages_received(id):
     """Show user's received messages """
 
@@ -457,7 +473,8 @@ def user_messages_received(id):
 
 
 @app.route("/user-messages-sent/<int:id>")
-@login_required
+#@login_required
+@login_check(User.users)
 def user_messages_sent(id):
     """Show user's sent messages """
 
@@ -477,7 +494,8 @@ def user_messages_sent(id):
 
 
 @app.route("/message-to-user/<int:id>", methods=["GET", "POST"])
-@login_required
+#@login_required
+@login_check(User.users)
 def message_to_user(id):
     """ Send a message to a user"""
 

@@ -10,10 +10,28 @@ def login_required(f):
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if "user_id" in session:
-            return f(*args, **kwargs)
-        return redirect("/login")
+        if session.get("user_id") is None:
+            return redirect("/login")
+        return f(*args, **kwargs)
     return decorated_function
+
+
+def login_check(users):
+    def decorator(func):
+        @wraps(func)
+        def decorated_function(*args, **kwargs):
+            user_id = session.get("user_id")
+            if user_id is None:
+                session.clear()
+                return redirect("/login")
+
+            for user in users:
+                if user.id == user_id:
+                    return func(*args, **kwargs)
+            session.clear()
+            return redirect("/login")
+        return decorated_function
+    return decorator
 
 
 def apology(message, code=400):
