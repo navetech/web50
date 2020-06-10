@@ -44,6 +44,14 @@ class Communicator:
         self.timestamp = dt.isoformat()
 
 
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "timestamp" : self.timestamp
+        }
+
+
 class Sender(Communicator):
     def __init__(self, name):
         super().__init__(name)
@@ -156,6 +164,15 @@ class User(Sender, Receiver):
         super().remove()
 
 
+    def to_dict(self):
+        c_logins = []
+        for login in self.current_logins:
+            c_logins.append(login.to_dict())
+        r = super().to_dict()
+        r['current_logins'] = c_logins
+        return r
+
+
 class Log:
     max_seq_number = sys.maxsize - 1
     seq_number = 0
@@ -168,6 +185,13 @@ class Log:
 
         dt = datetime.now(timezone.utc)
         self.timestamp = dt.isoformat()
+
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "timestamp" : self.timestamp
+        }
 
 
 class Login(Log):
@@ -283,7 +307,11 @@ def register():
         # Emit event
         print("antes")
         print(user.name)
-        socketio.emit('announce register', {'name': user.name, 'timestamp': user.timestamp})
+        data = user.to_dict()
+        print("DATA")
+        print(data)
+        socketio.emit('announce register', data)
+#        socketio.emit('announce register', {'name': user.name, 'timestamp': user.timestamp})
         print("depois")
         print(user.name)
 

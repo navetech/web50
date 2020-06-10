@@ -5,11 +5,28 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.11/handlebars.min.js"></script>
 
     <script id="user" type="text/x-handlebars-template">
-        <li class="list-group-item ln-container01">
-            <span class="ln-highlight">{% raw -%}{{ name }}{%- endraw %}</span>
+        {% raw -%}
+            <li class="list-group-item ln-container01">
+            {{#if user.id }}
+                <span class="ln-highlight">{{ user.name }}</span>
+            {{else}}
+                <a class="ln-highlight" href="{{ url_for('message_to_user', id=user.id) }}">{{ user.name }}</a>
+            {/if}}
             registered on
-            <span class="ln-highlight">{% raw -%}{{ timestamp }}{%- endraw %}</span>
-        </li>
+            <span class="ln-highlight">{{ user.timestamp }}</span>
+            {{#if user.current_logins }}
+                online
+                <span class="ln-highlight">{{ user.current_logins[0].timestamp }}</span>
+                {/if}}
+            </li>
+        {%- endraw %}
+                <li class="list-group-item ln-container01">
+            <span class="ln-highlight">{% raw -%}{{ user.name }}{%- endraw %}</span>
+            registered on
+            <span class="ln-highlight">{% raw -%}{{ user.timestamp }}{%- endraw %}</span>
+            online
+            <span class="ln-highlight">{% raw -%}{{ user.current_logins.[0].timestamp }}{%- endraw %}</span>
+</li>
     </script>
 
     <script src="/static/scripts/users.js"></script>
