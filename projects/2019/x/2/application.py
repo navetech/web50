@@ -233,7 +233,7 @@ class Text:
 def index():
     """ Home page """
 
-    # Redirect user to channels page
+    # Redirect page
     return redirect("/users")
 
 
@@ -279,12 +279,20 @@ def register():
         # Report message
         flash('You were successfully logged in')
         flash(user.name)
-        
+
+        # Emit event
+        print("antes")
+        print(user.name)
+        socketio.emit('announce register', {'name': user.name, 'timestamp': user.timestamp})
+        print("depois")
+        print(user.name)
+
         # Redirect user to home page
         return redirect("/")
 
     # User reached route not via GET neither via POST
     else:
+
         return apology("invalid method", 403)
 
 
