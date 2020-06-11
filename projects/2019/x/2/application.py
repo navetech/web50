@@ -54,8 +54,14 @@ class Sender(Communicator):
     def __init__(self, name):
         super().__init__(name)
         self.messages_sent = []
+
         
     def remove(self):
+
+        # Remove sent messages
+        for message in self.messages_sent:
+            if message.sender == self:
+                message.remove()
         self.messages_sent = []
 
 
@@ -63,13 +69,29 @@ class Receiver(Communicator):
     def __init__(self, name):
         super().__init__(name)
         self.messages_received = []
-        
+
+
     def remove(self):
+
+        # Remove receive messages
+        for message in self.messages_received:
+            if message.receiver == self:
+                message.remove()
         self.messages_received = []
 
 
 class Channel(Receiver):
     channels = []
+
+    @staticmethod
+    def remove_by_user(user):
+        to_remove = []
+        for channel in Channel.channels:
+            if channel.creator == user:
+                to_remove.append(channel)
+        for channel in to_remove:
+            Channel.channels.remove(channel)
+
 
     @staticmethod
     def get_by_id(id):
@@ -114,28 +136,33 @@ class User(Sender, Receiver):
 
     def __init__(self, name):
         super().__init__(name)
-        self.logs_history = []
-        self.current_logins = []
+
+        self.current_log = None
+        self.last_login = None
+        self.last_logout = None
+
         User.users.insert(0, self)
 
 
     def login(self):
-        login = Login()
-        self.logs_history.insert(0, login)
-        self.current_logins.insert(0, login)
+        if self.last_logout is not None :
+            self.last_logout.remove_from_currents()
+
+        login = Login(self)
+        self.last_login = login
+        self.current_log = login
+
         return login
 
 
     def logout(self, login_id):
-        logout = Logout()
-        self.logs_history.insert(0, logout)
+        login = Log.get_by_id(login_id)
+        if login is not None:
+            login.remove_from_currents()
 
-        to_remove = []
-        for login in self.current_logins:
-            if login.id == login_id:
-                to_remove.append(login)
-        for login in to_remove:
-            self.current_logins.remove(login)
+        logout = Logout(self)
+        self.last_logout = logout
+        self.current_log = logout
 
         return logout
 
@@ -143,16 +170,12 @@ class User(Sender, Receiver):
     def remove(self):
 
         # Remove created channels
-        to_remove = []
-        for channel in Channel.channels:
-            if channel.creator == self:
-                to_remove.append(channel)
-        for channel in to_remove:
-            Channel.channels.remove(channel)
+        Channel.remove_by_user(self)
 
-        # Remove logins
-        self.logs_history = []
-        self.current_logins = []
+        # Remove logs
+        Login.remove_by_user(self)
+        Logout.remove_by_user(self)
+        Log.remove_by_user(self)
 
         # Remove user
         try:
@@ -172,10 +195,31 @@ class User(Sender, Receiver):
 
 
 class Log:
+    logs = []
     max_seq_number = sys.maxsize - 1
     seq_number = 0
 
-    def __init__(self):
+    @staticmethod
+    def remove_by_user(user):
+        to_remove = []
+        for log in Log.logs:
+            if log.user == user:
+                to_remove.append(log)
+        for log in to_remove:
+            Log.logs.remove(log)
+
+
+    @staticmethod
+    def get_by_id(id):
+        for log in Log.logs:
+            if log.id == id:
+                return log
+        return None
+
+
+    def __init__(self, user):
+        self.user = user
+
         if Log.seq_number > Log.max_seq_number:
             raise RuntimeError("Max number of logins/logouts exceeded")
         self.id = Log.seq_number
@@ -183,6 +227,17 @@ class Log:
 
         dt = datetime.now(timezone.utc)
         self.timestamp = dt.isoformat()
+
+        Log.logs.insert(0, self)
+
+
+    def remove(self):
+
+        # Remove log
+        try:
+            Log.logs.remove(self)
+        except:
+            raise RuntimeError("remove(): Logins/logouts does not exist")
 
 
     def to_dict(self):
@@ -193,11 +248,79 @@ class Log:
 
 
 class Login(Log):
-    pass
+    currents = []
+
+    @staticmethod
+    def remove_by_user(user):
+        to_remove = []
+        for log in Login.currents:
+            if log.user == user:
+                to_remove.append(log)
+        for log in to_remove:
+            Login.currents.remove(log)
+
+
+    def __init__(self, user):
+        super().__init__(user)
+        Login.currents.insert(0, self)
+
+
+    def remove(self):
+
+        # Remove login
+        try:
+            Login.currents.remove(self)
+        except:
+            pass
+
+        super().remove()
+
+
+    def remove_from_currents(self):
+
+        # Remove login
+        try:
+            Login.currents.remove(self)
+        except:
+            pass
 
 
 class Logout(Log):
-    pass
+    currents = []
+
+    @staticmethod
+    def remove_by_user(user):
+        to_remove = []
+        for log in Logout.currents:
+            if log.user == user:
+                to_remove.append(log)
+        for log in to_remove:
+            Logout.currents.remove(log)
+
+
+    def __init__(self, user):
+        super().__init__(user)
+        Logout.currents.insert(0, self)
+
+
+    def remove(self):
+
+        # Remove logout
+        try:
+            Logout.currents.remove(self)
+        except:
+            pass
+
+        super().remove()
+
+
+    def remove_from_currents(self):
+
+        # Remove login
+        try:
+            Logout.currents.remove(self)
+        except:
+            pass
 
 
 class Message:
