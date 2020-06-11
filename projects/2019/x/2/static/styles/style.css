@@ -24,3 +24,96 @@ main form label
     width: 100%;
     background-color: white;
 }
+
+
+@keyframes show {
+    0% {
+        opacity: 0;
+        height: 0px;
+        line-height: 0px;
+/*
+        padding: 0px;
+        margin-bottom: 0px;
+*/
+    }
+    50% {
+        opacity: 0;
+        height: 100%;
+        line-height: 100%;
+/*
+        padding: 20px;
+        margin-bottom: 10px;
+*/
+}
+    100% {
+        opacity: 1;
+        height: 100%;
+        line-height: 100%;
+/*
+        padding: 20px;
+        margin-bottom: 10px;
+*/
+}
+}
+
+
+@keyframes hide {
+    0% {
+        opacity: 1;
+        height: 100%;
+        line-height: 100%;
+/*
+        padding: 20px;
+        margin-bottom: 10px;
+*/
+}
+    50% {
+        opacity: 0;
+        height: 100%;
+        line-height: 100%;
+/*
+        padding: 20px;
+        margin-bottom: 10px;
+*/
+}
+    100% {
+        opacity: 0;
+        height: 0px;
+        line-height: 0px;
+/*
+        padding: 0px;
+        margin-bottom: 0px;
+*/
+}
+}
+
+
+.item-show {
+    opacity: 0;
+    height: 0px;
+    line-height: 0px;
+/*
+    padding: 0px;
+    margin-bottom: 0px;
+*/
+
+    animation-name: show;
+    animation-duration: 5s;
+    animation-fill-mode: forwards;
+    animation-play-state: paused;
+}
+
+.item-hide {
+    opacity: 1;
+    height: 100%;
+    line-height: 100%;
+/*
+    padding: 20px;
+    margin-bottom: 10px;
+*/
+
+    animation-name: hide;
+    animation-duration: 5s;
+    animation-fill-mode: forwards;
+    animation-play-state: paused;
+}

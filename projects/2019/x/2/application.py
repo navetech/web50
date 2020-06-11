@@ -14,9 +14,7 @@ from helpers import login_check, apology
 
 app = Flask(__name__)
 app.config.from_object('my_application.default_settings')
-print(app.config["SECRET_KEY"])
 app.config.from_envvar('APPLICATION_SETTINGS')
-print(app.config["SECRET_KEY"])
 
 # Configure session to use filesystem
 #app.config["SESSION_PERMANENT"] = False
@@ -251,6 +249,15 @@ class Text:
     config["max_length"] = config["columns_max"] * config["rows_number"]
 
 
+from flask import jsonify
+
+@app.route("/session", methods=["GET"])
+def session_():
+    """ Session data """
+    user_id = session.get("user_id")
+    return jsonify(user_id)
+
+
 @app.route("/")
 #@login_required
 @login_check(User.users)
@@ -305,15 +312,8 @@ def register():
         flash(user.name)
 
         # Emit event
-        print("antes")
-        print(user.name)
         data = user.to_dict()
-        print("DATA")
-        print(data)
         socketio.emit('announce register', data)
-#        socketio.emit('announce register', {'name': user.name, 'timestamp': user.timestamp})
-        print("depois")
-        print(user.name)
 
         # Redirect user to home page
         return redirect("/")
@@ -406,6 +406,8 @@ def unregister():
             # Remove user
             user = User.get_by_id(session.get("user_id"))
             if user is not None:
+                data = user.to_dict()
+                socketio.emit('announce unregister', data)
                 user.remove()
             session.clear()
 
