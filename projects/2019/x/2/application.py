@@ -510,6 +510,12 @@ def register():
         if user is not None:
             return apology("user already exists", 403)
 
+        # Set session locale and timezone
+        session.clear()
+        session["locale"] = request.form.get("locale")
+        session["timezone"] = request.form.get("timezone")
+        session["timezone_offset"] = request.form.get("timezone-offset")
+
         # Register user
         user = User(name)
 
@@ -523,7 +529,6 @@ def register():
         login = user.login()
 
         # Remember which user has logged in
-        session.clear()
         session["user_id"] = user.id
         session["user_name"] = user.name
         session["login_id"] = login.id
