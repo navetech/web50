@@ -1,4 +1,4 @@
-#import os
+import os
 import sys
 
 from datetime import datetime, timezone
@@ -8,7 +8,7 @@ from flask import Flask, redirect, request, render_template, session, flash
 from flask_socketio import SocketIO, emit
 
 import my_application
-from helpers import login_check, apology
+from helpers import login_check, apology, append_id_to_filename
 
 
 
@@ -26,6 +26,10 @@ app.config.from_envvar('APPLICATION_SETTINGS')
 socketio = SocketIO(app)
 
 
+import time
+import locale
+
+
 class Communicator:
     max_seq_number = sys.maxsize - 1
     seq_number = 0
@@ -39,7 +43,30 @@ class Communicator:
         Communicator.seq_number += 1
 
         dt = datetime.now(timezone.utc)
-        self.timestamp = dt.isoformat()
+#        self.timestamp = dt.isoformat()
+
+        # Get locale
+        loc = locale.getlocale(locale.LC_CTYPE)
+        (language_code, encoding) = loc
+        # language_code format returned by getlocale is like 'pt_BR' but 
+        # language_code format required by setlocale is like 'pt-BR' 
+        language_code = language_code.replace("_", "-", 1)
+        locale.setlocale(locale.LC_TIME, language_code)
+
+        # Get local time zone
+        lt = time.localtime()   # localtime returns tm_gmtoff in seconds
+        gmt_offset = lt.tm_gmtoff
+
+        print("localtime")
+        print(lt.tm_zone)
+        print(lt.tm_gmtoff)
+        print(lt.tm_isdst)
+
+        minutes_offset = (int(abs(gmt_offset) / 60)) % 60
+        h = gmt_offset // 3600
+        hours_offset = ((h > 0) - (h < 0)) * (abs(h) % 24)
+
+        self.timestamp = dt.strftime("%a, %d %b %Y %H:%M:%S %Z")
 
 
     def to_dict(self):
@@ -55,14 +82,22 @@ class Sender(Communicator):
         super().__init__(name)
         self.messages_sent = []
 
-        
-    def remove(self):
+
+    def remove_messages(self):
 
         # Remove sent messages
         for message in self.messages_sent:
             if message.sender == self:
                 message.remove()
         self.messages_sent = []
+
+        
+    def remove(self):
+        self.remove_messages()
+
+
+    def send_message(self, receiver, text, files_names):
+        Message(self, receiver, text, files_names)
 
 
 class Receiver(Communicator):
@@ -71,26 +106,32 @@ class Receiver(Communicator):
         self.messages_received = []
 
 
-    def remove(self):
+    def remove_messages(self):
 
-        # Remove receive messages
+        # Remove received messages
         for message in self.messages_received:
             if message.receiver == self:
                 message.remove()
         self.messages_received = []
 
 
+    def remove(self):
+        self.remove_messages()
+
+
 class Channel(Receiver):
     channels = []
 
     @staticmethod
-    def remove_by_user(user):
+    def remove_by_creator(creator):
         to_remove = []
         for channel in Channel.channels:
-            if channel.creator == user:
+            if channel.creator == creator:
                 to_remove.append(channel)
+
         for channel in to_remove:
             Channel.channels.remove(channel)
+            channel.remove()
 
 
     @staticmethod
@@ -137,20 +178,19 @@ class User(Sender, Receiver):
     def __init__(self, name):
         super().__init__(name)
 
-        self.current_log = None
-        self.last_login = None
-        self.last_logout = None
+        self.current_logins = []
+        self.current_logout = None
 
         User.users.insert(0, self)
 
 
     def login(self):
-        if self.last_logout is not None :
-            self.last_logout.remove_from_currents()
+        if self.current_logout is not None :
+            self.current_logout.remove_from_currents()
+        self.current_logout = None
 
         login = Login(self)
-        self.last_login = login
-        self.current_log = login
+        self.current_logins.insert(0, login)
 
         return login
 
@@ -159,9 +199,14 @@ class User(Sender, Receiver):
         login = Log.get_by_id(login_id)
         if login is not None:
             login.remove_from_currents()
+            try:
+                self.current_logins.remove(login)
+            except:
+                raise RuntimeError("remove(): User's current login does not exist")
 
+        if self.current_logout is not None :
+            self.current_logout.remove_from_currents()
         logout = Logout(self)
-        self.last_logout = logout
         self.current_log = logout
 
         return logout
@@ -170,11 +215,15 @@ class User(Sender, Receiver):
     def remove(self):
 
         # Remove created channels
-        Channel.remove_by_user(self)
+        Channel.remove_by_creator(self)
 
         # Remove logs
         Login.remove_by_user(self)
+        self.current_logins = []
+
         Logout.remove_by_user(self)
+        self.current_logout = None
+
         Log.remove_by_user(self)
 
         # Remove user
@@ -185,12 +234,26 @@ class User(Sender, Receiver):
         super().remove()
 
 
+    def create_channel(self, name):
+        Channel(name, self)
+
+
+
     def to_dict(self):
-        c_logins = []
+        logins = []
         for login in self.current_logins:
-            c_logins.append(login.to_dict())
+            logins.append(login.to_dict())
+
+        logout = self.current_logout
+
         r = super().to_dict()
-        r['current_logins'] = c_logins
+        r['current_logins'] = logins
+
+        if logout is not None:
+            r['current_logout'] = logout.to_dict()
+        else:
+            r['current_logout'] = None
+
         return r
 
 
@@ -231,15 +294,6 @@ class Log:
         Log.logs.insert(0, self)
 
 
-    def remove(self):
-
-        # Remove log
-        try:
-            Log.logs.remove(self)
-        except:
-            raise RuntimeError("remove(): Logins/logouts does not exist")
-
-
     def to_dict(self):
         return {
             "id": self.id,
@@ -265,24 +319,13 @@ class Login(Log):
         Login.currents.insert(0, self)
 
 
-    def remove(self):
-
-        # Remove login
-        try:
-            Login.currents.remove(self)
-        except:
-            pass
-
-        super().remove()
-
-
     def remove_from_currents(self):
 
         # Remove login
         try:
             Login.currents.remove(self)
         except:
-            pass
+            raise RuntimeError("remove(): Login from currents does not exist")
 
 
 class Logout(Log):
@@ -303,24 +346,13 @@ class Logout(Log):
         Logout.currents.insert(0, self)
 
 
-    def remove(self):
-
-        # Remove logout
-        try:
-            Logout.currents.remove(self)
-        except:
-            pass
-
-        super().remove()
-
-
     def remove_from_currents(self):
 
         # Remove login
         try:
             Logout.currents.remove(self)
         except:
-            pass
+            raise RuntimeError("remove(): Logout from currents does not exist")
 
 
 class Message:
@@ -336,11 +368,14 @@ class Message:
         return None
 
 
-    def __init__(self, sender, receiver, text, files):
+    def __init__(self, sender, receiver, text, files_names):
         self.sender = sender
         self.receiver = receiver
         self.text = text
-        self.files = files
+
+        self.files = []
+        for name in files_names:
+            self.files.append(File( name, self))
 
         if Message.seq_number > Message.max_seq_number:
             raise RuntimeError("Max number of messages exceeded")
@@ -356,6 +391,7 @@ class Message:
     def remove(self):
 
         # Remove files
+        File.remove_by_message(self)
         self.files = []
 
         # Remove message
@@ -370,6 +406,68 @@ class Text:
     config["columns_max"] = 80
     config["rows_number"] = 5
     config["max_length"] = config["columns_max"] * config["rows_number"]
+
+
+class File:
+    files = []
+    max_seq_number = sys.maxsize - 1
+    seq_number = 0
+
+
+    @staticmethod
+    def remove_by_message(message):
+        to_remove = []
+        for file in File.files:
+            if file.message == message:
+                to_remove.append(message)
+        for file in to_remove:
+            File.files.remove(file)
+
+
+    def __init__(self, name, message):
+        self.name = name
+        self.message = message
+
+        if File.seq_number > File.max_seq_number:
+            raise RuntimeError("Max number of files exceeded")
+        self.id = File.seq_number
+        File.seq_number += 1
+
+        dt = datetime.now(timezone.utc)
+        self.timestamp = dt.strftime("%a, %d %b %Y %H:%M:%S %Z")
+
+        self.name_unique = append_id_to_filename(self.id, name, File.max_seq_number)
+
+        File.files.insert(0, self)
+
+
+@app.template_test('channel')
+def is_channel(receiver):
+    return isinstance(receiver, Channel)
+
+@app.template_test('user')
+def is_user(receiver):
+    return isinstance(receiver, User)
+
+
+UPLOAD_FOLDER = 'uploads'
+
+# Create upload directory
+try:
+    files = os.listdir(UPLOAD_FOLDER)
+except FileNotFoundError:
+    os.mkdir(UPLOAD_FOLDER)
+
+# This is the path to the upload directory
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+# These are the extension that we are accepting to be uploaded
+app.config['ALLOWED_EXTENSIONS'] = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
+
+# For a given file, return whether it's an allowed type or not
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1] in app.config['ALLOWED_EXTENSIONS']
+
 
 
 from flask import jsonify

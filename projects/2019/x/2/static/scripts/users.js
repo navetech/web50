@@ -12,7 +12,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (user.id === session_user_id) {
             same_user = true;
         }
-        
+
+        const d = new Date(user.timestamp);
+        console.log(d)
+        user.timestamp = d.toString();
+
         const context = {
             user: user,
             same_user: same_user

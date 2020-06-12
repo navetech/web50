@@ -48,3 +48,19 @@ def apology(message, code=400):
             s = s.replace(old, new)
         return s
     return render_template("apology.html", top=code, bottom=escape(message)), code
+
+
+def append_id_to_filename(file_id, filename, max_seq_number):
+
+    # Append file id precededed by zeros to the beginning of filename
+    d = 0
+    n = max_seq_number
+    while n > 0:
+        d += 1
+        n //= 10
+    f = "0" + str(d)
+    p = "{:" + f + "}"
+    x = f"{p}".format(file_id)
+    appended_name = x + "-" + filename
+
+    return appended_name
