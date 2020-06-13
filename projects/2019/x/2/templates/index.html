@@ -2,36 +2,71 @@
 <html lang="en">
     <head>
         <script>
-            console.log("index")
-            document.addEventListener('DOMContentLoaded', () => {
-                console.log("loaded")
+document.addEventListener('DOMContentLoaded', () => {
 
-                // Initialize new request
-                const request = new XMLHttpRequest();
-                request.open('POST', '/');
+    let url = window.location.href;
 
-                // Callback function for when request completes
-                request.onload = () => {
-                    console.log("returned");
-                }
+    url += "?params=true"
 
-                // Add data to send with request
-                const data = new FormData();
-                const options = Intl.DateTimeFormat().resolvedOptions()
-                data.append("locale", options.locale);
-                data.append("timezone", options.timeZone);
+    const options = Intl.DateTimeFormat().resolvedOptions();
+    url += "&locale=" + options.locale;
+//    data.append("locale", options.locale);
+    url += "&timezone=" + options.timeZone;
+//    data.append("timezone", options.timeZone);
 
-                const d = new Date();
-                data.append("timezone-offset", - d.getTimezoneOffset() * 60);
+    const d = new Date();
+    url += "&timezone-offset=" + (- d.getTimezoneOffset() * 60);
+//    data.append("timezone-offset", - d.getTimezoneOffset() * 60);
 
-                // Send request
-                request.send(data);
+    // Initialize new request
+    const request = new XMLHttpRequest();
 
-                return true;
-            });
-        </script>
+    request.open("GET", url, true);
+    console.log("TRUE")
+
+        // Callback function for when request completes
+        request.onload = () => {
+
+    console.log(window.location.href)
+    window.location.href += "login";
+    console.log(window.location.href)
+}
+
+
+//    request.open("GET", "demo_get2.asp?fname=Henry&lname=Ford", true);
+    request.send();
+
+});
+
+/*
+    request.open('POST', '/', true);
+
+    // Callback function for when request completes
+    request.onload = () => {
+
+        console.log(window.location.href)
+        window.location.href += "login";
+        console.log(window.location.href)
+       }
+
+    // Add data to send with request
+    const data = new FormData();
+
+    const options = Intl.DateTimeFormat().resolvedOptions()
+    data.append("locale", options.locale);
+    data.append("timezone", options.timeZone);
+
+    const d = new Date();
+    data.append("timezone-offset", - d.getTimezoneOffset() * 60);
+
+    // Send request
+    request.send(data);
+    console.log("TRUE")
+    return true;
+});
+*/
+</script>
     </head>
     <body>
-        index.html
     </body>
 </html>

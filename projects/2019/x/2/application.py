@@ -455,37 +455,105 @@ def session_():
     return jsonify(user_id)
 
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/", methods=["GET"])
+#@app.route("/", methods=["GET", "POST"])
 #@login_required
-@login_check(User.users)
+#@login_check(User.users)
 def index():
     """ Home page """
 
     # User reached route via GET (as by clicking a link or via redirect)
     if request.method == "GET":
-        return redirect("/users")
+
+        # Set session locale and timezone
+        print("GET index")
+        session.clear()
+
+        params = request.args.get("params")
+        if not params:
+            return render_template("index.html")
+
+        loc = request.args.get("locale")
+        if loc is not None:
+            session["locale"] = loc
+        else:
+            session["locale"] = "en-US"
+        print(session["locale"])
+
+        dt = datetime.now(timezone.utc)
+
+        tz = request.args.get("timezone")
+        if tz is not None:
+            session["timezone"] = tz
+        else:
+            session["timezone"] = timezone.utc.tzname(dt)
+        print(session["timezone"])
+
+        timezone_offset = request.args.get("timezone-offset")
+        if timezone_offset is not None:
+            try:
+                session["timezone_offset"] = int(timezone_offset)
+            except ValueError:
+                session["timezone_offset"] = timezone.utc.utcoffset(dt).seconds
+        else:
+            session["timezone_offset"] = timezone.utc.utcoffset(dt).seconds
+        print(session["timezone_offset"])
+
+        return redirect("/login")
+
+#        if loc is None and tz is None and timezone_offset is None:
+ #           return render_template("index.html")
+  #      else:
+   #         return redirect("/login")
 
     # User reached route via POST (as by submitting a form via POST)
     elif request.method == "POST":
 
         # Set session locale and timezone
+        print("index")
         session.clear()
-        session["locale"] = request.form.get("locale")
+
+        loc = request.form.get("locale")
+        if loc is not None:
+            session["locale"] = loc
+        else:
+            session["locale"] = "en-US"
         print(session["locale"])
-        session["timezone"] = request.form.get("timezone")
+
+        dt = datetime.now(timezone.utc)
+
+        tz = request.form.get("timezone")
+        if tz is not None:
+            session["timezone"] = tz
+        else:
+            session["timezone"] = timezone.utc.tzname(dt)
         print(session["timezone"])
-        session["timezone_offset"] = request.form.get("timezone-offset")
+
+        timezone_offset = request.form.get("timezone-offset")
+        if timezone_offset is not None:
+            try:
+                session["timezone_offset"] = int(timezone_offset)
+            except ValueError:
+                session["timezone_offset"] = timezone.utc.utcoffset(dt).seconds
+        else:
+            session["timezone_offset"] = timezone.utc.utcoffset(dt).seconds
         print(session["timezone_offset"])
 
         # Redirect page
-        return redirect("/register")
+        return redirect("/login")
 
     # Redirect page
-    return redirect("/register")
+    return redirect("/login")
+
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
     """Register a new user"""
+
+    user_id = session.get("user_id")
+    if user_id is not None:
+        return redirect("/")
+
 
     # User reached route via GET (as by clicking a link or via redirect)
     if request.method == "GET":
@@ -504,40 +572,11 @@ def register():
         if user is not None:
             return apology("user already exists", 403)
 
-        dt = datetime.now(timezone.utc)
-        print("timezone utc")
-        print(timezone.utc.utcoffset(dt))
-        print(timezone.utc.dst(dt))
-        print(timezone.utc.tzname(dt))
-        print(timezone.utc.fromutc(dt))
-
-
-        # Get locale
-        loc = locale.getlocale(locale.LC_CTYPE)
-        print("LOCALE")
-        print(loc)
-        (language_code, encoding) = loc
-        # language_code format returned by getlocale is like 'pt_BR' but 
-        # language_code format required by setlocale is like 'pt-BR' 
-        language_code = language_code.replace("_", "-", 1)
-#        locale.setlocale(locale.LC_TIME, language_code)
-
-        # Get local time zone
-        lt = time.localtime()   # localtime returns tm_gmtoff in seconds
-        gmt_offset = lt.tm_gmtoff
-
-        print("localtime")
-        print(lt.tm_zone)
-        print(lt.tm_gmtoff)
-        print(lt.tm_isdst)
-
-
         # Set session locale and timezone
         print("request")
         session.clear()
 
         loc = request.form.get("locale")
-        print(loc)
         if loc is not None:
             session["locale"] = loc
         else:
