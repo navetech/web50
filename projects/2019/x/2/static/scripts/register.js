@@ -5,12 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Initialize new request
         const request = new XMLHttpRequest();
         const name = document.querySelector('#name').value;
-        request.open('POST', '/register');
-
-        // Callback function for when request completes
-        request.onload = () => {
-
-        }
+        request.open('POST', '/register', false);
 
         // Add data to send with request
         const data = new FormData();
@@ -25,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Send request
         request.send(data);
-        return false;
+        return true;
     };
 
 });

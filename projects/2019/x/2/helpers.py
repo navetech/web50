@@ -68,57 +68,36 @@ def append_id_to_filename(file_id, filename, max_seq_number):
 
 from datetime import tzinfo, timedelta, datetime
 
-ZERO = timedelta(0)
-HOUR = timedelta(hours=1)
-SECOND = timedelta(seconds=1)
-
-# A class capturing the platform's idea of local time.
-# (May result in wrong values on historical times in
-#  timezones where UTC offset and/or the DST rules had
-#  changed in the past.)
-import time as _time
-
-STDOFFSET = timedelta(seconds = -_time.timezone)
-if _time.daylight:
-    DSTOFFSET = timedelta(seconds = -_time.altzone)
-else:
-    DSTOFFSET = STDOFFSET
-
-DSTDIFF = DSTOFFSET - STDOFFSET
-
 class ClientTimezone(tzinfo):
-
-    def fromutc(self, dt):
-        assert dt.tzinfo is self
-        stamp = (dt - datetime(1970, 1, 1, tzinfo=self)) // SECOND
-        args = _time.localtime(stamp)[:6]
-        dst_diff = DSTDIFF // SECOND
-        # Detect fold
-        fold = (args == _time.localtime(stamp - dst_diff))
-        return datetime(*args, microsecond=dt.microsecond,
-                        tzinfo=self, fold=fold)
 
     def utcoffset(self, dt):
         offset = session.get("timezone_offset")
-        if offset:
-            return timedelta(seconds=offset]
-        else:
-            return timedelta(0)
+        return timedelta(seconds=offset)
 
     def dst(self, dt):
-        if self._isdst(dt):
-            return DSTDIFF
-        else:
-            return ZERO
+        return timedelta(0)
 
     def tzname(self, dt):
-        return _time.tzname[self._isdst(dt)]
+        return session.get("timezone")
 
-    def _isdst(self, dt):
-        tt = (dt.year, dt.month, dt.day,
-              dt.hour, dt.minute, dt.second,
-              dt.weekday(), 0, 0)
-        stamp = _time.mktime(tt)
-        tt = _time.localtime(stamp)
-        return tt.tm_isdst > 0
 
+import locale
+
+def get_timestamp():
+    tz = ClientTimezone()
+    dt = datetime.now(tz)
+
+    loc_save = locale.getlocale(locale.LC_CTYPE)
+    loc = session.get("locale")
+    locale.setlocale(locale.LC_TIME, loc)
+
+#   timestamp = dt.isoformat()
+    timestamp = dt.strftime("%a, %d %b %Y %H:%M:%S %Z")
+
+    (language_code, encoding) = loc_save
+    # language_code format returned by getlocale is like 'pt_BR' but 
+    # language_code format required by setlocale is like 'pt-BR' 
+    language_code = language_code.replace("_", "-", 1)
+    locale.setlocale(locale.LC_TIME, language_code)
+
+    return timestamp
