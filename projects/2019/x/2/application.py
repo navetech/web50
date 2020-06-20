@@ -451,7 +451,7 @@ from flask import jsonify
 
 @app.route("/session", methods=["GET"])
 def session_():
-    """ Session data (get and send to client """
+    """ Session data (get and send session data to client """
 
     user_id = session.get("user_id")
     return jsonify(user_id)
@@ -465,17 +465,22 @@ def home():
     redirect("/users")
 
 
-@app.route("/", methods=["GET"])
-#@app.route("/", methods=["GET", "POST"])
-#@login_required
-#@login_check(User.users)
-@not_login_required
+#@app.route("/", methods=["GET"])
+@app.route("/", methods=["GET", "POST"])
 def index():
-    """ Initial page (blank page, with only a script to get locale and timezone """
+    """ Initial page (blank page, with only a script to get locale and timezone from client """
+
+    # If logged in, redirect to home page
+    user_id = session.get("user_id")
+    if user_id is not None:
+        return redirect("/home")
 
     # User reached route via GET (as by clicking a link or via redirect)
     if request.method == "GET":
+        print("GET index")
+        return render_template("index.html")
 
+        """
         # Set session locale and timezone
         print("GET index")
         session.clear()
@@ -516,12 +521,13 @@ def index():
  #           return render_template("index.html")
   #      else:
    #         return redirect("/login")
+        """
 
     # User reached route via POST (as by submitting a form via POST)
     elif request.method == "POST":
 
         # Set session locale and timezone
-        print("index")
+        print("POST index")
         session.clear()
 
         loc = request.form.get("locale")
@@ -550,22 +556,25 @@ def index():
             session["timezone_offset"] = timezone.utc.utcoffset(dt).seconds
         print(session["timezone_offset"])
 
-        # Redirect page
-        return redirect("/login")
+        session["params_set"] = True
 
-    # Redirect page
-    return redirect("/login")
+        # Redirect to login page
+        return redirect("/login")
 
 
 @app.route("/register", methods=["GET", "POST"])
-@not_login_required
 def register():
     """Register a new user"""
 
-#    user_id = session.get("user_id")
-#    if user_id is not None:
-#        return redirect("/home")
+    # If not logged in, redirect to logout
+    user_id = session.get("user_id")
+    if user_id is not None:
+        return redirect("/logout")
 
+    # If not yet accessed intitial page, redirect to initial page 
+    params_set = session.get("params_set")
+    if not params_set:
+        return redirect ("/")
 
     # User reached route via GET (as by clicking a link or via redirect)
     if request.method == "GET":
@@ -608,10 +617,10 @@ def register():
         data = user.to_dict()
         print("REGISTER")
         print(data)
-        socketio.emit('announce register', data)
+#        socketio.emit('announce register', data)
 
-        # Redirect user to home page
-        return redirect("/home")
+        # Redirect to home page
+        return redirect("/users")
 
     # User reached route not via GET neither via POST
     else:
@@ -620,9 +629,18 @@ def register():
 
 
 @app.route("/login", methods=["GET", "POST"])
-@not_login_required
 def login():
     """Log user in"""
+
+    # If not logged in, redirect to logout
+    user_id = session.get("user_id")
+    if user_id is not None:
+        return redirect("/logout")
+
+    # If not yet accessed intitial page, redirect to initial page 
+    params_set = session.get("params_set")
+    if not params_set:
+        return redirect ("/")
 
     # User reached route via GET (as by clicking a link or via redirect)
     if request.method == "GET":
@@ -658,7 +676,7 @@ def login():
         flash('You were successfully logged in')
         flash(user.name)
         
-        # Redirect user to home page
+        # Redirect to home page
         return redirect("/home")
 
     # User reached route not via GET neither via POST
@@ -672,13 +690,13 @@ def login():
 def logout():
     """ Log user out"""
 
-    # Log out user
+    # Log out
     user = User.get_by_id(session.get("user_id"))
     if user is not None:
         user.logout(session.get("login_id"))
-    session.clear()
+        session.clear()
 
-    # Redirect user to initial page
+    # Redirect to initial page
     return redirect("/")
 
 
@@ -688,6 +706,11 @@ def logout():
 def unregister():
     """Unregister the user"""
 
+    # If not logged, redirect to initial page
+    user = User.get_by_id(session.get("user_id"))
+    if user is None:
+        return redirect("/")
+
     # User reached route via GET (as by clicking a link or via redirect)
     if request.method == "GET":
         return render_template("unregister.html")
@@ -695,18 +718,23 @@ def unregister():
     # User reached route via POST (as by submitting a form via POST)
     elif request.method == "POST":
 
+        # If confirmed:
         if request.form.get("confirm"):
-
             # Remove user
             user = User.get_by_id(session.get("user_id"))
             if user is not None:
                 data = user.to_dict()
-                socketio.emit('announce unregister', data)
+#                socketio.emit('announce unregister', data)
                 user.remove()
-            session.clear()
+                session.clear()
 
-        # Redirect user to initial page
-        return redirect("/")
+            # Redirect user to initial page
+            return redirect("/")
+
+        # If not confirmed
+        else:
+            # Redirect to home page
+            return redirect("/home")
 
     # User reached route not via GET neither via POST
     else:
@@ -778,6 +806,8 @@ def users_():
 
     # User reached route via GET (as by clicking a link or via redirect)
     if request.method == "GET":
+        print("users GET")
+        print(User.users)
         return render_template("users.html", users=User.users)
     else:
         return apology("invalid method", 403)

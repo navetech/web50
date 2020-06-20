@@ -2,8 +2,9 @@
 <html lang="en">
     <head>
         <script>
-document.addEventListener('DOMContentLoaded', () => {
+            document.addEventListener('DOMContentLoaded', () => {
 
+/*
     let url = window.location.href;
 
     url += "?params=true"
@@ -37,36 +38,37 @@ document.addEventListener('DOMContentLoaded', () => {
     request.send();
 
 });
-
-/*
-    request.open('POST', '/', true);
-
-    // Callback function for when request completes
-    request.onload = () => {
-
-        console.log(window.location.href)
-        window.location.href += "login";
-        console.log(window.location.href)
-       }
-
-    // Add data to send with request
-    const data = new FormData();
-
-    const options = Intl.DateTimeFormat().resolvedOptions()
-    data.append("locale", options.locale);
-    data.append("timezone", options.timeZone);
-
-    const d = new Date();
-    data.append("timezone-offset", - d.getTimezoneOffset() * 60);
-
-    // Send request
-    request.send(data);
-    console.log("TRUE")
-    return true;
-});
 */
-</script>
+                // Initialize new request
+                const request = new XMLHttpRequest();
+                console.log("index.html POST")
+                request.open('POST', '/', true);
+
+                // Callback function for when request completes
+                request.onload = () => {
+                    console.log(window.location.href)
+                    window.location.href += "login";
+                    console.log(window.location.href)
+                }
+
+                // Add data to send with request
+                const data = new FormData();
+
+                const options = Intl.DateTimeFormat().resolvedOptions()
+                data.append("locale", options.locale);
+                data.append("timezone", options.timeZone);
+
+                const d = new Date();
+                data.append("timezone-offset", - d.getTimezoneOffset() * 60);
+
+                // Send request
+                request.send(data);
+                console.log("TRUE")
+                return false;
+            });
+        </script>
     </head>
+
     <body>
     </body>
 </html>
