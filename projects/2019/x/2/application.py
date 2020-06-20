@@ -8,7 +8,7 @@ from flask import Flask, redirect, request, render_template, session, flash
 from flask_socketio import SocketIO, emit
 
 import my_application
-from helpers import login_check, apology, append_id_to_filename, get_timestamp
+from helpers import login_check, apology, append_id_to_filename, get_timestamp, not_login_required
 
 
 
@@ -42,7 +42,8 @@ class Communicator:
         self.id = Communicator.seq_number
         Communicator.seq_number += 1
 
-        self.timestamp = get_timestamp()
+        dt = datetime.now(timezone.utc)
+        self.timestamp = dt.isoformat()
 
 
     def to_dict(self):
@@ -450,17 +451,27 @@ from flask import jsonify
 
 @app.route("/session", methods=["GET"])
 def session_():
-    """ Session data """
+    """ Session data (get and send to client """
+
     user_id = session.get("user_id")
     return jsonify(user_id)
+
+
+@app.route("/home", methods=["GET"])
+@login_check(User.users)
+def home():
+    """ Home page """
+
+    redirect("/users")
 
 
 @app.route("/", methods=["GET"])
 #@app.route("/", methods=["GET", "POST"])
 #@login_required
 #@login_check(User.users)
+@not_login_required
 def index():
-    """ Home page """
+    """ Initial page (blank page, with only a script to get locale and timezone """
 
     # User reached route via GET (as by clicking a link or via redirect)
     if request.method == "GET":
@@ -547,12 +558,13 @@ def index():
 
 
 @app.route("/register", methods=["GET", "POST"])
+@not_login_required
 def register():
     """Register a new user"""
 
-    user_id = session.get("user_id")
-    if user_id is not None:
-        return redirect("/")
+#    user_id = session.get("user_id")
+#    if user_id is not None:
+#        return redirect("/home")
 
 
     # User reached route via GET (as by clicking a link or via redirect)
@@ -572,44 +584,13 @@ def register():
         if user is not None:
             return apology("user already exists", 403)
 
-        # Set session locale and timezone
-        print("request")
-        session.clear()
-
-        loc = request.form.get("locale")
-        if loc is not None:
-            session["locale"] = loc
-        else:
-            session["locale"] = "en-US"
-        print(session["locale"])
-
-        dt = datetime.now(timezone.utc)
-
-        tz = request.form.get("timezone")
-        if tz is not None:
-            session["timezone"] = tz
-        else:
-            session["timezone"] = timezone.utc.tzname(dt)
-        print(session["timezone"])
-
-        timezone_offset = request.form.get("timezone-offset")
-        if timezone_offset is not None:
-            try:
-                session["timezone_offset"] = int(timezone_offset)
-            except ValueError:
-                session["timezone_offset"] = timezone.utc.utcoffset(dt).seconds
-        else:
-            session["timezone_offset"] = timezone.utc.utcoffset(dt).seconds
-        print(session["timezone_offset"])
-
         # Register user
         user = User(name)
 
         # Log out previous user
-        previous_user = User.get_by_id(session.get("user_id"))
-        if previous_user is not None:
-            previous_user.logout(session.get("login_id"))
-        session.clear()
+#        previous_user = User.get_by_id(session.get("user_id"))
+#        if previous_user is not None:
+#            previous_user.logout(session.get("login_id"))
 
         # Login user
         login = user.login()
@@ -625,10 +606,12 @@ def register():
 
         # Emit event
         data = user.to_dict()
+        print("REGISTER")
+        print(data)
         socketio.emit('announce register', data)
 
         # Redirect user to home page
-        return redirect("/users")
+        return redirect("/home")
 
     # User reached route not via GET neither via POST
     else:
@@ -637,6 +620,7 @@ def register():
 
 
 @app.route("/login", methods=["GET", "POST"])
+@not_login_required
 def login():
     """Log user in"""
 
@@ -658,16 +642,14 @@ def login():
             return apology("user does not exist", 403)
 
         # Log out previous user
-        previous_user = User.get_by_id(session.get("user_id"))
-        if previous_user is not None:
-            previous_user.logout(session.get("login_id"))
-        session.clear()
+#        previous_user = User.get_by_id(session.get("user_id"))
+#        if previous_user is not None:
+#            previous_user.logout(session.get("login_id"))
 
         # Login user
         login = user.login()
 
         # Remember which user has logged in
-        session.clear()
         session["user_id"] = user.id
         session["user_name"] = user.name
         session["login_id"] = login.id
@@ -677,7 +659,7 @@ def login():
         flash(user.name)
         
         # Redirect user to home page
-        return redirect("/")
+        return redirect("/home")
 
     # User reached route not via GET neither via POST
     else:
@@ -696,7 +678,7 @@ def logout():
         user.logout(session.get("login_id"))
     session.clear()
 
-    # Redirect user to home page
+    # Redirect user to initial page
     return redirect("/")
 
 
@@ -723,7 +705,7 @@ def unregister():
                 user.remove()
             session.clear()
 
-        # Redirect user to home page
+        # Redirect user to initial page
         return redirect("/")
 
     # User reached route not via GET neither via POST
