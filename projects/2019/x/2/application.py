@@ -274,7 +274,7 @@ class Log:
     def to_dict(self):
         return {
             "id": self.id,
-            "timestamp" : self.timestamp
+            "timestamp": self.timestamp
         }
 
 
@@ -617,7 +617,7 @@ def register():
         data = user.to_dict()
         print("REGISTER")
         print(data)
-#        socketio.emit('announce register', data)
+        socketio.emit('announce register', data)
 
         # Redirect to home page
         return redirect("/users")
@@ -724,7 +724,7 @@ def unregister():
             user = User.get_by_id(session.get("user_id"))
             if user is not None:
                 data = user.to_dict()
-#                socketio.emit('announce unregister', data)
+                socketio.emit('announce unregister', data)
                 user.remove()
                 session.clear()
 

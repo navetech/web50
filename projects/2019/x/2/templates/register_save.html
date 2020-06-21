@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+
+<!--
+{% block scripts %}
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.11/handlebars.min.js"></script>
+
+    <script id="user" type="text/x-handlebars-template">
+        {% raw -%}
+            <li id="user{{ user.id }}" class="list-group-item ln-container01 item-show">
+                {{#if same_user }}
+                    <span class="ln-highlight">{{ user.name }}</span>
+                {{else}}
+                <a class="ln-highlight" href="/message-to-user/{{ user.id }}">{{ user.name }}</a>
+                {{/if}}
+                registered on
+                <span class="ln-highlight">{{ user.timestamp }}</span>
+                {{#if user.current_logins }}
+                    online
+                    <span class="ln-highlight">{{ user.current_logins.[0].timestamp }}</span>
+                {{/if}}
+                </li>
+        {%- endraw %}
+    </script>
+
+    <script src="/static/scripts/register.js"></script>
+{% endblock %}
+-->
+
+{% block title %}
+    Register
+{% endblock %}
+
+{% block main %}
+    <ul class="list-group">
+        <li class="list-group-item ln-container01">
+            <form id="form" action="/register" method="post">
+                <div class="form-group">
+                    <label for="name">Name</label>
+                    <input required autofocus autocomplete="on" class="form-control" id= "name" name="name" placeholder="Name" type="text">
+                </div>
+
+                <button class="btn btn-dark" type="submit">Register</button>
+            </form>
+        </li>
+    </ul>
+{% endblock %}

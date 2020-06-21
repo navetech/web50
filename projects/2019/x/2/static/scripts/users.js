@@ -1,5 +1,3 @@
-const template = Handlebars.compile(document.querySelector('#user').innerHTML);
-
 document.addEventListener('DOMContentLoaded', () => {
 
 /*
@@ -73,6 +71,8 @@ const timezone = options.timeZone;
 console.log("timezone");
 console.log(timezone);
 
+    var template = Handlebars.compile(document.querySelector('#usuario').innerHTML);
+    console.log(template);
 
     // Connect to websocket
     var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
@@ -98,6 +98,7 @@ console.log(timezone);
             same_user: same_user
         }
 
+        console.log(template);
         const content = template(context);
         const old_content = document.querySelector('#users').innerHTML
         document.querySelector('#users').innerHTML = content + old_content;
