@@ -6,7 +6,7 @@
 
     <script id="channel" type="text/x-handlebars-template">
         {% raw -%}
-            <li id="channel{{ channel.id }}" class="list-group-item ln-container01 item-show">
+            <li id="channel{{ channel.id }}" class="list-group-item ln-container01 channel-item item-show">
                 <a class="ln-highlight" href="/channel-messages/{{ channel.id }}">{{ channel.name }}</a>
                 created by
                 {{#if same_user }}
@@ -20,6 +20,12 @@
         {%- endraw %}
     </script>
 
+    <script id="channel-none" type="text/x-handlebars-template">
+        {% raw -%}
+            <li id="channel-null" class="list-group-item ln-container01 item-show">No channels</li>
+        {%- endraw %}
+    </script>
+
     <script src="/static/scripts/channels.js"></script>
 {% endblock %}
 
@@ -28,7 +34,7 @@
 {% endblock %}
 
 {% block main %}
-    <ul class="list-group">
+    <ul class="list-group ln-group-width-auto">
         <li class="list-group-item ln-container01">
             <form action="/channels" method="post">
                 <div class="form-group">
@@ -43,7 +49,7 @@
 
     <ul id="channels" class="list-group pt-4 ln-group-width-auto">
         {% for channel in channels %}
-            <li id="channel{{ channel.id }}" class="list-group-item ln-container01 item-hide">
+            <li id="channel{{ channel.id }}" class="list-group-item ln-container01 channel-item item-hide">
                 <a class="ln-highlight" href="{{ url_for('channel_messages', id=channel.id) }}">{{ channel.name }}</a>
                 created by
                 {% if channel.creator.id == session.user_id %}
@@ -55,9 +61,9 @@
                 <span class="ln-highlight">{{ channel.timestamp }}</span>
             </li>
 
-                <div class="ln-group-divider"></div>
+            <div class="ln-group-divider"></div>
         {% else %}
-            <li class="list-group-item ln-container01">No channels</li>
+            <li id="channel-null" class="list-group-item ln-container01 item-hide">No channels</li>
         {% endfor %}
     </ul>
 {% endblock %}

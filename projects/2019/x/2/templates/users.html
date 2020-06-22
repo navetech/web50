@@ -6,7 +6,7 @@
 
     <script id="user" type="text/x-handlebars-template">
         {% raw -%}
-            <li id="user{{ user.id }}" class="list-group-item ln-container01 item-show">
+            <li id="user{{ user.id }}" class="list-group-item ln-container01 user-item item-show">
                 {{#if same_user }}
                     <span class="ln-highlight">{{ user.name }}</span>
                 {{else}}
@@ -42,6 +42,12 @@
         {%- endraw %}
     </script>
 
+    <script id="user-none" type="text/x-handlebars-template">
+        {% raw -%}
+            <li id="user-null" class="list-group-item ln-container01 item-show">No users</li>
+        {%- endraw %}
+    </script>
+
     <script src="/static/scripts/users.js"></script>
 {% endblock %}
 
@@ -50,9 +56,9 @@
 {% endblock %}
 
 {% block main %}
-    <ul id="users" class="list-group pt-4 ln-group-width-auto">
+    <ul id="users" class="list-group ln-group-width-auto">
         {% for user in users %}
-            <li id="user{{ user.id }}" class="list-group-item ln-container01 item-hide">
+            <li id="user{{ user.id }}" class="list-group-item ln-container01 user-item item-hide">
                 {% if user.id == session.user_id %}
                     <span class="ln-highlight">{{ user.name }}</span>
                 {% else %}
@@ -70,7 +76,7 @@
 
             <div class="ln-group-divider"></div>
         {% else %}
-            <li class="list-group-item ln-container01">No users</li>
+            <li id="user-null" class="list-group-item ln-container01 item-hide">No users</li>
         {% endfor %}
     </ul>
 {% endblock %}

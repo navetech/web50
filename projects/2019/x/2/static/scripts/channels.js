@@ -1,11 +1,14 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    const template_create = Handlebars.compile(document.querySelector('#channel').innerHTML);
+    let items_count = document.querySelectorAll(".channel-item").length;
+
+    const template_item = Handlebars.compile(document.querySelector('#channel').innerHTML);
+    const template_item_none = Handlebars.compile(document.querySelector('#channel-none').innerHTML);
 
     // Connect to websocket
     var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
 
-    // When a user is registered, add user
+    // When a channel is created, add channel
     socket.on('announce create channel', channel => {
 
         let same_user = false;
@@ -18,75 +21,65 @@ document.addEventListener('DOMContentLoaded', () => {
             same_user: same_user
         }
 
-        const content = template_create(context);
+        const content = template_item(context);
         const old_content = document.querySelector('#channels').innerHTML
         document.querySelector('#channels').innerHTML = content + old_content;
+        items_count++;
 
-        const id = `#channel${channel.id}`
-        const element = document.querySelector(id)
+        const id_elem_add = `#channel${channel.id}`;
+        const elem_add = document.querySelector(id_elem_add);
 
-        element.addEventListener('animationend', () =>  {
-            element.style.animationPlayState = 'paused';
-            let clo = element.getAttribute("class");
-            let cln = clo.replace("item-show", "item-hide");
-            element.setAttribute("class", cln);
+        elem_add.addEventListener('animationend', () =>  {
+            elem_add.style.animationPlayState = 'paused';
+            let class_old = elem_add.getAttribute("class");
+            let class_new = class_old.replace("item-show", "item-hide");
+            elem_add.setAttribute("class", class_new);
+
+            const id_elem_remove = `#channel-null`;
+            const elem_remove = document.querySelector(id_elem_remove);
+    
+            if (elem_remove) {
+                elem_remove.addEventListener('animationend', () =>  {
+                    elem_remove.remove();
+                });
+                elem_remove.style.animationPlayState = 'running';
+            }
         });
-
-        element.style.animationPlayState = 'running';
-    });
-
-/*
-    // When a user is unregistered, remove user
-    socket.on('announce unregister', user => {
-
-        const id = `#user${user.id}`;
-        const element = document.querySelector(id);
-
-        element.addEventListener('animationend', () =>  {
-            element.remove();
-        });
-
-        element.style.animationPlayState = 'running';
+        elem_add.style.animationPlayState = 'running';
     });
 
 
-    // When a user login, update user
-    socket.on('announce login', user => {
+    // When a channel is removed, remove channel
+    socket.on('announce remove channel', channel => {
+        const id_elem_remove = `#channel${channel.id}`;
+        const elem_remove = document.querySelector(id_elem_remove);
 
-        let same_user = false;
-        if (user.id === session_user_id) {
-            same_user = true;
+        if (elem_remove) {
+
+            elem_remove.addEventListener('animationend', () =>  {
+                elem_remove.remove();
+
+                items_count--;
+                if ((items_count < 1) &&
+                    (document.querySelector(`#channel-null`) == null)) {
+
+                    const content = template_item_none();
+                    const old_content = document.querySelector('#channels').innerHTML;
+                    document.querySelector('#channels').innerHTML = content + old_content;
+            
+                    const id_elem_add = `#channel-null`;
+                    const elem_add = document.querySelector(id_elem_add);
+            
+                    elem_add.addEventListener('animationend', () =>  {
+                        elem_add.style.animationPlayState = 'paused';
+                        let class_old = elem_add.getAttribute("class");
+                        let class_new = class_old.replace("item-show", "item-hide");
+                        elem_add.setAttribute("class", class_new);
+                    });
+                    elem_add.style.animationPlayState = 'running';
+                }
+            });
+            elem_remove.style.animationPlayState = 'running';
         }
-
-        const context = {
-            user: user,
-            same_user: same_user
-        }
-
-        const content = template_log(context);
-        const id = `#user${user.id}`
-        const element = document.querySelector(id)
-        element.innerHTML = content
     });
-
-
-    // When a user logout, update user
-    socket.on('announce logout', user => {
-
-        let same_user = false;
-        if (user.id === session_user_id) {
-            same_user = true;
-        }
-
-        const context = {
-            user: user,
-            same_user: same_user
-        }
-
-        const content = template_log(context);
-        const id = `#user${user.id}`
-        const element = document.querySelector(id)
-        element.innerHTML = content
-    });
-*/
 });

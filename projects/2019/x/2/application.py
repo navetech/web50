@@ -96,15 +96,22 @@ class Channel(Receiver):
     channels = []
 
     @staticmethod
+    def remove_by_list(to_remove):
+        for channel in to_remove:
+            Channel.channels.remove(channel)
+            channel.remove()
+            data = channel.to_dict()
+            socketio.emit('announce remove channel', data)
+
+
+    @staticmethod
     def remove_by_creator(creator):
         to_remove = []
         for channel in Channel.channels:
             if channel.creator == creator:
                 to_remove.append(channel)
 
-        for channel in to_remove:
-            Channel.channels.remove(channel)
-            channel.remove()
+        Channel.remove_by_list(to_remove)
 
 
     @staticmethod
