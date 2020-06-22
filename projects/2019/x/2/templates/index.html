@@ -4,51 +4,13 @@
         <script>
             document.addEventListener('DOMContentLoaded', () => {
 
-/*
-    let url = window.location.href;
-
-    url += "?params=true"
-
-    const options = Intl.DateTimeFormat().resolvedOptions();
-    url += "&locale=" + options.locale;
-//    data.append("locale", options.locale);
-    url += "&timezone=" + options.timeZone;
-//    data.append("timezone", options.timeZone);
-
-    const d = new Date();
-    url += "&timezone-offset=" + (- d.getTimezoneOffset() * 60);
-//    data.append("timezone-offset", - d.getTimezoneOffset() * 60);
-
-    // Initialize new request
-    const request = new XMLHttpRequest();
-
-    request.open("GET", url, true);
-    console.log("TRUE")
-
-        // Callback function for when request completes
-        request.onload = () => {
-
-    console.log(window.location.href)
-    window.location.href += "login";
-    console.log(window.location.href)
-}
-
-
-//    request.open("GET", "demo_get2.asp?fname=Henry&lname=Ford", true);
-    request.send();
-
-});
-*/
                 // Initialize new request
                 const request = new XMLHttpRequest();
-                console.log("index.html POST")
                 request.open('POST', '/', true);
 
                 // Callback function for when request completes
                 request.onload = () => {
-                    console.log(window.location.href)
                     window.location.href += "login";
-                    console.log(window.location.href)
                 }
 
                 // Add data to send with request
@@ -63,7 +25,6 @@
 
                 // Send request
                 request.send(data);
-                console.log("TRUE")
                 return false;
             });
         </script>

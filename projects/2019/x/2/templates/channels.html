@@ -1,5 +1,28 @@
 {% extends "layout.html" %}
 
+{% block scripts %}
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js"></script>
+
+    <script id="channel" type="text/x-handlebars-template">
+        {% raw -%}
+            <li id="channel{{ channel.id }}" class="list-group-item ln-container01 item-show">
+                <a class="ln-highlight" href="/channel-messages/{{ channel.id }}">{{ channel.name }}</a>
+                created by
+                {{#if same_user }}
+                    <a class="ln-highlight" href="/user-messages-sent/{{ channel.creator.id }}">{{ channel.creator.name }}</a>
+                {{else}}
+                    <a class="ln-highlight" href="/message-to-user/{{ channel.creator.id }}">{{ channel.creator.name }}</a>
+                {{/if}}
+                on
+                <span class="ln-highlight">{{ channel.timestamp }}</span>
+            </li>
+        {%- endraw %}
+    </script>
+
+    <script src="/static/scripts/channels.js"></script>
+{% endblock %}
+
 {% block title %}
     Channels
 {% endblock %}
@@ -18,9 +41,9 @@
         </li>
     </ul>
 
-    <ul class="list-group pt-4 ln-group-width-auto">
+    <ul id="channels" class="list-group pt-4 ln-group-width-auto">
         {% for channel in channels %}
-            <li class="list-group-item ln-container01">
+            <li id="channel{{ channel.id }}" class="list-group-item ln-container01 item-hide">
                 <a class="ln-highlight" href="{{ url_for('channel_messages', id=channel.id) }}">{{ channel.name }}</a>
                 created by
                 {% if channel.creator.id == session.user_id %}

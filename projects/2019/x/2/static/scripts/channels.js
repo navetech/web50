@@ -1,29 +1,28 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    const template_reg = Handlebars.compile(document.querySelector('#user').innerHTML);
-    const template_log = Handlebars.compile(document.querySelector('#user-content').innerHTML);
+    const template_create = Handlebars.compile(document.querySelector('#channel').innerHTML);
 
     // Connect to websocket
     var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
 
     // When a user is registered, add user
-    socket.on('announce register', user => {
+    socket.on('announce create channel', channel => {
 
         let same_user = false;
-        if (user.id === session_user_id) {
+        if (channel.creator.id === session_user_id) {
             same_user = true;
         }
 
         const context = {
-            user: user,
+            channel: channel,
             same_user: same_user
         }
 
-        const content = template_reg(context);
-        const old_content = document.querySelector('#users').innerHTML
-        document.querySelector('#users').innerHTML = content + old_content;
+        const content = template_create(context);
+        const old_content = document.querySelector('#channels').innerHTML
+        document.querySelector('#channels').innerHTML = content + old_content;
 
-        const id = `#user${user.id}`
+        const id = `#channel${channel.id}`
         const element = document.querySelector(id)
 
         element.addEventListener('animationend', () =>  {
@@ -36,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
         element.style.animationPlayState = 'running';
     });
 
-
+/*
     // When a user is unregistered, remove user
     socket.on('announce unregister', user => {
 
@@ -89,4 +88,5 @@ document.addEventListener('DOMContentLoaded', () => {
         const element = document.querySelector(id)
         element.innerHTML = content
     });
+*/
 });

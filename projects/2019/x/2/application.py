@@ -3,12 +3,12 @@ import sys
 
 from datetime import datetime, timezone
 
-from flask import Flask, redirect, request, render_template, session, flash
+from flask import Flask, redirect, request, render_template, session, flash, jsonify
 #from flask_session import Session
 from flask_socketio import SocketIO, emit
 
 import my_application
-from helpers import login_check, apology, append_id_to_filename, get_timestamp, not_login_required
+from helpers import login_check, apology, append_id_to_filename
 
 
 
@@ -24,10 +24,6 @@ app.config.from_envvar('APPLICATION_SETTINGS')
 #app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 # Configure socket
 socketio = SocketIO(app)
-
-
-import time
-import locale
 
 
 class Communicator:
@@ -133,6 +129,12 @@ class Channel(Receiver):
         Channel.channels.insert(0, self)
 
 
+    def to_dict(self):
+        r = super().to_dict()
+        r['creator'] = self.creator.to_dict()
+        return r
+
+
 class User(Sender, Receiver):
     users = []
 
@@ -209,11 +211,6 @@ class User(Sender, Receiver):
         except:
             raise RuntimeError("remove(): User does not exist")
         super().remove()
-
-
-    def create_channel(self, name):
-        Channel(name, self)
-
 
 
     def to_dict(self):
@@ -437,6 +434,7 @@ except FileNotFoundError:
 
 # This is the path to the upload directory
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
 # These are the extension that we are accepting to be uploaded
 app.config['ALLOWED_EXTENSIONS'] = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
 
@@ -445,9 +443,6 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1] in app.config['ALLOWED_EXTENSIONS']
 
-
-
-from flask import jsonify
 
 @app.route("/session", methods=["GET"])
 def session_():
@@ -462,7 +457,7 @@ def session_():
 def home():
     """ Home page """
 
-    redirect("/users")
+    return redirect("/users")
 
 
 #@app.route("/", methods=["GET"])
@@ -477,57 +472,12 @@ def index():
 
     # User reached route via GET (as by clicking a link or via redirect)
     if request.method == "GET":
-        print("GET index")
         return render_template("index.html")
-
-        """
-        # Set session locale and timezone
-        print("GET index")
-        session.clear()
-
-        params = request.args.get("params")
-        if not params:
-            return render_template("index.html")
-
-        loc = request.args.get("locale")
-        if loc is not None:
-            session["locale"] = loc
-        else:
-            session["locale"] = "en-US"
-        print(session["locale"])
-
-        dt = datetime.now(timezone.utc)
-
-        tz = request.args.get("timezone")
-        if tz is not None:
-            session["timezone"] = tz
-        else:
-            session["timezone"] = timezone.utc.tzname(dt)
-        print(session["timezone"])
-
-        timezone_offset = request.args.get("timezone-offset")
-        if timezone_offset is not None:
-            try:
-                session["timezone_offset"] = int(timezone_offset)
-            except ValueError:
-                session["timezone_offset"] = timezone.utc.utcoffset(dt).seconds
-        else:
-            session["timezone_offset"] = timezone.utc.utcoffset(dt).seconds
-        print(session["timezone_offset"])
-
-        return redirect("/login")
-
-#        if loc is None and tz is None and timezone_offset is None:
- #           return render_template("index.html")
-  #      else:
-   #         return redirect("/login")
-        """
 
     # User reached route via POST (as by submitting a form via POST)
     elif request.method == "POST":
 
         # Set session locale and timezone
-        print("POST index")
         session.clear()
 
         loc = request.form.get("locale")
@@ -535,7 +485,6 @@ def index():
             session["locale"] = loc
         else:
             session["locale"] = "en-US"
-        print(session["locale"])
 
         dt = datetime.now(timezone.utc)
 
@@ -544,7 +493,6 @@ def index():
             session["timezone"] = tz
         else:
             session["timezone"] = timezone.utc.tzname(dt)
-        print(session["timezone"])
 
         timezone_offset = request.form.get("timezone-offset")
         if timezone_offset is not None:
@@ -554,7 +502,6 @@ def index():
                 session["timezone_offset"] = timezone.utc.utcoffset(dt).seconds
         else:
             session["timezone_offset"] = timezone.utc.utcoffset(dt).seconds
-        print(session["timezone_offset"])
 
         session["params_set"] = True
 
@@ -596,11 +543,6 @@ def register():
         # Register user
         user = User(name)
 
-        # Log out previous user
-#        previous_user = User.get_by_id(session.get("user_id"))
-#        if previous_user is not None:
-#            previous_user.logout(session.get("login_id"))
-
         # Login user
         login = user.login()
 
@@ -615,17 +557,10 @@ def register():
 
         # Emit event
         data = user.to_dict()
-        print("REGISTER")
-        print(data)
         socketio.emit('announce register', data)
 
         # Redirect to home page
         return redirect("/users")
-
-    # User reached route not via GET neither via POST
-    else:
-
-        return apology("invalid method", 403)
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -659,11 +594,6 @@ def login():
         if user is None:
             return apology("user does not exist", 403)
 
-        # Log out previous user
-#        previous_user = User.get_by_id(session.get("user_id"))
-#        if previous_user is not None:
-#            previous_user.logout(session.get("login_id"))
-
         # Login user
         login = user.login()
 
@@ -675,13 +605,13 @@ def login():
         # Report message
         flash('You were successfully logged in')
         flash(user.name)
-        
+
+        # Emit event
+        data = user.to_dict()
+        socketio.emit('announce login', data)
+
         # Redirect to home page
         return redirect("/home")
-
-    # User reached route not via GET neither via POST
-    else:
-        return apology("invalid method", 403)
 
 
 @app.route("/logout")
@@ -695,6 +625,10 @@ def logout():
     if user is not None:
         user.logout(session.get("login_id"))
         session.clear()
+
+        # Emit event
+        data = user.to_dict()
+        socketio.emit('announce logout', data)
 
     # Redirect to initial page
     return redirect("/")
@@ -720,6 +654,7 @@ def unregister():
 
         # If confirmed:
         if request.form.get("confirm"):
+
             # Remove user
             user = User.get_by_id(session.get("user_id"))
             if user is not None:
@@ -733,12 +668,9 @@ def unregister():
 
         # If not confirmed
         else:
+
             # Redirect to home page
             return redirect("/home")
-
-    # User reached route not via GET neither via POST
-    else:
-        return apology("invalid method", 403)
 
 
 @app.route("/channels", methods=["GET", "POST"])
@@ -770,10 +702,11 @@ def channels_():
         # Create channel
         channel = Channel(name, creator=user)
 
-        return render_template("channels.html", channels=Channel.channels)
+        # Emit event
+        data = channel.to_dict()
+        socketio.emit('announce create channel', data)
 
-    else:
-        return apology("invalid method", 403)
+        return render_template("channels.html", channels=Channel.channels)
 
 
 @app.route("/channel-messages/<int:id>")
@@ -804,13 +737,7 @@ def channel_messages(id):
 def users_():
     """ Show users """
 
-    # User reached route via GET (as by clicking a link or via redirect)
-    if request.method == "GET":
-        print("users GET")
-        print(User.users)
-        return render_template("users.html", users=User.users)
-    else:
-        return apology("invalid method", 403)
+    return render_template("users.html", users=User.users)
 
 
 @app.route("/user-messages-received/<int:id>")
