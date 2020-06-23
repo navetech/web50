@@ -3,7 +3,7 @@ import sys
 
 from datetime import datetime, timezone
 
-from flask import Flask, redirect, request, render_template, session, flash, jsonify
+from flask import Flask, redirect, request, render_template, session, flash, jsonify, url_for
 #from flask_session import Session
 from flask_socketio import SocketIO, emit
 
@@ -737,6 +737,71 @@ def channel_messages(id):
                            messages=m, text_config=Text.config)
 
 
+def message_to_any(receiver):
+
+    # Get the name of the uploaded files
+    uploaded_files = request.files.getlist("file")
+    files_obj = []
+    for file in uploaded_files:
+        # Check if the file is one of the allowed types/extensions
+        if file and allowed_file(file.filename):
+            # Make the filename safe, remove unsupported chars
+            filename = secure_filename(file.filename)
+
+            # Instatiate file
+            file_obj = File(filename)
+
+            # Append file id precededed by zeros to the beginning of filename
+            filename = append_id_to_filename(file_obj.id, filename)
+ 
+            # Move the file form the temporal folder to the upload
+            # folder we setup
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            # Save the filename into a list, we'll use it later
+            files_obj.append(file_obj)
+
+    # Get message text
+    text = request.form.get("text")
+    if text:
+        text = text.strip()
+
+    # Create message
+    user_id = session.get("user_id")
+    sender = User.get_by_id(user_id)
+    message = Message(sender, receiver, text, files_obj)
+
+    return message
+
+
+@app.route("/message-to-channel/<int:id>", methods=["GET", "POST"])
+@login_check(User.users)
+def message_to_channel(id):
+    """ Send a message to a channel"""
+
+    # Ensure channel exists
+    channel = Channel.get_by_id(id)
+    if not channel:
+        return apology("channel does not exist", 403)
+
+    # User reached route via GET (as by clicking a link or via redirect)
+    if request.method == "GET":
+        return render_template("message-to-any.html", channel=channel,
+                               text_config=Text.config)
+
+    # User reached route via POST (as by submitting a form via POST)
+    elif request.method == "POST":
+
+        # Get and send message to receiver
+        receiver = channel
+        message_to_any(receiver)
+
+        # Redirect user to channel messages page
+        return redirect(url_for('channel_messages', id=channel.id))
+
+    # User reached route not via GET neither via POST
+    else:
+        return apology("invalid method", 403)
+
 
 @app.route("/users", methods=["GET"])
 #@login_required
@@ -818,3 +883,31 @@ def message_to_user(id):
     # User reached route not via GET neither via POST
     else:
         return apology("invalid method", 403)
+
+
+@app.route("/message-delete/<int:id>")
+#@login_required
+@login_check(User.users)
+def message_delete(id):
+    """ Delete a message """
+
+    # Ensure message exists
+    message = Message.get_by_id(id)
+    if not message:
+        return apology("message does not exist", 403)
+
+    # Delete message
+    message.remove()
+
+    # Redirect user to previous page
+    sender = message.sender
+    receiver = message.receiver
+    user_id = session.get("user_id")
+    if isinstance(receiver, Channel):
+        return redirect(url_for('channel_messages', id=receiver.id))
+    elif receiver.id == user_id:
+        return redirect(url_for('user_messages_received', id=user_id))
+    elif sender.id == user_id:
+        return redirect(url_for('user_messages_sent', id=user_id))
+    else:
+        return redirect("/")
