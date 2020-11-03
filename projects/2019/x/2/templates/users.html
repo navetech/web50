@@ -6,20 +6,7 @@
 
     <script id="user" type="text/x-handlebars-template">
         {% raw -%}
-            <li id="user{{ user.id }}" class="list-group-item ln-container01 user-item item-show">
-                {{#if same_user }}
-                    <span class="ln-highlight">{{ user.name }}</span>
-                {{else}}
-                    <a class="ln-highlight" href="/message-to-user/{{ user.id }}">{{ user.name }}</a>
-                {{/if}}
-                registered on
-                <span class="ln-highlight">{{ user.timestamp }}</span>
-                {{#if user.current_logins }}
-                    online
-                    <span class="ln-highlight">{{ user.current_logins.[0].timestamp }}</span>
-                {{else}}
-                    offline
-                {{/if}}
+            <li id="user{{ user.id }}" class="list-group-item ln-container01 user-item {{ item_show_hide }}">
             </li>
         {%- endraw %}
     </script>
@@ -57,26 +44,5 @@
 
 {% block main %}
     <ul id="users" class="list-group ln-group-width-auto">
-        {% for user in users %}
-            <li id="user{{ user.id }}" class="list-group-item ln-container01 user-item item-hide">
-                {% if user.id == session.user_id %}
-                    <span class="ln-highlight">{{ user.name }}</span>
-                {% else %}
-                    <a class="ln-highlight" href="{{ url_for('message_to_user', id=user.id) }}">{{ user.name }}</a>
-                {% endif %}
-                registered on
-                <span class="ln-highlight">{{ user.timestamp }}</span>
-                {% if user.current_logins %}
-                    online
-                    <span class="ln-highlight">{{ user.current_logins[0].timestamp }}</span>
-                {% else %}
-                    offline
-                {% endif %}
-            </li>
-
-            <div class="ln-group-divider"></div>
-        {% else %}
-            <li id="user-null" class="list-group-item ln-container01 item-hide">No users</li>
-        {% endfor %}
     </ul>
 {% endblock %}

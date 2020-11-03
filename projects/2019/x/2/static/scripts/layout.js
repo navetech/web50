@@ -1,4 +1,4 @@
-var session_user_id;
+let session_user_id;
 
 document.addEventListener('DOMContentLoaded', () => {
 

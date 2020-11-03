@@ -1,30 +1,37 @@
+let items_count = 0;
+let template_item;
+let template_item_content;
+let template_item_none;
+
 document.addEventListener('DOMContentLoaded', () => {
+    items_count = document.querySelectorAll(".user-item").length;
 
-    let items_count = document.querySelectorAll(".user-item").length;
-
-    const template_item = Handlebars.compile(document.querySelector('#user').innerHTML);
-    const template_item_content = Handlebars.compile(document.querySelector('#user-content').innerHTML);
-    const template_item_none = Handlebars.compile(document.querySelector('#user-none').innerHTML);
+    template_item = Handlebars.compile(document.querySelector('#user').innerHTML);
+    template_item_content = Handlebars.compile(document.querySelector('#user-content').innerHTML);
+    template_item_none = Handlebars.compile(document.querySelector('#user-none').innerHTML);
 
     // Connect to websocket
-    var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
+    let socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
+
+
+    // Initialize new request
+    const request = new XMLHttpRequest();
+    request.open('GET', '/api/users');
+
+    // Callback function for when request completes
+    request.onload = () => {
+        // Extract JSON data from request
+        const users = JSON.parse(request.responseText);
+        showUsers(users);
+    }
+    // Send request
+    request.send();
+
 
     // When a user is registered, add user
     socket.on('announce register', user => {
-        let same_user = false;
-        if (user.id === session_user_id) {
-            same_user = true;
-        }
-
-        const context = {
-            user: user,
-            same_user: same_user
-        };
-
-        const content = template_item(context);
-        const old_content = document.querySelector('#users').innerHTML;
-        document.querySelector('#users').innerHTML = content + old_content;
-        items_count++;
+        const item_show_hide = 'item-show';
+        addUser(user, item_show_hide);
 
         const id_elem_add = `#user${user.id}`;
         const elem_add = document.querySelector(id_elem_add);
@@ -86,38 +93,71 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // When a user login, update user
     socket.on('announce login', user => {
-        let same_user = false;
-        if (user.id === session_user_id) {
-            same_user = true;
-        }
-
-        const context = {
-            user: user,
-            same_user: same_user
-        }
-
-        const content = template_item_content(context);
-        const id = `#user${user.id}`
-        const element = document.querySelector(id)
-        element.innerHTML = content
+        setUserContent(user);
     });
 
 
     // When a user logout, update user
     socket.on('announce logout', user => {
-        let same_user = false;
-        if (user.id === session_user_id) {
-            same_user = true;
-        }
-
-        const context = {
-            user: user,
-            same_user: same_user
-        }
-
-        const content = template_item_content(context);
-        const id = `#user${user.id}`
-        const element = document.querySelector(id)
-        element.innerHTML = content
+        setUserContent(user);
     });
 });
+
+
+function showUsers(users) {
+    items_count = 0;
+    document.querySelector('#users').innerHTML = '';
+
+    if (users.length > 0) {
+        const item_show_hide = 'item-hide';
+        users.reverse().forEach(user => {
+            addUser(user, item_show_hide);
+        });
+    }
+    else {
+        const content = template_item_none();
+        document.querySelector('#users').innerHTML = content;
+    }
+}
+
+
+function addUser(user, item_show_hide) {
+    const context = {
+        user: user,
+        item_show_hide: item_show_hide
+    };
+    const content = template_item(context);
+    const old_content = document.querySelector('#users').innerHTML;
+    document.querySelector('#users').innerHTML = content + old_content;
+    setUserContent(user);
+    items_count++;
+}
+
+
+function setUserContent(user) {
+    let same_user = false;
+    if (user.id === session_user_id) {
+        same_user = true;
+    }
+
+    const locales = window.navigator.language;
+    const options = {dateStyle: 'full', timeStyle: 'full'};
+
+    const d = new Date(user.timestamp);
+    user.timestamp = d.toLocaleString(locales, options);
+
+    user.current_logins.forEach(login => {
+        const d = new Date(login.timestamp);
+        login.timestamp = d.toLocaleString(locales, options);
+    });
+
+    const context = {
+        user: user,
+        same_user: same_user
+    }
+    const content = template_item_content(context);
+    const id = `#user${user.id}`
+    const element = document.querySelector(id)
+    element.innerHTML = content
+}
+

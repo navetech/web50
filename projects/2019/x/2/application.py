@@ -808,6 +808,19 @@ def message_to_channel(id):
 @login_check(User.users)
 def users_():
     """ Show users """
+    return render_template("users.html")
+
+
+@app.route("/api/users", methods=["GET"])
+def api_users_():
+    """ Send users """
+    data = []
+    for user in User.users:
+        data.append(user.to_dict())
+
+    return jsonify(data)
+
+
 
     return render_template("users.html", users=User.users)
 
