@@ -13,7 +13,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Connect to websocket
     let socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
 
-
     // Initialize new request
     const request = new XMLHttpRequest();
     request.open('GET', '/api/users');
@@ -69,20 +68,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 items_count--;
                 if ((items_count < 1) &&
                     (document.querySelector(`#user-null`) == null)) {
-
-                    const content = template_item_none();
-                    const old_content = document.querySelector('#users').innerHTML;
-                    document.querySelector('#users').innerHTML = content + old_content;
-            
-                    const id_elem_add = `#user-null`;
-                    const elem_add = document.querySelector(id_elem_add);
-            
-                    elem_add.addEventListener('animationend', () =>  {
-                        elem_add.style.animationPlayState = 'paused';
-                        let class_old = elem_add.getAttribute("class");
-                        let class_new = class_old.replace("item-show", "item-hide");
-                        elem_add.setAttribute("class", class_new);
-                    });
+                        const context = {
+                            item_show_hide: 'item-show'
+                        }
+                        const content = template_item_none(context);
+                        const old_content = document.querySelector('#users').innerHTML;
+                        document.querySelector('#users').innerHTML = content + old_content;
+                
+                        const id_elem_add = '#user-null';
+                        const elem_add = document.querySelector(id_elem_add);
+                
+                        elem_add.addEventListener('animationend', () =>  {
+                            elem_add.style.animationPlayState = 'paused';
+                            let class_old = elem_add.getAttribute("class");
+                            let class_new = class_old.replace("item-show", "item-hide");
+                            elem_add.setAttribute("class", class_new);
+                        });
                     elem_add.style.animationPlayState = 'running';
                 }
             });
@@ -108,15 +109,18 @@ function showUsers(users) {
     items_count = 0;
     document.querySelector('#users').innerHTML = '';
 
+    const item_show_hide = 'item-hide';
     if (users.length > 0) {
-        const item_show_hide = 'item-hide';
         users.reverse().forEach(user => {
             addUser(user, item_show_hide);
         });
     }
     else {
-        const content = template_item_none();
-        document.querySelector('#users').innerHTML = content;
+        const context = {
+            item_show_hide: item_show_hide
+        }
+        const content = template_item_none(context);
+        document.querySelector('#channels').innerHTML = content;
     }
 }
 

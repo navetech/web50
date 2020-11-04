@@ -694,7 +694,7 @@ def channels_():
     elif request.method == "POST":
         name = request.form.get("name")
         if not name:
-            return render_template("channels.html", channels=Channel.channels)
+            return render_template("channels.html")
 
         # Ensure channel does not exist
         channel = Channel.get_by_name(name)
@@ -713,7 +713,17 @@ def channels_():
         data = channel.to_dict()
         socketio.emit('announce create channel', data)
 
-        return render_template("channels.html", channels=Channel.channels)
+        return render_template("channels.html")
+
+
+@app.route("/api/channels", methods=["GET"])
+def api_channels_():
+    """ Send channels """
+    data = []
+    for channel in Channel.channels:
+        data.append(channel.to_dict())
+
+    return jsonify(data)
 
 
 @app.route("/channel-messages/<int:id>")

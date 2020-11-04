@@ -6,7 +6,7 @@
 
     <script id="channel" type="text/x-handlebars-template">
         {% raw -%}
-            <li id="channel{{ channel.id }}" class="list-group-item ln-container01 channel-item item-show">
+            <li id="channel{{ channel.id }}" class="list-group-item ln-container01 channel-item {{ item_show_hide }}">
                 <a class="ln-highlight" href="/channel-messages/{{ channel.id }}">{{ channel.name }}</a>
                 created by
                 {{#if same_user }}
@@ -22,7 +22,7 @@
 
     <script id="channel-none" type="text/x-handlebars-template">
         {% raw -%}
-            <li id="channel-null" class="list-group-item ln-container01 item-show">No channels</li>
+            <li id="channel-null" class="list-group-item ln-container01 {{ item_show_hide }}">No channels</li>
         {%- endraw %}
     </script>
 
@@ -48,22 +48,5 @@
     </ul>
 
     <ul id="channels" class="list-group pt-4 ln-group-width-auto">
-        {% for channel in channels %}
-            <li id="channel{{ channel.id }}" class="list-group-item ln-container01 channel-item item-hide">
-                <a class="ln-highlight" href="{{ url_for('channel_messages', id=channel.id) }}">{{ channel.name }}</a>
-                created by
-                {% if channel.creator.id == session.user_id %}
-                    <a class="ln-highlight" href="{{ url_for('user_messages_sent', id=channel.creator.id) }}">{{ channel.creator.name }}</a>
-                {% else %}
-                    <a class="ln-highlight" href="{{ url_for('message_to_user', id=channel.creator.id) }}">{{ channel.creator.name }}</a>
-                {% endif %}
-                on
-                <span class="ln-highlight">{{ channel.timestamp }}</span>
-            </li>
-
-            <div class="ln-group-divider"></div>
-        {% else %}
-            <li id="channel-null" class="list-group-item ln-container01 item-hide">No channels</li>
-        {% endfor %}
     </ul>
 {% endblock %}
