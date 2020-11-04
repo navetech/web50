@@ -381,6 +381,16 @@ class Message:
         except:
             raise RuntimeError("remove(): Message does not exist")
 
+    def to_dict(self):
+        r = {}
+        r["id"] = self.id
+        r["timestamp"] = self.timestamp
+        r["sender"] = self.sender.to_dict()
+        r["receiver"] = self.receiver.to_dict()
+        r["text"] = self.text;
+        return r
+
+
 
 class Text:
     config = {}
@@ -745,6 +755,27 @@ def channel_messages(id):
 
     return render_template("channel-messages.html", channel=channel,
                            messages=m, text_config=Text.config)
+
+
+@app.route("/api/channel-messages/<int:id>")
+def api_channel_messages(id):
+    """Send channel's messages """
+
+    # Ensure channel exists
+    channel = Channel.get_by_id(id)
+    if not channel:
+        return jsonify('')
+    else:
+        c = channel.to_dict()
+        # Get channel's messages
+        m = []
+        for message in Message.messages:
+            if message.receiver == channel:
+                m.append(message.to_dict())
+
+        data = {'channel':c, 'messages': m}
+        return jsonify(data)
+
 
 
 def message_to_any(receiver):

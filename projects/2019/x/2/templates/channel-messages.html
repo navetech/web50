@@ -1,15 +1,51 @@
 {% extends "messages.html" %}
 
+{% block messages_scripts %}
+    <script id="channel" type="text/x-handlebars-template">
+        {% raw -%}
+            <li class="list-group-item ln-container01 ln-h03">
+                <span class="ln-highlight">{{ channel.name }}</span>
+                created on
+                <span class="ln-highlight">{{ channel.timestamp }}</span>
+            </li>
+        {%- endraw %}
+    </script>
+
+    <script id="channel-message" type="text/x-handlebars-template">
+        {% raw -%}
+            <div class="ln-group-divider"></div>
+            <ul class="list-group pt-4">
+                <li class="list-group-item ln-container01">
+                    from
+                    {{#if user_is_sender }}
+                        <a class="ln-highlight" href="/user-messages-sent/{{ message.sender.id }}">{{ message.sender.name }}</a>
+                    {{else}}
+                        <a class="ln-highlight" href="/message-to-user/{{ message.sender.id }}">{{ message.sender.name }}</a>
+                    {{/if}}
+                    to channel
+                    <span class="ln-highlight">{{ message.receiver.name }}</span>
+                    on
+                    <span class="ln-highlight">{{ message.timestamp }}</span>
+                    {{#if user_is_sender }}
+                        <a class="btn btn-dark" role="button" href="/message-delete/{{ message.id }}">Delete</a>
+                    {{/if}}
+                </li>
+
+                <li class="list-group-item ln-container01">
+                    <textarea readonly class="message-text-out" rows="{{ rows_number }}">{{ message.text }}</textarea>
+                </li>
+            </ul>
+        {%- endraw %}
+    </script>
+
+    <script src="/static/scripts/channel-messages.js"></script>
+{% endblock %}
+
 {% block title %}
     Channel Messages
 {% endblock %}
 
 {% block messages_main %}
-    <ul class="list-group ln-group-width-auto">
-        <li class="list-group-item ln-container01 ln-h03">
-            <span class="ln-highlight">{{ channel.name }}</span>
-            created on
-            <span class="ln-highlight">{{ channel.timestamp }}</span>
-        </li>
+    <ul id="channel-id" class="list-group ln-group-width-auto" data-id={{ channel.id }}>
     </ul>
 {% endblock %}
