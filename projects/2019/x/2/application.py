@@ -685,7 +685,6 @@ def unregister():
 
         # If not confirmed
         else:
-
             # Redirect to home page
             return redirect("/home")
 
@@ -727,12 +726,20 @@ def channels_():
 
 
 @app.route("/api/channels", methods=["GET"])
-def api_channels_():
+def api_channels():
     """ Send channels """
-    data = []
-    for channel in Channel.channels:
-        data.append(channel.to_dict())
 
+    # Get user
+    session_user_id = session.get("user_id")
+    if session_user_id is None:
+        return jsonify('')
+
+    # Get channels
+    c = []
+    for channel in Channel.channels:
+        c.append(channel.to_dict())
+
+    data = {'channels': c, 'session_user_id': session_user_id}
     return jsonify(data)
 
 
@@ -757,24 +764,30 @@ def channel_messages(id):
                            messages=m, text_config=Text.config)
 
 
+
 @app.route("/api/channel-messages/<int:id>")
 def api_channel_messages(id):
     """Send channel's messages """
+
+    # Get user
+    session_user_id = session.get("user_id")
+    if session_user_id is None:
+        return jsonify('')
 
     # Ensure channel exists
     channel = Channel.get_by_id(id)
     if not channel:
         return jsonify('')
-    else:
-        c = channel.to_dict()
-        # Get channel's messages
-        m = []
-        for message in Message.messages:
-            if message.receiver == channel:
-                m.append(message.to_dict())
+    c = channel.to_dict()
 
-        data = {'channel':c, 'messages': m}
-        return jsonify(data)
+    # Get channel's messages
+    m = []
+    for message in Message.messages:
+        if message.receiver == channel:
+            m.append(message.to_dict())
+
+    data = {'channel': c, 'messages': m, 'session_user_id': session_user_id}
+    return jsonify(data)
 
 
 
@@ -844,26 +857,33 @@ def message_to_channel(id):
         return apology("invalid method", 403)
 
 
+
 @app.route("/users", methods=["GET"])
 #@login_required
 @login_check(User.users)
 def users_():
     """ Show users """
+
     return render_template("users.html")
 
 
-@app.route("/api/users", methods=["GET"])
-def api_users_():
-    """ Send users """
-    data = []
-    for user in User.users:
-        data.append(user.to_dict())
 
+@app.route("/api/users", methods=["GET"])
+def api_users():
+    """ Send users """
+
+    # Get session user
+    session_user_id = session.get("user_id")
+    if session_user_id is None:
+        return jsonify('')
+
+    u = []
+    for user in User.users:
+        u.append(user.to_dict())
+
+    data = {'users': u, 'session_user_id': session_user_id}
     return jsonify(data)
 
-
-
-    return render_template("users.html", users=User.users)
 
 
 @app.route("/user-messages-received/<int:id>")

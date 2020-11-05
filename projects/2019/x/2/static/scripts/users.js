@@ -20,8 +20,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Callback function for when request completes
     request.onload = () => {
         // Extract JSON data from request
-        const users = JSON.parse(request.responseText);
-        showUsers(users);
+        const data = JSON.parse(request.responseText);
+        session_user_id = data.session_user_id;
+        showUsers(data.users);
     }
     // Send request
     request.send();

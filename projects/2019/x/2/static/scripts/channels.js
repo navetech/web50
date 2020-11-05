@@ -18,8 +18,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Callback function for when request completes
     request.onload = () => {
         // Extract JSON data from request
-        const channels = JSON.parse(request.responseText);
-        showChannels(channels);
+        const data = JSON.parse(request.responseText);
+        console.log(data);
+        session_user_id = data.session_user_id;
+        showChannels(data.channels);
     }
     // Send request
     request.send();
