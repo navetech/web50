@@ -145,16 +145,12 @@ function setUserContent(user) {
         same_user = true;
     }
 
-    const locales = window.navigator.language;
-    const options = {dateStyle: 'full', timeStyle: 'full'};
-
-    const d = new Date(user.timestamp);
-    user.timestamp = d.toLocaleString(locales, options);
-
+    user.timestamp = convertToLocaleString(user.timestamp);
+    
     user.current_logins.forEach(login => {
-        const d = new Date(login.timestamp);
-        login.timestamp = d.toLocaleString(locales, options);
+        login.timestamp = convertToLocaleString(login.timestamp);
     });
+
 
     const context = {
         user: user,

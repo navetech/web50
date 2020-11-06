@@ -12,8 +12,10 @@
                         to channel
                         <a class="ln-highlight" href="/channel-messages/{{ message.receiver.id }}">{{ message.receiver.name }}</a>
                     {{else}}
-                        to
-                        <a class="ln-highlight" href="/message-to-user/{{ message.receiver.id }}">{{ message.receiver.name }}</a>
+                        {{#if receiver_is_user }}
+                            to
+                            <a class="ln-highlight" href="/message-to-user/{{ message.receiver.id }}">{{ message.receiver.name }}</a>
+                        {{/if}}
                     {{/if}}
                     on
                     <span class="ln-highlight">{{ message.timestamp }}</span>
@@ -26,7 +28,9 @@
             </ul>
         {%- endraw %}
     </script>
-{% endblock %}
+
+    <script src="/static/scripts/user-messages-sent.js"></script>
+    {% endblock %}
 
 {% block title %}
     User Messages Sent

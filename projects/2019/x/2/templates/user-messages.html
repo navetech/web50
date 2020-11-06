@@ -1,6 +1,10 @@
 {% extends "messages.html" %}
 
 {% block messages_scripts %}
+
+    {% block user_messages_scripts %}
+    {% endblock %}
+
     <script id="user" type="text/x-handlebars-template">
         {% raw -%}
             <li class="list-group-item ln-container01 ln-h03">
@@ -20,10 +24,6 @@
             </li>
         {%- endraw %}
     </script>
-
-    {% block user_messages_scripts %}
-    {% endblock %}
-
 
     <script id="user-message" type="text/x-handlebars-template">
         {% raw -%}
@@ -64,6 +64,8 @@
             </ul>
         {%- endraw %}
     </script>
+
+    <script src="/static/scripts/user-messages.js"></script>
 {% endblock %}
 
 {% block messages_main %}

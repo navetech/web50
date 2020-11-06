@@ -19,7 +19,6 @@ document.addEventListener('DOMContentLoaded', () => {
     request.onload = () => {
         // Extract JSON data from request
         const data = JSON.parse(request.responseText);
-        console.log(data);
         session_user_id = data.session_user_id;
         showChannels(data.channels);
     }
@@ -118,11 +117,7 @@ function addChannel(channel, item_show_hide) {
         same_user = true;
     }
 
-    const locales = window.navigator.language;
-    const options = {dateStyle: 'full', timeStyle: 'full'};
-
-    const d = new Date(channel.timestamp);
-    channel.timestamp = d.toLocaleString(locales, options);
+    channel.timestamp = convertToLocaleString(channel.timestamp);
 
     const context = {
         channel: channel,

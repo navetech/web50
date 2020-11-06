@@ -387,6 +387,14 @@ class Message:
         r["timestamp"] = self.timestamp
         r["sender"] = self.sender.to_dict()
         r["receiver"] = self.receiver.to_dict()
+
+        if is_channel(self.receiver):
+            r["receiver"]["type"] = "channel"
+        elif is_user(self.receiver):
+            r["receiver"]["type"] = "user"
+        else:
+            r["receiver"]["type"] = ""
+
         r["text"] = self.text;
         return r
 
@@ -926,6 +934,32 @@ def user_messages_sent(id):
 
     return render_template("user-messages-sent.html", user=user, messages=m,
                            text_config=Text.config)
+
+                
+@app.route("/api/user-messages-sent/<int:id>")
+def api_user_messages_sent(id):
+    """Send user's messages sent"""
+
+    # Get session user
+    session_user_id = session.get("user_id")
+    if session_user_id is None:
+        return jsonify('')
+
+    # Ensure user exists
+    user = User.get_by_id(id)
+    if not user:
+        return jsonify('')
+    u = user.to_dict()
+
+    # Get user's messages sent
+    m = []
+    for message in Message.messages:
+        if message.sender == user:
+            m.append(message.to_dict())
+
+    data = {'user': u, 'messages': m, 'session_user_id': session_user_id}
+    return jsonify(data)
+
 
 
 @app.route("/message-to-user/<int:id>", methods=["GET", "POST"])
