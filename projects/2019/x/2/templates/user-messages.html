@@ -1,21 +1,73 @@
 {% extends "messages.html" %}
 
-{% block title %}
-    User Messages
+{% block messages_scripts %}
+    <script id="user" type="text/x-handlebars-template">
+        {% raw -%}
+            <li class="list-group-item ln-container01 ln-h03">
+                {{#if same_user }}
+                    <span class="ln-highlight">{{ user.name }}</span>
+                {{else}}
+                    <a class="ln-highlight" href="/message-to-user/{{ user.id }}">{{ user.name }}</a>
+                {{/if}}
+                registered on
+                <span class="ln-highlight">{{ user.timestamp }}</span>
+                {{#if user.current_logins }}
+                    online
+                    <span class="ln-highlight">{{ user.current_logins.[0].timestamp }}</span>
+                {{else}}
+                    offline
+                {{/if}}
+            </li>
+        {%- endraw %}
+    </script>
+
+    {% block user_messages_scripts %}
+    {% endblock %}
+
+
+    <script id="user-message" type="text/x-handlebars-template">
+        {% raw -%}
+            <div class="ln-group-divider"></div>
+            <ul class="list-group pt-4">
+                <li class="list-group-item ln-container01">
+                    from
+                    {{#if user_is_sender }}
+                        <span class="ln-highlight">{{ message.sender.name }}</span>
+                    {{else}}
+                        <a class="ln-highlight" href="/message-to-user/{{ message.sender.id }}">{{ message.sender.name }}</a>
+                    {{/if}}
+                    {{#if receiver_is_channel }}
+                        to channel
+                        <a class="ln-highlight" href="/channel-messages/{{ message.receiver.id }}">{{ message.receiver.name }}</a>
+                    {{else}}
+                        to
+                        {{#if user_is_receiver }}
+                            <span class="ln-highlight">{{ message.receiver.name }}</span>
+                        {{else}}
+                            <a class="ln-highlight" href="/message-to-user/{{ message.receiver.id }}">{{ message.receiver.name }}</a>
+                        {{/if}}
+                    {{/if}}
+                    on
+                    <span class="ln-highlight">{{ message.timestamp }}</span>
+                    {{#if user_is_sender }}
+                        <a class="btn btn-dark" role="button" href="/message-delete/{{ message.id }}">Delete</a>
+                    {{else}}
+                        {{#if user_is_receiver }}
+                            <a class="btn btn-dark" role="button" href="/message-delete/{{ message.id }}">Delete</a>
+                        {{/if}}
+                    {{/if}}
+                </li>
+
+                <li class="list-group-item ln-container01">
+                    <textarea readonly class="message-text-out" rows="{{ rows_number }}">{{ message.text }}</textarea>
+                </li>
+            </ul>
+        {%- endraw %}
+    </script>
 {% endblock %}
 
 {% block messages_main %}
-    <ul class="list-group ln-group-width-auto">
-        <li class="list-group-item ln-container01 ln-h03">
-            {% if user.id == session.user_id %}
-                <span class="ln-highlight">{{ user.name }}</span>
-            {% else %}
-                <a class="ln-highlight" href="{{ url_for('message_to_user', id=user.id) }}">{{ user.name }}</a>
-            {% endif %}
-            registered on
-            <span class="ln-highlight">{{ user.timestamp }}</span>,
-            logged on
-            <span class="ln-highlight">{{ user.logins[0].timestamp }}</span>
-        </li>
+    <ul id="user-id" class="list-group ln-group-width-auto" data-id={{ user.id }}>
     </ul>
 {% endblock %}
+
