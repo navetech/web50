@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from flask import Flask, redirect, request, render_template, session, flash, jsonify, url_for
 #from flask_session import Session
 from flask_socketio import SocketIO, emit
+from werkzeug import secure_filename
 
 import my_application
 from helpers import login_check, apology, append_id_to_filename
@@ -26,9 +27,11 @@ app.config.from_envvar('APPLICATION_SETTINGS')
 socketio = SocketIO(app)
 
 
+
 class Communicator:
     max_seq_number = sys.maxsize - 1
     seq_number = 0
+
 
     def __init__(self, name):
         self.name = name
@@ -50,55 +53,34 @@ class Communicator:
         }
 
 
+
 class Sender(Communicator):
     def __init__(self, name):
         super().__init__(name)
-        self.messages_sent = []
-
-
-    def remove_messages(self):
-
-        # Remove sent messages
-        for message in self.messages_sent:
-            if message.sender == self:
-                message.remove()
-        self.messages_sent = []
 
         
     def remove(self):
-        self.remove_messages()
+        Message.remove_by_sender(self)
 
-
-    def send_message(self, receiver, text, files_names):
-        Message(self, receiver, text, files_names)
 
 
 class Receiver(Communicator):
     def __init__(self, name):
         super().__init__(name)
-        self.messages_received = []
-
-
-    def remove_messages(self):
-
-        # Remove received messages
-        for message in self.messages_received:
-            if message.receiver == self:
-                message.remove()
-        self.messages_received = []
 
 
     def remove(self):
-        self.remove_messages()
+        Message.remove_by_receiver(self)
+
 
 
 class Channel(Receiver):
     channels = []
 
+
     @staticmethod
     def remove_by_list(to_remove):
         for channel in to_remove:
-            Channel.channels.remove(channel)
             channel.remove()
             data = channel.to_dict()
             socketio.emit('announce remove channel', data)
@@ -136,14 +118,26 @@ class Channel(Receiver):
         Channel.channels.insert(0, self)
 
 
+    def remove(self):
+        # Remove channel
+        try:
+            Channel.channels.remove(self)
+        except:
+            raise RuntimeError("remove(): Channel does not exist")
+
+        super().remove()
+
+
     def to_dict(self):
         r = super().to_dict()
         r['creator'] = self.creator.to_dict()
         return r
 
 
+
 class User(Sender, Receiver):
     users = []
+
 
     @staticmethod
     def get_by_id(id):
@@ -192,14 +186,13 @@ class User(Sender, Receiver):
 
         if self.current_logout is not None :
             self.current_logout.remove_from_currents()
+
         logout = Logout(self)
-        self.current_log = logout
 
         return logout
 
     
     def remove(self):
-
         # Remove created channels
         Channel.remove_by_creator(self)
 
@@ -217,6 +210,7 @@ class User(Sender, Receiver):
             User.users.remove(self)
         except:
             raise RuntimeError("remove(): User does not exist")
+
         super().remove()
 
 
@@ -238,10 +232,12 @@ class User(Sender, Receiver):
         return r
 
 
+
 class Log:
     logs = []
     max_seq_number = sys.maxsize - 1
     seq_number = 0
+
 
     @staticmethod
     def remove_by_user(user):
@@ -282,8 +278,10 @@ class Log:
         }
 
 
+
 class Login(Log):
     currents = []
+
 
     @staticmethod
     def remove_by_user(user):
@@ -301,7 +299,6 @@ class Login(Log):
 
 
     def remove_from_currents(self):
-
         # Remove login
         try:
             Login.currents.remove(self)
@@ -309,8 +306,10 @@ class Login(Log):
             raise RuntimeError("remove(): Login from currents does not exist")
 
 
+
 class Logout(Log):
     currents = []
+
 
     @staticmethod
     def remove_by_user(user):
@@ -328,12 +327,12 @@ class Logout(Log):
 
 
     def remove_from_currents(self):
-
-        # Remove login
+        # Remove logout
         try:
             Logout.currents.remove(self)
         except:
             raise RuntimeError("remove(): Logout from currents does not exist")
+
 
 
 class Message:
@@ -341,6 +340,33 @@ class Message:
     max_seq_number = sys.maxsize - 1
     seq_number = 0
 
+
+    @staticmethod
+    def remove_by_list(to_remove):
+        for message in to_remove:
+            message.remove()
+
+
+    @staticmethod
+    def remove_by_sender(sender):
+        to_remove = []
+        for message in Message.messages:
+            if message.sender == sender:
+                to_remove.append(message)
+
+        Message.remove_by_list(to_remove)
+
+
+    @staticmethod
+    def remove_by_receiver(receiver):
+        to_remove = []
+        for message in Message.messages:
+            if message.receiver == receiver:
+                to_remove.append(message)
+
+        Message.remove_by_list(to_remove)
+        
+        
     @staticmethod
     def get_by_id(id):
         for message in Message.messages:
@@ -349,14 +375,15 @@ class Message:
         return None
 
 
-    def __init__(self, sender, receiver, text, files_names):
+    def __init__(self, sender, receiver, text, files):
         self.sender = sender
         self.receiver = receiver
         self.text = text
 
         self.files = []
-        for name in files_names:
-            self.files.append(File( name, self))
+        for file in files:
+            file.message = self
+            self.files.append(file)
 
         if Message.seq_number > Message.max_seq_number:
             raise RuntimeError("Max number of messages exceeded")
@@ -370,7 +397,6 @@ class Message:
 
 
     def remove(self):
-
         # Remove files
         File.remove_by_message(self)
         self.files = []
@@ -380,6 +406,7 @@ class Message:
             Message.messages.remove(self)
         except:
             raise RuntimeError("remove(): Message does not exist")
+
 
     def to_dict(self):
         r = {}
@@ -396,8 +423,8 @@ class Message:
             r["receiver"]["type"] = ""
 
         r["text"] = self.text;
-        return r
 
+        return r
 
 
 class Text:
@@ -414,18 +441,33 @@ class File:
 
 
     @staticmethod
+    def remove_by_list(to_remove):
+        for file in to_remove:
+            file.remove()
+
+
+    @staticmethod
     def remove_by_message(message):
         to_remove = []
         for file in File.files:
             if file.message == message:
                 to_remove.append(message)
-        for file in to_remove:
-            File.files.remove(file)
+
+        File.remove_by_list(to_remove)
 
 
-    def __init__(self, name, message):
+    def remove(self):
+        # Remove file from storage device
+
+        # Remove file
+        try:
+            File.files.remove(self)
+        except:
+            raise RuntimeError("remove(): File does not exist")
+
+
+    def __init__(self, name):
         self.name = name
-        self.message = message
 
         if File.seq_number > File.max_seq_number:
             raise RuntimeError("Max number of files exceeded")
@@ -440,13 +482,16 @@ class File:
         File.files.insert(0, self)
 
 
+
 @app.template_test('channel')
 def is_channel(receiver):
     return isinstance(receiver, Channel)
 
+
 @app.template_test('user')
 def is_user(receiver):
     return isinstance(receiver, User)
+
 
 
 UPLOAD_FOLDER = 'uploads'
@@ -463,25 +508,18 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 # These are the extension that we are accepting to be uploaded
 app.config['ALLOWED_EXTENSIONS'] = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
 
+
 # For a given file, return whether it's an allowed type or not
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1] in app.config['ALLOWED_EXTENSIONS']
 
 
-@app.route("/session", methods=["GET"])
-def session_():
-    """ Session data (get and send session data to client """
-
-    user_id = session.get("user_id")
-    return jsonify(user_id)
-
 
 @app.route("/home", methods=["GET"])
 @login_check(User.users)
 def home():
     """ Home page """
-
     return redirect("/users")
 
 
@@ -697,6 +735,32 @@ def unregister():
             return redirect("/home")
 
 
+@app.route("/users", methods=["GET"])
+#@login_required
+@login_check(User.users)
+def users_():
+    """ Show users """
+    return render_template("users.html")
+
+
+@app.route("/api/users", methods=["GET"])
+def api_users():
+    """ Send users """
+
+    # Get session user
+    session_user_id = session.get("user_id")
+    if session_user_id is None:
+        return jsonify('')
+
+    # Get users
+    u = []
+    for user in User.users:
+        u.append(user.to_dict())
+
+    data = {'users': u, 'session_user_id': session_user_id}
+    return jsonify(data)
+
+
 @app.route("/channels", methods=["GET", "POST"])
 #@login_required
 @login_check(User.users)
@@ -705,7 +769,7 @@ def channels_():
 
     # User reached route via GET (as by clicking a link or via redirect)
     if request.method == "GET":
-        return render_template("channels.html", channels=Channel.channels)
+        return render_template("channels.html")
 
     # User reached route via POST (as by submitting a form via POST)
     elif request.method == "POST":
@@ -751,90 +815,6 @@ def api_channels():
     return jsonify(data)
 
 
-@app.route("/channel-messages/<int:id>")
-#@login_required
-@login_check(User.users)
-def channel_messages(id):
-    """Show channel's messages """
-
-    # Ensure channel exists
-    channel = Channel.get_by_id(id)
-    if not channel:
-        return apology("channel does not exist", 403)
-
-    # Get channel's messages
-    m = []
-    for message in Message.messages:
-        if message.receiver == channel:
-            m.append(message)
-
-    return render_template("channel-messages.html", channel=channel,
-                           messages=m, text_config=Text.config)
-
-
-
-@app.route("/api/channel-messages/<int:id>")
-def api_channel_messages(id):
-    """Send channel's messages """
-
-    # Get user
-    session_user_id = session.get("user_id")
-    if session_user_id is None:
-        return jsonify('')
-
-    # Ensure channel exists
-    channel = Channel.get_by_id(id)
-    if not channel:
-        return jsonify('')
-    c = channel.to_dict()
-
-    # Get channel's messages
-    m = []
-    for message in Message.messages:
-        if message.receiver == channel:
-            m.append(message.to_dict())
-
-    data = {'channel': c, 'messages': m, 'session_user_id': session_user_id}
-    return jsonify(data)
-
-
-
-def message_to_any(receiver):
-
-    # Get the name of the uploaded files
-    uploaded_files = request.files.getlist("file")
-    files_obj = []
-    for file in uploaded_files:
-        # Check if the file is one of the allowed types/extensions
-        if file and allowed_file(file.filename):
-            # Make the filename safe, remove unsupported chars
-            filename = secure_filename(file.filename)
-
-            # Instatiate file
-            file_obj = File(filename)
-
-            # Append file id precededed by zeros to the beginning of filename
-            filename = append_id_to_filename(file_obj.id, filename)
- 
-            # Move the file form the temporal folder to the upload
-            # folder we setup
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            # Save the filename into a list, we'll use it later
-            files_obj.append(file_obj)
-
-    # Get message text
-    text = request.form.get("text")
-    if text:
-        text = text.strip()
-
-    # Create message
-    user_id = session.get("user_id")
-    sender = User.get_by_id(user_id)
-    message = Message(sender, receiver, text, files_obj)
-
-    return message
-
-
 @app.route("/message-to-channel/<int:id>", methods=["GET", "POST"])
 @login_check(User.users)
 def message_to_channel(id):
@@ -865,33 +845,139 @@ def message_to_channel(id):
         return apology("invalid method", 403)
 
 
-
-@app.route("/users", methods=["GET"])
+@app.route("/message-to-user/<int:id>", methods=["GET", "POST"])
 #@login_required
 @login_check(User.users)
-def users_():
-    """ Show users """
+def message_to_user(id):
+    """ Send a message to a user"""
 
-    return render_template("users.html")
+    # Ensure user exists
+    user = User.get_by_id(id)
+    if not user:
+        return apology("user does not exist", 403)
+
+    # User reached route via GET (as by clicking a link or via redirect)
+    if request.method == "GET":
+        return render_template("message-to-any.html", user=user,
+                               text_config=Text.config)
+
+    # User reached route via POST (as by submitting a form via POST)
+    elif request.method == "POST":
+
+        # Get and send message to receiver
+        receiver = user
+        message_to_any(receiver)
+
+        # Redirect to user messages page
+        return redirect(url_for('user_messages_sent', id=session["user_id"]))
+
+    # User reached route not via GET neither via POST
+    else:
+        return apology("invalid method", 403)
 
 
+def message_to_any(receiver):
 
-@app.route("/api/users", methods=["GET"])
-def api_users():
-    """ Send users """
+    # Get uploaded files
+    uploaded_files = request.files.getlist("file")
 
-    # Get session user
+    files_obj = []
+    for file in uploaded_files:
+
+        # Check if the file is one of the allowed types/extensions
+        if file and allowed_file(file.filename):
+
+            # Make the filename safe, remove unsupported chars
+            filename = secure_filename(file.filename)
+
+            # Instatiate file
+            file_obj = File(filename)
+ 
+            # Move the file form the temporal folder to the upload
+            # folder we setup
+            filename_unique = file_obj.name_unique;
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename_unique))
+
+            files_obj.append(file_obj)
+
+    # Get message text
+    text = request.form.get("text")
+    if text:
+        text = text.strip()
+
+    # Create message
+    user_id = session.get("user_id")
+    sender = User.get_by_id(user_id)
+    message = Message(sender, receiver, text, files_obj)
+
+    return message
+
+
+@app.route("/message-delete/<int:id>")
+#@login_required
+@login_check(User.users)
+def message_delete(id):
+    """ Delete a message """
+
+    # Ensure message exists
+    message = Message.get_by_id(id)
+    if not message:
+        return apology("message does not exist", 403)
+
+    # Delete message
+    message.remove()
+
+    # Redirect user to previous page
+    sender = message.sender
+    receiver = message.receiver
+    user_id = session.get("user_id")
+    if isinstance(receiver, Channel):
+        return redirect(url_for('channel_messages', id=receiver.id))
+    elif receiver.id == user_id:
+        return redirect(url_for('user_messages_received', id=user_id))
+    elif sender.id == user_id:
+        return redirect(url_for('user_messages_sent', id=user_id))
+    else:
+        return redirect("/")
+
+
+@app.route("/channel-messages/<int:id>")
+#@login_required
+@login_check(User.users)
+def channel_messages(id):
+    """Show channel's messages """
+
+    # Ensure channel exists
+    channel = Channel.get_by_id(id)
+    if not channel:
+        return apology("channel does not exist", 403)
+
+    return render_template("channel-messages.html", channel=channel)
+
+
+@app.route("/api/channel-messages/<int:id>")
+def api_channel_messages(id):
+    """Send channel's messages """
+
+    # Get user
     session_user_id = session.get("user_id")
     if session_user_id is None:
         return jsonify('')
 
-    u = []
-    for user in User.users:
-        u.append(user.to_dict())
+    # Ensure channel exists
+    channel = Channel.get_by_id(id)
+    if not channel:
+        return jsonify('')
+    c = channel.to_dict()
 
-    data = {'users': u, 'session_user_id': session_user_id}
+    # Get channel's messages
+    m = []
+    for message in Message.messages:
+        if message.receiver == channel:
+            m.append(message.to_dict())
+
+    data = {'channel': c, 'messages': m, 'session_user_id': session_user_id}
     return jsonify(data)
-
 
 
 @app.route("/user-messages-received/<int:id>")
@@ -905,14 +991,7 @@ def user_messages_received(id):
     if not user:
         return apology("user does not exist", 403)
 
-    # Get messages received by user
-    m = []
-    for message in Message.messages:
-        if message.receiver == user:
-            m.append(message)
-
-    return render_template("user-messages-received.html", user=user, messages=m,
-                           text_config=Text.config)
+    return render_template("user-messages-received.html", user=user)
 
 
 @app.route("/api/user-messages-received/<int:id>")
@@ -951,14 +1030,7 @@ def user_messages_sent(id):
     if not user:
         return apology("user does not exist", 403)
 
-    # Get messages sent by user
-    m = []
-    for message in Message.messages:
-        if message.sender == user:
-            m.append(message)
-
-    return render_template("user-messages-sent.html", user=user, messages=m,
-                           text_config=Text.config)
+    return render_template("user-messages-sent.html", user=user)
 
                 
 @app.route("/api/user-messages-sent/<int:id>")
@@ -984,63 +1056,17 @@ def api_user_messages_sent(id):
 
     data = {'user': u, 'messages': m, 'session_user_id': session_user_id}
     return jsonify(data)
+    
 
+# This route is expecting a parameter containing the name
+# of a file. Then it will locate that file on the upload
+# directory and show it on the browser, so if the user uploads
+# an image, that image is going to be show after the upload
+@app.route('/uploads/<int:file_id>/<filename>')
+def uploaded_file(file_id, filename):
 
+    # Append file id precededed by zeros to the beginning of filename
+    filename = append_id_to_filename(file_id, filename)
 
-@app.route("/message-to-user/<int:id>", methods=["GET", "POST"])
-#@login_required
-@login_check(User.users)
-def message_to_user(id):
-    """ Send a message to a user"""
-
-    # Ensure user exists
-    user = User.get_by_id(id)
-    if not user:
-        return apology("user does not exist", 403)
-
-    # User reached route via GET (as by clicking a link or via redirect)
-    if request.method == "GET":
-        return render_template("message-to-any.html", user=user,
-                               text_config=Text.config)
-
-    # User reached route via POST (as by submitting a form via POST)
-    elif request.method == "POST":
-
-        # Get and send message to receiver
-        receiver = user
-        message_to_any(receiver)
-
-        # Redirect to user messages page
-        return redirect(url_for('user_messages_sent', id=session["user_id"]))
-
-    # User reached route not via GET neither via POST
-    else:
-        return apology("invalid method", 403)
-
-
-@app.route("/message-delete/<int:id>")
-#@login_required
-@login_check(User.users)
-def message_delete(id):
-    """ Delete a message """
-
-    # Ensure message exists
-    message = Message.get_by_id(id)
-    if not message:
-        return apology("message does not exist", 403)
-
-    # Delete message
-    message.remove()
-
-    # Redirect user to previous page
-    sender = message.sender
-    receiver = message.receiver
-    user_id = session.get("user_id")
-    if isinstance(receiver, Channel):
-        return redirect(url_for('channel_messages', id=receiver.id))
-    elif receiver.id == user_id:
-        return redirect(url_for('user_messages_received', id=user_id))
-    elif sender.id == user_id:
-        return redirect(url_for('user_messages_sent', id=user_id))
-    else:
-        return redirect("/")
+    return send_from_directory(app.config['UPLOAD_FOLDER'],
+                               filename)
