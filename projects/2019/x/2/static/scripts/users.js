@@ -140,21 +140,14 @@ function addUser(user, item_show_hide) {
 
 
 function setUserContent(user) {
-    let same_user = false;
-    if (user.id === session_user_id) {
-        same_user = true;
-    }
-
     user.timestamp = convertToLocaleString(user.timestamp);
     
     user.current_logins.forEach(login => {
         login.timestamp = convertToLocaleString(login.timestamp);
     });
 
-
     const context = {
-        user: user,
-        same_user: same_user
+        user: user
     }
     const content = template_item_content(context);
     const id = `#user${user.id}`

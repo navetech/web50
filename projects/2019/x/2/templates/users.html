@@ -13,11 +13,7 @@
 
     <script id="user-content" type="text/x-handlebars-template">
         {% raw -%}
-            {{#if same_user }}
-                <span class="ln-highlight">{{ user.name }}</span>
-            {{else}}
-                <a class="ln-highlight" href="/message-to-user/{{ user.id }}">{{ user.name }}</a>
-            {{/if}}
+            <a class="ln-highlight" href="/message-to-user/{{ user.id }}">{{ user.name }}</a>
             registered on
             <span class="ln-highlight">{{ user.timestamp }}</span>
             {{#if user.current_logins }}

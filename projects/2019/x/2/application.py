@@ -915,6 +915,31 @@ def user_messages_received(id):
                            text_config=Text.config)
 
 
+@app.route("/api/user-messages-received/<int:id>")
+def api_user_messages_received(id):
+    """Send user's messages received"""
+
+    # Get session user
+    session_user_id = session.get("user_id")
+    if session_user_id is None:
+        return jsonify('')
+
+    # Ensure user exists
+    user = User.get_by_id(id)
+    if not user:
+        return jsonify('')
+    u = user.to_dict()
+
+    # Get user's messages received
+    m = []
+    for message in Message.messages:
+        if message.receiver == user:
+            m.append(message.to_dict())
+
+    data = {'user': u, 'messages': m, 'session_user_id': session_user_id}
+    return jsonify(data)
+
+
 @app.route("/user-messages-sent/<int:id>")
 #@login_required
 @login_check(User.users)

@@ -7,7 +7,7 @@
             <ul class="list-group pt-4">
                 <li class="list-group-item ln-container01">
                     from
-                    <span class="ln-highlight">{{ message.sender.name }}</span>
+                    <a class="ln-highlight" href="/message-to-user/{{ message.sender.id }}">{{ message.sender.name }}</a>
                     {{#if receiver_is_channel }}
                         to channel
                         <a class="ln-highlight" href="/channel-messages/{{ message.receiver.id }}">{{ message.receiver.name }}</a>

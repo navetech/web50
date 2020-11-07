@@ -9,7 +9,7 @@
                     from
                     <a class="ln-highlight" href="/message-to-user/{{ message.sender.id }}">{{ message.sender.name }}</a>
                     to
-                    <span class="ln-highlight">{{ message.receiver.name }}</span>
+                    <a class="ln-highlight" href="/message-to-user/{{ message.receiver.id }}">{{ message.receiver.name }}</a>
                     on
                     <span class="ln-highlight">{{ message.timestamp }}</span>
                     <a class="btn btn-dark" role="button" href="/message-delete/{{ message.id }}">Delete</a>

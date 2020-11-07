@@ -112,17 +112,11 @@ function showChannels(channels) {
 
 
 function addChannel(channel, item_show_hide) {
-    let same_user = false;
-    if (channel.creator.id === session_user_id) {
-        same_user = true;
-    }
-
     channel.timestamp = convertToLocaleString(channel.timestamp);
 
     const context = {
         channel: channel,
-        item_show_hide: item_show_hide,
-        same_user: same_user
+        item_show_hide: item_show_hide
     }
 
     const content = template_item(context);

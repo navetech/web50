@@ -17,11 +17,7 @@
             <ul class="list-group pt-4">
                 <li class="list-group-item ln-container01">
                     from
-                    {{#if user_is_sender }}
-                        <a class="ln-highlight" href="/user-messages-sent/{{ message.sender.id }}">{{ message.sender.name }}</a>
-                    {{else}}
-                        <a class="ln-highlight" href="/message-to-user/{{ message.sender.id }}">{{ message.sender.name }}</a>
-                    {{/if}}
+                    <a class="ln-highlight" href="/message-to-user/{{ message.sender.id }}">{{ message.sender.name }}</a>
                     to channel
                     <span class="ln-highlight">{{ message.receiver.name }}</span>
                     on

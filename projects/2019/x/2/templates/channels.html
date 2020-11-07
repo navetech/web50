@@ -9,11 +9,7 @@
             <li id="channel{{ channel.id }}" class="list-group-item ln-container01 channel-item {{ item_show_hide }}">
                 <a class="ln-highlight" href="/channel-messages/{{ channel.id }}">{{ channel.name }}</a>
                 created by
-                {{#if same_user }}
-                    <a class="ln-highlight" href="/user-messages-sent/{{ channel.creator.id }}">{{ channel.creator.name }}</a>
-                {{else}}
-                    <a class="ln-highlight" href="/message-to-user/{{ channel.creator.id }}">{{ channel.creator.name }}</a>
-                {{/if}}
+                <a class="ln-highlight" href="/message-to-user/{{ channel.creator.id }}">{{ channel.creator.name }}</a>
                 on
                 <span class="ln-highlight">{{ channel.timestamp }}</span>
             </li>
