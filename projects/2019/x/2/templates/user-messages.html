@@ -1,10 +1,6 @@
 {% extends "messages.html" %}
 
 {% block messages_scripts %}
-
-    {% block user_messages_scripts %}
-    {% endblock %}
-
     <script id="user" type="text/x-handlebars-template">
         {% raw -%}
             <li class="list-group-item ln-container01 ln-h03">
@@ -21,47 +17,11 @@
         {%- endraw %}
     </script>
 
-    <script id="user-message" type="text/x-handlebars-template">
-        {% raw -%}
-            <div class="ln-group-divider"></div>
-            <ul class="list-group pt-4">
-                <li class="list-group-item ln-container01">
-                    from
-                    {{#if user_is_sender }}
-                        <span class="ln-highlight">{{ message.sender.name }}</span>
-                    {{else}}
-                        <a class="ln-highlight" href="/message-to-user/{{ message.sender.id }}">{{ message.sender.name }}</a>
-                    {{/if}}
-                    {{#if receiver_is_channel }}
-                        to channel
-                        <a class="ln-highlight" href="/channel-messages/{{ message.receiver.id }}">{{ message.receiver.name }}</a>
-                    {{else}}
-                        to
-                        {{#if user_is_receiver }}
-                            <span class="ln-highlight">{{ message.receiver.name }}</span>
-                        {{else}}
-                            <a class="ln-highlight" href="/message-to-user/{{ message.receiver.id }}">{{ message.receiver.name }}</a>
-                        {{/if}}
-                    {{/if}}
-                    on
-                    <span class="ln-highlight">{{ message.timestamp }}</span>
-                    {{#if user_is_sender }}
-                        <a class="btn btn-dark" role="button" href="/message-delete/{{ message.id }}">Delete</a>
-                    {{else}}
-                        {{#if user_is_receiver }}
-                            <a class="btn btn-dark" role="button" href="/message-delete/{{ message.id }}">Delete</a>
-                        {{/if}}
-                    {{/if}}
-                </li>
-
-                <li class="list-group-item ln-container01">
-                    <textarea readonly class="message-text-out" rows="{{ rows_number }}">{{ message.text }}</textarea>
-                </li>
-            </ul>
-        {%- endraw %}
-    </script>
-
     <script src="/static/scripts/user-messages.js"></script>
+
+    {% block user_messages_scripts %}
+    {% endblock %}
+
 {% endblock %}
 
 {% block messages_main %}

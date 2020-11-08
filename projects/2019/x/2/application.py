@@ -879,7 +879,7 @@ def message_to_user(id):
 def message_to_any(receiver):
 
     # Get uploaded files
-    uploaded_files = request.files.getlist("file")
+    uploaded_files = request.files.getlist("files[]")
 
     files_obj = []
     for file in uploaded_files:

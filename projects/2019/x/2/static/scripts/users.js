@@ -1,7 +1,9 @@
 let items_count = 0;
+
 let template_item;
 let template_item_content;
 let template_item_none;
+
 
 document.addEventListener('DOMContentLoaded', () => {
     items_count = document.querySelectorAll(".user-item").length;
@@ -9,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     template_item = Handlebars.compile(document.querySelector('#user').innerHTML);
     template_item_content = Handlebars.compile(document.querySelector('#user-content').innerHTML);
     template_item_none = Handlebars.compile(document.querySelector('#user-none').innerHTML);
-
+    
     // Connect to websocket
     let socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
 
@@ -121,7 +123,7 @@ function showUsers(users) {
             item_show_hide: item_show_hide
         }
         const content = template_item_none(context);
-        document.querySelector('#channels').innerHTML = content;
+        document.querySelector('#users').innerHTML = content;
     }
 }
 

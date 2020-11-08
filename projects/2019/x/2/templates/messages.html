@@ -1,67 +1,18 @@
 {% extends "layout.html" %}
 
 {% block scripts %}
-    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js"></script>
+    <script id="message-none" type="text/x-handlebars-template">
+        <div id="message-null" class="ln-group-divider"></div>
+        <ul class="list-group pt-4">
+            <li class="list-group-item ln-container01">No messages</li>
+        </ul>
+    </script>
+
+    <script src="/static/scripts/messages.js"></script>
 
     {% block messages_scripts %}
     {% endblock %}
 
-    <script id="message" type="text/x-handlebars-template">
-        {% raw -%}
-            <div class="ln-group-divider"></div>
-            <ul class="list-group pt-4">
-                <li class="list-group-item ln-container01">
-                    from
-                    {% if message.sender.id == session.user_id %}
-                        {% if channel is defined %}
-                            <a class="ln-highlight" href="{{ url_for('user_messages_sent', id=message.sender.id) }}">{{ message.sender.name }}</a>
-                        {% else %}
-                            <span class="ln-highlight">{{ message.sender.name }}</span>
-                        {% endif %}
-                    {% else %}
-                        <a class="ln-highlight" href="{{ url_for('message_to_user', id=message.sender.id) }}">{{ message.sender.name }}</a>
-                    {% endif %}
-
-                    {% if message.receiver is channel %}
-                        to channel
-                        {% if channel is defined %}
-                            <span class="ln-highlight">{{ message.receiver.name }}</span>
-                        {% else %}
-                            <a class="ln-highlight" href="{{ url_for('channel_messages', id=message.receiver.id) }}">{{ message.receiver.name }}</a>
-                        {% endif %}
-                    {% elif message.receiver is user %}
-                        to
-                        {% if message.receiver.id == session.user_id %}
-                            <span class="ln-highlight">{{ message.receiver.name }}</span>
-                        {% else %}
-                            <a class="ln-highlight" href="{{ url_for('message_to_user', id=message.receiver.id) }}">{{ message.receiver.name }}</a>
-                        {% endif %}
-                    {% endif %}
-                    on
-                    <span class="ln-highlight">{{ message.timestamp }}</span>
-                    {% if message.sender.id == session.user_id
-                        or (message.receiver is user and message.receiver.id == session.user_id) %}
-                        <a class="btn btn-dark" role="button" href="{{ url_for('message_delete', id=message.id) }}">Delete</a>
-                    {% endif %}
-                </li>
-
-                <li class="list-group-item ln-container01">
-                    <textarea readonly class="message-text-out" rows={{ text_config["rows_number"] }}>{{ message.text }}</textarea>
-                </li>
-            </ul>
-        {%- endraw %}
-    </script>
-
-    <script id="message-none" type="text/x-handlebars-template">
-        {% raw -%}
-            <div id="message-null" class="ln-group-divider"></div>
-            <ul class="list-group pt-4">
-                <li class="list-group-item ln-container01">No messages</li>
-            </ul>
-        {%- endraw %}
-    </script>
-    <script src="/static/scripts/messages.js"></script>
 {% endblock %}
 
 {% block main %}

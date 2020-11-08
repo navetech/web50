@@ -31,14 +31,13 @@
                 <form enctype="multipart/form-data" action="{{ url_for('message_to_user', id=user.id) }}" method="post">
             {% endif %}
                 <div class="form-group">
-                    <label for="file">Select Files</label>
-                    <input class="form-control" type="file" id=File" name="file" multiple>
+                    <label for="files[]">Select Files</label>
+                    <input class="form-control" type="file" id="files[]" name="files[]" multiple>
                 </div>
                 <div class="form-group">
                     <label for="text">Text</label>
                     <textarea autofocus name="text" id="text" class="form-control" rows= {{ text_config["rows_number"] }} maxlength={{ text_config["max_length"] }} placeholder="Text"></textarea>
                 </div>
-            
                 <button class="btn btn-dark" type="submit">Send</button>
             </form>
         </li>

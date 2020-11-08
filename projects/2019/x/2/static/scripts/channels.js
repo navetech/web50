@@ -1,13 +1,15 @@
 let items_count = 0;
+
 let template_item;
 let template_item_none;
+
 
 document.addEventListener('DOMContentLoaded', () => {
     items_count = document.querySelectorAll(".channel-item").length;
 
     template_item = Handlebars.compile(document.querySelector('#channel').innerHTML);
     template_item_none = Handlebars.compile(document.querySelector('#channel-none').innerHTML);
-
+    
     // Connect to websocket
     let socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
     

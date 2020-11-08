@@ -1,9 +1,6 @@
 {% extends "layout.html" %}
 
 {% block scripts %}
-    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js"></script>
-
     <script id="channel" type="text/x-handlebars-template">
         {% raw -%}
             <li id="channel{{ channel.id }}" class="list-group-item ln-container01 channel-item {{ item_show_hide }}">
@@ -37,7 +34,6 @@
                     <label for="name">Channel Name</label>
                     <input autocomplete="on" autofocus class="form-control"  type="text" id="name" name="name" placeholder="Channel Name">
                 </div>
-        
                 <button class="btn btn-dark" type="submit">Create Channel</button>
             </form>
         </li>
