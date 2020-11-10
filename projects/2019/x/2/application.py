@@ -4,9 +4,10 @@ import sys
 from datetime import datetime, timezone
 
 from flask import Flask, redirect, request, render_template, session, flash, jsonify, url_for
+from flask import send_from_directory
 #from flask_session import Session
 from flask_socketio import SocketIO, emit
-from werkzeug import secure_filename
+from werkzeug.utils import secure_filename
 
 import my_application
 from helpers import login_check, apology, append_id_to_filename
@@ -424,6 +425,11 @@ class Message:
 
         r["text"] = self.text;
 
+        r["files"] = []
+        for file in self.files:
+            r["files"].append(file.to_dict())
+
+
         return r
 
 
@@ -456,6 +462,14 @@ class File:
         File.remove_by_list(to_remove)
 
 
+    @staticmethod
+    def get_by_id(id):
+        for file in File.files:
+            if file.id == id:
+                return file
+        return None
+
+
     def remove(self):
         # Remove file from storage device
 
@@ -477,9 +491,20 @@ class File:
         dt = datetime.now(timezone.utc)
         self.timestamp = dt.strftime("%a, %d %b %Y %H:%M:%S %Z")
 
-        self.name_unique = append_id_to_filename(self.id, name, File.max_seq_number)
+        # Make the filename safe, remove unsupported chars
+        filename_secure = secure_filename(name)
+
+        self.name_unique = append_id_to_filename(self.id, filename_secure, File.max_seq_number)
 
         File.files.insert(0, self)
+
+
+    def to_dict(self):
+        r = {}
+        r["id"] = self.id
+        r["timestamp"] = self.timestamp
+        r["name"] = self.name
+        r["name_unique"] = self.name_unique
 
 
 
@@ -887,11 +912,8 @@ def message_to_any(receiver):
         # Check if the file is one of the allowed types/extensions
         if file and allowed_file(file.filename):
 
-            # Make the filename safe, remove unsupported chars
-            filename = secure_filename(file.filename)
-
             # Instatiate file
-            file_obj = File(filename)
+            file_obj = File(file.filename)
  
             # Move the file form the temporal folder to the upload
             # folder we setup
@@ -1063,10 +1085,12 @@ def api_user_messages_sent(id):
 # directory and show it on the browser, so if the user uploads
 # an image, that image is going to be show after the upload
 @app.route('/uploads/<int:file_id>/<filename>')
-def uploaded_file(file_id, filename):
+def uploaded_file(file_id):
 
-    # Append file id precededed by zeros to the beginning of filename
-    filename = append_id_to_filename(file_id, filename)
+    # Ensure file exists
+    file = File.get_by_id(file_id)
+    if not file:
+        return apology("file does not exist", 403)
 
     return send_from_directory(app.config['UPLOAD_FOLDER'],
-                               filename)
+                               file.name_unique)
