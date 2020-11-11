@@ -126,7 +126,7 @@ class Channel(Receiver):
         except:
             raise RuntimeError("remove(): Channel does not exist")
 
-        super().remove()
+        Receiver.remove(self)
 
 
     def to_dict(self):
@@ -212,7 +212,8 @@ class User(Sender, Receiver):
         except:
             raise RuntimeError("remove(): User does not exist")
 
-        super().remove()
+        Sender.remove(self)
+        Receiver.remove(self)
 
 
     def to_dict(self):
@@ -399,7 +400,8 @@ class Message:
 
     def remove(self):
         # Remove files
-        File.remove_by_message(self)
+        for file in self.files:
+            file.remove()
         self.files = []
 
         # Remove message
@@ -471,6 +473,7 @@ class File:
 
     def remove(self):
         # Remove file from storage device
+        os.remove(os.path.join(app.config['UPLOAD_FOLDER'], self.name_unique))
 
         # Remove file
         try:
