@@ -1,8 +1,16 @@
 {% extends "layout.html" %}
 
 {% block scripts %}
-    <script id="message-none" type="text/x-handlebars-template">
-        <div id="message-null" class="ln-group-divider"></div>
+<script id="message-file" type="text/x-handlebars-template">
+    {% raw -%}
+        <li class="list-group-item ln-container01">
+            <a class="ln-highlight" href="/uploads/{{ file.id }}/{{ file.name }}">{{ file.name }}</a>
+        </li>
+    {%- endraw %}
+</script>
+
+<script id="message-none" type="text/x-handlebars-template">
+        <div class="ln-group-divider"></div>
         <ul class="list-group pt-4">
             <li class="list-group-item ln-container01">No messages</li>
         </ul>

@@ -22,6 +22,8 @@
                     <a class="btn btn-dark" role="button" href="/message-delete/{{ message.id }}">Delete</a>
                 </li>
 
+                <div id="message{{ message.id }}-files"></div>
+
                 <li class="list-group-item ln-container01">
                     <textarea readonly class="message-text-out" rows="{{ rows_number }}">{{ message.text }}</textarea>
                 </li>

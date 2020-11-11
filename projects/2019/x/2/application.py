@@ -429,7 +429,6 @@ class Message:
         for file in self.files:
             r["files"].append(file.to_dict())
 
-
         return r
 
 
@@ -505,6 +504,8 @@ class File:
         r["timestamp"] = self.timestamp
         r["name"] = self.name
         r["name_unique"] = self.name_unique
+
+        return r
 
 
 
@@ -1085,7 +1086,7 @@ def api_user_messages_sent(id):
 # directory and show it on the browser, so if the user uploads
 # an image, that image is going to be show after the upload
 @app.route('/uploads/<int:file_id>/<filename>')
-def uploaded_file(file_id):
+def uploaded_file(file_id, filename):
 
     # Ensure file exists
     file = File.get_by_id(file_id)

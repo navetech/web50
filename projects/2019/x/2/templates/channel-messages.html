@@ -27,11 +27,7 @@
                     {{/if}}
                 </li>
 
-                {{#each files}}
-                    <li class="list-group-item ln-container01">
-                        <a class="ln-highlight" href="/uploaded_file/{{ this.id }}">{{ this.name }}</a>
-                    </li>
-                {{/each}}
+                <div id="message{{ message.id }}-files"></div>
 
                 <li class="list-group-item ln-container01">
                     <textarea readonly class="message-text-out" rows="{{ rows_number }}">{{ message.text }}</textarea>
