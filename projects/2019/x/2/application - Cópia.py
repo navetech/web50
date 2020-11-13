@@ -2,27 +2,31 @@ import os
 import sys
 
 from datetime import datetime, timezone
-import time
-import locale
 
-from flask import Flask, session, redirect, request, render_template, flash, url_for, send_from_directory
-from flask_session import Session
+from flask import Flask, redirect, request, render_template, session, flash, jsonify, url_for
+from flask import send_from_directory
+#from flask_session import Session
 from flask_socketio import SocketIO, emit
-from werkzeug import secure_filename
+from werkzeug.utils import secure_filename
 
-from helpers import login_required, apology
+import my_application
+from helpers import login_check, apology, append_id_to_filename
+
 
 
 app = Flask(__name__)
+#app.config.from_object('my_application.default_settings')
+app.config.from_envvar('APPLICATION_SETTINGS')
 
 # Configure session to use filesystem
-app.config["SESSION_PERMANENT"] = False
-app.config["SESSION_TYPE"] = "filesystem"
-Session(app)
+#app.config["SESSION_PERMANENT"] = False
+#app.config["SESSION_TYPE"] = "filesystem"
+#Session(app)
 
+#app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 # Configure socket
-app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 socketio = SocketIO(app)
+
 
 
 class Communicator:
@@ -39,19 +43,59 @@ class Communicator:
         Communicator.seq_number += 1
 
         dt = datetime.now(timezone.utc)
-        self.timestamp = dt.strftime("%a, %d %b %Y %H:%M:%S %Z")
+        self.timestamp = dt.isoformat()
+
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "timestamp" : self.timestamp
+        }
+
 
 
 class Sender(Communicator):
-    pass
+    def __init__(self, name):
+        super().__init__(name)
+
+        
+    def remove(self):
+        Message.remove_by_sender(self)
+
 
 
 class Receiver(Communicator):
-    pass
+    def __init__(self, name):
+        super().__init__(name)
+
+
+    def remove(self):
+        Message.remove_by_receiver(self)
+
 
 
 class Channel(Receiver):
     channels = []
+
+
+    @staticmethod
+    def remove_by_list(to_remove):
+        for channel in to_remove:
+            channel.remove()
+            data = channel.to_dict()
+            socketio.emit('announce remove channel', data)
+
+
+    @staticmethod
+    def remove_by_creator(creator):
+        to_remove = []
+        for channel in Channel.channels:
+            if channel.creator == creator:
+                to_remove.append(channel)
+
+        Channel.remove_by_list(to_remove)
+
 
     @staticmethod
     def get_by_id(id):
@@ -69,27 +113,32 @@ class Channel(Receiver):
         return None
 
 
-    def __init__(self, name):
+    def __init__(self, name, creator):
         super().__init__(name)
+        self.creator = creator
         Channel.channels.insert(0, self)
 
 
-class Login:
-    max_seq_number = sys.maxsize - 1
-    seq_number = 0
+    def remove(self):
+        # Remove channel
+        try:
+            Channel.channels.remove(self)
+        except:
+            raise RuntimeError("remove(): Channel does not exist")
 
-    def __init__(self):
-        if Login.seq_number > Login.max_seq_number:
-            raise RuntimeError("Max number of logins exceeded")
-        self.id = Login.seq_number
-        Login.seq_number += 1
+        Receiver.remove(self)
 
-        dt = datetime.now(timezone.utc)
-        self.timestamp = dt.strftime("%a, %d %b %Y %H:%M:%S %Z")
+
+    def to_dict(self):
+        r = super().to_dict()
+        r['creator'] = self.creator.to_dict()
+        return r
+
 
 
 class User(Sender, Receiver):
     users = []
+
 
     @staticmethod
     def get_by_id(id):
@@ -109,26 +158,53 @@ class User(Sender, Receiver):
 
     def __init__(self, name):
         super().__init__(name)
-        self.logins = []
+
+        self.current_logins = []
+        self.current_logout = None
+
         User.users.insert(0, self)
 
 
     def login(self):
-        self.logins.insert(0, Login())
+        if self.current_logout is not None :
+            self.current_logout.remove_from_currents()
+        self.current_logout = None
+
+        login = Login(self)
+        self.current_logins.insert(0, login)
+
+        return login
+
+
+    def logout(self, login_id):
+        login = Log.get_by_id(login_id)
+        if login is not None:
+            login.remove_from_currents()
+            try:
+                self.current_logins.remove(login)
+            except:
+                raise RuntimeError("remove(): User's current login does not exist")
+
+        if self.current_logout is not None :
+            self.current_logout.remove_from_currents()
+
+        logout = Logout(self)
+
+        return logout
 
     
     def remove(self):
+        # Remove created channels
+        Channel.remove_by_creator(self)
 
-        # Remove all user's messages
-        to_remove = []
-        for message in Message.messages:
-            if message.sender == self or message.receiver == self:
-                to_remove.append(message)
-        for message in to_remove:
-            message.remove()
+        # Remove logs
+        Login.remove_by_user(self)
+        self.current_logins = []
 
-        # Remove logins
-        self.logins = []
+        Logout.remove_by_user(self)
+        self.current_logout = None
+
+        Log.remove_by_user(self)
 
         # Remove user
         try:
@@ -136,12 +212,129 @@ class User(Sender, Receiver):
         except:
             raise RuntimeError("remove(): User does not exist")
 
+        Sender.remove(self)
+        Receiver.remove(self)
 
-class Text:
-    config = {}
-    config["columns_max"] = 80
-    config["rows_number"] = 5
-    config["max_length"] = config["columns_max"] * config["rows_number"]
+
+    def to_dict(self):
+        logins = []
+        for login in self.current_logins:
+            logins.append(login.to_dict())
+
+        logout = self.current_logout
+
+        r = super().to_dict()
+        r['current_logins'] = logins
+
+        if logout is not None:
+            r['current_logout'] = logout.to_dict()
+        else:
+            r['current_logout'] = None
+
+        return r
+
+
+
+class Log:
+    logs = []
+    max_seq_number = sys.maxsize - 1
+    seq_number = 0
+
+
+    @staticmethod
+    def remove_by_user(user):
+        to_remove = []
+        for log in Log.logs:
+            if log.user == user:
+                to_remove.append(log)
+        for log in to_remove:
+            Log.logs.remove(log)
+
+
+    @staticmethod
+    def get_by_id(id):
+        for log in Log.logs:
+            if log.id == id:
+                return log
+        return None
+
+
+    def __init__(self, user):
+        self.user = user
+
+        if Log.seq_number > Log.max_seq_number:
+            raise RuntimeError("Max number of logins/logouts exceeded")
+        self.id = Log.seq_number
+        Log.seq_number += 1
+
+        dt = datetime.now(timezone.utc)
+        self.timestamp = dt.isoformat()
+
+        Log.logs.insert(0, self)
+
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "timestamp": self.timestamp
+        }
+
+
+
+class Login(Log):
+    currents = []
+
+
+    @staticmethod
+    def remove_by_user(user):
+        to_remove = []
+        for log in Login.currents:
+            if log.user == user:
+                to_remove.append(log)
+        for log in to_remove:
+            Login.currents.remove(log)
+
+
+    def __init__(self, user):
+        super().__init__(user)
+        Login.currents.insert(0, self)
+
+
+    def remove_from_currents(self):
+        # Remove login
+        try:
+            Login.currents.remove(self)
+        except:
+            raise RuntimeError("remove(): Login from currents does not exist")
+
+
+
+class Logout(Log):
+    currents = []
+
+
+    @staticmethod
+    def remove_by_user(user):
+        to_remove = []
+        for log in Logout.currents:
+            if log.user == user:
+                to_remove.append(log)
+        for log in to_remove:
+            Logout.currents.remove(log)
+
+
+    def __init__(self, user):
+        super().__init__(user)
+        Logout.currents.insert(0, self)
+
+
+    def remove_from_currents(self):
+        # Remove logout
+        try:
+            Logout.currents.remove(self)
+        except:
+            raise RuntimeError("remove(): Logout from currents does not exist")
+
 
 
 class Message:
@@ -149,6 +342,33 @@ class Message:
     max_seq_number = sys.maxsize - 1
     seq_number = 0
 
+
+    @staticmethod
+    def remove_by_list(to_remove):
+        for message in to_remove:
+            message.remove()
+
+
+    @staticmethod
+    def remove_by_sender(sender):
+        to_remove = []
+        for message in Message.messages:
+            if message.sender == sender:
+                to_remove.append(message)
+
+        Message.remove_by_list(to_remove)
+
+
+    @staticmethod
+    def remove_by_receiver(receiver):
+        to_remove = []
+        for message in Message.messages:
+            if message.receiver == receiver:
+                to_remove.append(message)
+
+        Message.remove_by_list(to_remove)
+        
+        
     @staticmethod
     def get_by_id(id):
         for message in Message.messages:
@@ -161,7 +381,11 @@ class Message:
         self.sender = sender
         self.receiver = receiver
         self.text = text
-        self.files = files
+
+        self.files = []
+        for file in files:
+            file.message = self
+            self.files.append(file)
 
         if Message.seq_number > Message.max_seq_number:
             raise RuntimeError("Max number of messages exceeded")
@@ -169,14 +393,15 @@ class Message:
         Message.seq_number += 1
 
         dt = datetime.now(timezone.utc)
-        self.timestamp = dt.strftime("%a, %d %b %Y %H:%M:%S %Z")
+        self.timestamp = dt.isoformat()
 
         Message.messages.insert(0, self)
 
 
     def remove(self):
-
         # Remove files
+        for file in self.files:
+            file.remove()
         self.files = []
 
         # Remove message
@@ -186,10 +411,78 @@ class Message:
             raise RuntimeError("remove(): Message does not exist")
 
 
+    def to_dict(self):
+        r = {}
+        r["id"] = self.id
+        r["timestamp"] = self.timestamp
+        r["sender"] = self.sender.to_dict()
+        r["receiver"] = self.receiver.to_dict()
+
+        if is_channel(self.receiver):
+            r["receiver"]["type"] = "channel"
+        elif is_user(self.receiver):
+            r["receiver"]["type"] = "user"
+        else:
+            r["receiver"]["type"] = ""
+
+        r["text"] = self.text;
+
+        r["files"] = []
+        for file in self.files:
+            r["files"].append(file.to_dict())
+
+        return r
+
+
+
+class Text:
+    config = {}
+    config["columns_max"] = 80
+    config["rows_number"] = 5
+    config["max_length"] = config["columns_max"] * config["rows_number"]
+
+
+
 class File:
     files = []
     max_seq_number = sys.maxsize - 1
     seq_number = 0
+
+
+    @staticmethod
+    def remove_by_list(to_remove):
+        for file in to_remove:
+            file.remove()
+
+
+    @staticmethod
+    def remove_by_message(message):
+        to_remove = []
+        for file in File.files:
+            if file.message == message:
+                to_remove.append(message)
+
+        File.remove_by_list(to_remove)
+
+
+    @staticmethod
+    def get_by_id(id):
+        for file in File.files:
+            if file.id == id:
+                return file
+        return None
+
+
+    def remove(self):
+        # Remove file from storage device
+        os.remove(os.path.join(app.config['UPLOAD_FOLDER'], self.name_unique))
+
+        # Remove file
+        try:
+            File.files.remove(self)
+        except:
+            raise RuntimeError("remove(): File does not exist")
+
 
     def __init__(self, name):
         self.name = name
@@ -202,28 +495,37 @@ class File:
         dt = datetime.now(timezone.utc)
         self.timestamp = dt.strftime("%a, %d %b %Y %H:%M:%S %Z")
 
+        # Make the filename safe, remove unsupported chars
+        filename_secure = secure_filename(name)
+
+        self.name_unique = append_id_to_filename(self.id, filename_secure, File.max_seq_number)
+
         File.files.insert(0, self)
 
 
-    def remove(self):
+    def to_dict(self):
+        r = {}
+        r["id"] = self.id
+        r["timestamp"] = self.timestamp
+        r["name"] = self.name
+        r["name_unique"] = self.name_unique
 
-        # Remove file
-        try:
-            File.files.remove(self)
-        except:
-            raise RuntimeError("remove(): File does not exist")
+        return r
+
 
 
 @app.template_test('channel')
 def is_channel(receiver):
     return isinstance(receiver, Channel)
 
+
 @app.template_test('user')
 def is_user(receiver):
     return isinstance(receiver, User)
 
 
-UPLOAD_FOLDER = 'static/uploads'
+
+UPLOAD_FOLDER = 'uploads'
 
 # Create upload directory
 try:
@@ -233,8 +535,10 @@ except FileNotFoundError:
 
 # This is the path to the upload directory
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
 # These are the extension that we are accepting to be uploaded
 app.config['ALLOWED_EXTENSIONS'] = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
+
 
 # For a given file, return whether it's an allowed type or not
 def allowed_file(filename):
@@ -242,18 +546,76 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1] in app.config['ALLOWED_EXTENSIONS']
 
 
-@app.route("/")
-@login_required
-def index():
-    """ Home page """
 
-    # Redirect user to channels page
-    return redirect("/channels")
+@app.route("/home", methods=["GET"])
+@login_check(User.users)
+def home():
+    """ Home page """
+    return redirect("/users")
+
+
+#@app.route("/", methods=["GET"])
+@app.route("/", methods=["GET", "POST"])
+def index():
+    """ Initial page (blank page, with only a script to get locale and timezone from client """
+
+    # If logged in, redirect to home page
+    user_id = session.get("user_id")
+    if user_id is not None:
+        return redirect("/home")
+
+    # User reached route via GET (as by clicking a link or via redirect)
+    if request.method == "GET":
+        return render_template("index.html")
+
+    # User reached route via POST (as by submitting a form via POST)
+    elif request.method == "POST":
+
+        # Set session locale and timezone
+        session.clear()
+
+        loc = request.form.get("locale")
+        if loc is not None:
+            session["locale"] = loc
+        else:
+            session["locale"] = "en-US"
+
+        dt = datetime.now(timezone.utc)
+
+        tz = request.form.get("timezone")
+        if tz is not None:
+            session["timezone"] = tz
+        else:
+            session["timezone"] = timezone.utc.tzname(dt)
+
+        timezone_offset = request.form.get("timezone-offset")
+        if timezone_offset is not None:
+            try:
+                session["timezone_offset"] = int(timezone_offset)
+            except ValueError:
+                session["timezone_offset"] = timezone.utc.utcoffset(dt).seconds
+        else:
+            session["timezone_offset"] = timezone.utc.utcoffset(dt).seconds
+
+        session["params_set"] = True
+
+        # Redirect to login page
+        return redirect("/login")
 
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
     """Register a new user"""
+
+    # If not logged in, redirect to logout
+    user_id = session.get("user_id")
+    if user_id is not None:
+        return redirect("/logout")
+
+    # If not yet accessed intitial page, redirect to initial page 
+    params_set = session.get("params_set")
+    if not params_set:
+        return redirect ("/")
 
     # User reached route via GET (as by clicking a link or via redirect)
     if request.method == "GET":
@@ -269,47 +631,45 @@ def register():
 
         # Ensure user does not exist
         user = User.get_by_name(name)
-        if user:
+        if user is not None:
             return apology("user already exists", 403)
 
         # Register user
         user = User(name)
 
         # Login user
-        user.login()
+        login = user.login()
 
         # Remember which user has logged in
-        session.clear()
-        session["user"] = user
-
-        # Get locale
-        loc = locale.getlocale(locale.LC_CTYPE)
-        (language_code, encoding) = loc
-        # language_code format returned by getlocale is like 'pt_BR' but 
-        # language_code format required by setlocale is like 'pt-BR' 
-        language_code = language_code.replace("_", "-", 1)
-        session["language_code"] = language_code
-
-        # Get local time zone
-        lt = time.localtime()   # localtime returns tm_gmtoff in seconds
-        gmt_offset = lt.tm_gmtoff
-        session["gmt_offset"] = gmt_offset
+        session["user_id"] = user.id
+        session["user_name"] = user.name
+        session["login_id"] = login.id
 
         # Report message
         flash('You were successfully logged in')
         flash(user.name)
-        
-        # Redirect user to home page
-        return redirect("/")
 
-    # User reached route not via GET neither via POST
-    else:
-        return apology("invalid method", 403)
+        # Emit event
+        data = user.to_dict()
+        socketio.emit('announce register', data)
+
+        # Redirect to home page
+        return redirect("/users")
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
     """Log user in"""
+
+    # If not logged in, redirect to logout
+    user_id = session.get("user_id")
+    if user_id is not None:
+        return redirect("/logout")
+
+    # If not yet accessed intitial page, redirect to initial page 
+    params_set = session.get("params_set")
+    if not params_set:
+        return redirect ("/")
 
     # User reached route via GET (as by clicking a link or via redirect)
     if request.method == "GET":
@@ -325,56 +685,59 @@ def login():
 
         # Ensure user exists
         user = User.get_by_name(name)
-        if not user:
+        if user is None:
             return apology("user does not exist", 403)
 
         # Login user
-        user.login()
+        login = user.login()
 
         # Remember which user has logged in
-        session.clear()
-        session["user"] = user
-
-        # Get locale
-        loc = locale.getlocale(locale.LC_CTYPE)
-        (language_code, encoding) = loc
-        # language_code format returned by getlocale is like 'pt_BR' but 
-        # language_code format required by setlocale is like 'pt-BR' 
-        language_code = language_code.replace("_", "-", 1)
-        session["language_code"] = language_code
-
-        # Get local time zone
-        lt = time.localtime()   # localtime returns tm_gmtoff in seconds
-        gmt_offset = lt.tm_gmtoff
-        session["gmt_offset"] = gmt_offset
+        session["user_id"] = user.id
+        session["user_name"] = user.name
+        session["login_id"] = login.id
 
         # Report message
         flash('You were successfully logged in')
         flash(user.name)
-        
-        # Redirect user to home page
-        return redirect("/")
 
-    # User reached route not via GET neither via POST
-    else:
-        return apology("invalid method", 403)
+        # Emit event
+        data = user.to_dict()
+        socketio.emit('announce login', data)
+
+        # Redirect to home page
+        return redirect("/home")
 
 
 @app.route("/logout")
-@login_required
+#@login_required
+@login_check(User.users)
 def logout():
-    """Log user out"""
+    """ Log user out"""
 
-    session.clear()
+    # Log out
+    user = User.get_by_id(session.get("user_id"))
+    if user is not None:
+        user.logout(session.get("login_id"))
+        session.clear()
 
-    # Redirect user to home page
+        # Emit event
+        data = user.to_dict()
+        socketio.emit('announce logout', data)
+
+    # Redirect to initial page
     return redirect("/")
 
 
 @app.route("/unregister", methods=["GET", "POST"])
-@login_required
+#@login_required
+@login_check(User.users)
 def unregister():
     """Unregister the user"""
+
+    # If not logged, redirect to initial page
+    user = User.get_by_id(session.get("user_id"))
+    if user is None:
+        return redirect("/")
 
     # User reached route via GET (as by clicking a link or via redirect)
     if request.method == "GET":
@@ -383,127 +746,108 @@ def unregister():
     # User reached route via POST (as by submitting a form via POST)
     elif request.method == "POST":
 
+        # If confirmed:
         if request.form.get("confirm"):
 
-            # Get user
-            user = User.get_by_id(session["user"].id)
-
             # Remove user
-            user.remove()
+            user = User.get_by_id(session.get("user_id"))
+            if user is not None:
+                data = user.to_dict()
+                socketio.emit('announce unregister', data)
+                user.remove()
+                session.clear()
 
-            session.clear()
+            # Redirect user to initial page
+            return redirect("/")
 
-        # Redirect user to home page
-        return redirect("/")
+        # If not confirmed
+        else:
+            # Redirect to home page
+            return redirect("/home")
 
-    # User reached route not via GET neither via POST
-    else:
-        return apology("invalid method", 403)
+
+@app.route("/users", methods=["GET"])
+#@login_required
+@login_check(User.users)
+def users_():
+    """ Show users """
+    return render_template("users.html")
+
+
+@app.route("/api/users", methods=["GET"])
+def api_users():
+    """ Send users """
+
+    # Get session user
+    session_user_id = session.get("user_id")
+    if session_user_id is None:
+        return jsonify('')
+
+    # Get users
+    u = []
+    for user in User.users:
+        u.append(user.to_dict())
+
+    data = {'users': u, 'session_user_id': session_user_id}
+    return jsonify(data)
 
 
 @app.route("/channels", methods=["GET", "POST"])
-@login_required
+#@login_required
+@login_check(User.users)
 def channels_():
     """ Show channels / Create a channel """
 
     # User reached route via GET (as by clicking a link or via redirect)
     if request.method == "GET":
-        return render_template("channels.html", channels=Channel.channels)
+        return render_template("channels.html")
 
     # User reached route via POST (as by submitting a form via POST)
     elif request.method == "POST":
         name = request.form.get("name")
         if not name:
-            return render_template("channels.html", channels=Channel.channels)
+            return render_template("channels.html")
 
         # Ensure channel does not exist
         channel = Channel.get_by_name(name)
-        if channel:
+        if channel is not None:
             return apology("channel already exists", 403)
 
+        # Ensure user exists
+        user = User.get_by_id(session.get("user_id"))
+        if user is None:
+            return apology("user does not exist", 403)
+
         # Create channel
-        channel = Channel(name)
+        channel = Channel(name, creator=user)
 
-        return render_template("channels.html", channels=Channel.channels)
+        # Emit event
+        data = channel.to_dict()
+        socketio.emit('announce create channel', data)
 
-    else:
-        return apology("invalid method", 403)
-
-
-@app.route("/channel-messages/<int:id>")
-@login_required
-def channel_messages(id):
-    """Show channel's messages """
-
-    # Ensure channel exists
-    channel = Channel.get_by_id(id)
-    if not channel:
-        return apology("channel does not exist", 403)
-
-    # Get channel's messages
-    m = []
-    for message in Message.messages:
-        if message.receiver == channel:
-            m.append(message)
-
-    return render_template("channel-messages.html", channel=channel,
-                           messages=m, text_config=Text.config)
+        return render_template("channels.html")
 
 
+@app.route("/api/channels", methods=["GET"])
+def api_channels():
+    """ Send channels """
 
-def append_id_to_filename(file_id, filename):
+    # Get user
+    session_user_id = session.get("user_id")
+    if session_user_id is None:
+        return jsonify('')
 
-    # Append file id precededed by zeros to the beginning of filename
-    d = 0
-    n = File.max_seq_number
-    while n > 0:
-        d += 1
-        n //= 10
-    f = "0" + str(d)
-    p = "{:" + f + "}"
-    x = f"{p}".format(file_id)
-    appended_name = x + "-" + filename
+    # Get channels
+    c = []
+    for channel in Channel.channels:
+        c.append(channel.to_dict())
 
-    return appended_name
-
-
-def message_to_any(receiver):
-
-    # Get the name of the uploaded files
-    uploaded_files = request.files.getlist("file")
-    files_obj = []
-    for file in uploaded_files:
-        # Check if the file is one of the allowed types/extensions
-        if file and allowed_file(file.filename):
-            # Make the filename safe, remove unsupported chars
-            filename = secure_filename(file.filename)
-
-            # Instatiate file
-            file_obj = File(filename)
-
-            # Append file id precededed by zeros to the beginning of filename
-            filename = append_id_to_filename(file_obj.id, filename)
- 
-            # Move the file form the temporal folder to the upload
-            # folder we setup
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            # Save the filename into a list, we'll use it later
-            files_obj.append(file_obj)
-
-    # Get message text
-    text = request.form.get("text")
-    if text:
-        text = text.strip()
-
-    # Create message
-    sender = User.get_by_id(session["user"].id)
-    message = Message(sender, receiver, text, files_obj)
-
-    return message
+    data = {'channels': c, 'session_user_id': session_user_id}
+    return jsonify(data)
 
 
 @app.route("/message-to-channel/<int:id>", methods=["GET", "POST"])
-@login_required
+@login_check(User.users)
 def message_to_channel(id):
     """ Send a message to a channel"""
 
@@ -532,60 +876,9 @@ def message_to_channel(id):
         return apology("invalid method", 403)
 
 
-@app.route("/users", methods=["GET"])
-@login_required
-def users_():
-    """ Show users """
-
-    # User reached route via GET (as by clicking a link or via redirect)
-    if request.method == "GET":
-        return render_template("users.html", users=User.users)
-    else:
-        return apology("invalid method", 403)
-
-
-@app.route("/user-messages-received/<int:id>")
-@login_required
-def user_messages_received(id):
-    """Show user's received messages """
-
-    # Ensure user exists
-    user = User.get_by_id(id)
-    if not user:
-        return apology("user does not exist", 403)
-
-    # Get messages received by user
-    m = []
-    for message in Message.messages:
-        if message.receiver == user:
-            m.append(message)
-
-    return render_template("user-messages-received.html", user=user, messages=m,
-                           text_config=Text.config)
-
-
-@app.route("/user-messages-sent/<int:id>")
-@login_required
-def user_messages_sent(id):
-    """Show user's sent messages """
-
-    # Ensure user exists
-    user = User.get_by_id(id)
-    if not user:
-        return apology("user does not exist", 403)
-
-    # Get messages sent by user
-    m = []
-    for message in Message.messages:
-        if message.sender == user:
-            m.append(message)
-
-    return render_template("user-messages-sent.html", user=user, messages=m,
-                           text_config=Text.config)
-
-
 @app.route("/message-to-user/<int:id>", methods=["GET", "POST"])
-@login_required
+#@login_required
+@login_check(User.users)
 def message_to_user(id):
     """ Send a message to a user"""
 
@@ -607,15 +900,50 @@ def message_to_user(id):
         message_to_any(receiver)
 
         # Redirect to user messages page
-        return redirect(url_for('user_messages_sent', id=session["user"].id))
+        return redirect(url_for('user_messages_sent', id=session["user_id"]))
 
     # User reached route not via GET neither via POST
     else:
         return apology("invalid method", 403)
 
 
+def message_to_any(receiver):
+
+    # Get uploaded files
+    uploaded_files = request.files.getlist("files[]")
+
+    files_obj = []
+    for file in uploaded_files:
+
+        # Check if the file is one of the allowed types/extensions
+        if file and allowed_file(file.filename):
+
+            # Instatiate file
+            file_obj = File(file.filename)
+ 
+            # Move the file form the temporal folder to the upload
+            # folder we setup
+            filename_unique = file_obj.name_unique;
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename_unique))
+
+            files_obj.append(file_obj)
+
+    # Get message text
+    text = request.form.get("text")
+    if text:
+        text = text.strip()
+
+    # Create message
+    user_id = session.get("user_id")
+    sender = User.get_by_id(user_id)
+    message = Message(sender, receiver, text, files_obj)
+
+    return message
+
+
 @app.route("/message-delete/<int:id>")
-@login_required
+#@login_required
+@login_check(User.users)
 def message_delete(id):
     """ Delete a message """
 
@@ -628,17 +956,135 @@ def message_delete(id):
     message.remove()
 
     # Redirect user to previous page
-    s = message.sender
-    r = message.receiver
-    if isinstance(r, Channel):
-        return redirect(url_for('channel_messages', id=r.id))
-    elif r.id == session['user'].id:
-        return redirect(url_for('user_messages_received', id=session["user"].id))
-    elif s.id == session['user'].id:
-        return redirect(url_for('user_messages_sent', id=session["user"].id))
+    sender = message.sender
+    receiver = message.receiver
+    user_id = session.get("user_id")
+    if isinstance(receiver, Channel):
+        return redirect(url_for('channel_messages', id=receiver.id))
+    elif receiver.id == user_id:
+        return redirect(url_for('user_messages_received', id=user_id))
+    elif sender.id == user_id:
+        return redirect(url_for('user_messages_sent', id=user_id))
     else:
         return redirect("/")
 
+
+@app.route("/channel-messages/<int:id>")
+#@login_required
+@login_check(User.users)
+def channel_messages(id):
+    """Show channel's messages """
+
+    # Ensure channel exists
+    channel = Channel.get_by_id(id)
+    if not channel:
+        return apology("channel does not exist", 403)
+
+    return render_template("channel-messages.html", channel=channel)
+
+
+@app.route("/api/channel-messages/<int:id>")
+def api_channel_messages(id):
+    """Send channel's messages """
+
+    # Get user
+    session_user_id = session.get("user_id")
+    if session_user_id is None:
+        return jsonify('')
+
+    # Ensure channel exists
+    channel = Channel.get_by_id(id)
+    if not channel:
+        return jsonify('')
+    c = channel.to_dict()
+
+    # Get channel's messages
+    m = []
+    for message in Message.messages:
+        if message.receiver == channel:
+            m.append(message.to_dict())
+
+    data = {'channel': c, 'messages': m, 'session_user_id': session_user_id}
+    return jsonify(data)
+
+
+@app.route("/user-messages-received/<int:id>")
+#@login_required
+@login_check(User.users)
+def user_messages_received(id):
+    """Show user's received messages """
+
+    # Ensure user exists
+    user = User.get_by_id(id)
+    if not user:
+        return apology("user does not exist", 403)
+
+    return render_template("user-messages-received.html", user=user)
+
+
+@app.route("/api/user-messages-received/<int:id>")
+def api_user_messages_received(id):
+    """Send user's messages received"""
+
+    # Get session user
+    session_user_id = session.get("user_id")
+    if session_user_id is None:
+        return jsonify('')
+
+    # Ensure user exists
+    user = User.get_by_id(id)
+    if not user:
+        return jsonify('')
+    u = user.to_dict()
+
+    # Get user's messages received
+    m = []
+    for message in Message.messages:
+        if message.receiver == user:
+            m.append(message.to_dict())
+
+    data = {'user': u, 'messages': m, 'session_user_id': session_user_id}
+    return jsonify(data)
+
+
+@app.route("/user-messages-sent/<int:id>")
+#@login_required
+@login_check(User.users)
+def user_messages_sent(id):
+    """Show user's sent messages """
+
+    # Ensure user exists
+    user = User.get_by_id(id)
+    if not user:
+        return apology("user does not exist", 403)
+
+    return render_template("user-messages-sent.html", user=user)
+
+                
+@app.route("/api/user-messages-sent/<int:id>")
+def api_user_messages_sent(id):
+    """Send user's messages sent"""
+
+    # Get session user
+    session_user_id = session.get("user_id")
+    if session_user_id is None:
+        return jsonify('')
+
+    # Ensure user exists
+    user = User.get_by_id(id)
+    if not user:
+        return jsonify('')
+    u = user.to_dict()
+
+    # Get user's messages sent
+    m = []
+    for message in Message.messages:
+        if message.sender == user:
+            m.append(message.to_dict())
+
+    data = {'user': u, 'messages': m, 'session_user_id': session_user_id}
+    return jsonify(data)
+    
 
 # This route is expecting a parameter containing the name
 # of a file. Then it will locate that file on the upload
@@ -647,8 +1093,10 @@ def message_delete(id):
 @app.route('/uploads/<int:file_id>/<filename>')
 def uploaded_file(file_id, filename):
 
-    # Append file id precededed by zeros to the beginning of filename
-    filename = append_id_to_filename(file_id, filename)
+    # Ensure file exists
+    file = File.get_by_id(file_id)
+    if not file:
+        return apology("file does not exist", 403)
 
     return send_from_directory(app.config['UPLOAD_FOLDER'],
-                               filename)
+                               file.name_unique)

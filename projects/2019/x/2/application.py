@@ -15,7 +15,7 @@ from helpers import login_check, apology, append_id_to_filename
 
 
 app = Flask(__name__)
-app.config.from_object('my_application.default_settings')
+#app.config.from_object('my_application.default_settings')
 app.config.from_envvar('APPLICATION_SETTINGS')
 
 # Configure session to use filesystem
@@ -434,11 +434,13 @@ class Message:
         return r
 
 
+
 class Text:
     config = {}
     config["columns_max"] = 80
     config["rows_number"] = 5
     config["max_length"] = config["columns_max"] * config["rows_number"]
+
 
 
 class File:

@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     template_item_none = Handlebars.compile(document.querySelector('#user-none').innerHTML);
     
     // Connect to websocket
-    let socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
+    //let socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
 
     // Initialize new request
     const request = new XMLHttpRequest();
