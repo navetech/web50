@@ -17,47 +17,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = JSON.parse(request.responseText);
         session_user_id = data.session_user_id;
         showUser(data.user);
-        showUserMessagesReceived(data.messages);
+        showMessages(data.messages);
 
         // Join room for real-time communication with server
-        page = 'messages received user';
+        page = 'messages received by user';
         joinRoom(page, idCommunicator);
     }
     // Send request
     request.send();
 });
-
-
-function showUserMessagesReceived(messages) {
-    document.querySelector('#messages').innerHTML = '';
-
-    if (messages.length > 0) {
-        messages.reverse().forEach(message => {
-            addUserMessageReceived(message);
-        });
-    }
-    else {
-        const content = template_item_none();
-        document.querySelector('#messages').innerHTML = content;
-    }
-}
-
-
-function addUserMessageReceived(message) {
-    const rows_number = calculateRowsNumber(message.text);
-
-    message.timestamp = convertToLocaleString(message.timestamp);
-
-    const context = {
-        message: message,
-        rows_number: rows_number
-    }
-
-    const content = template_item(context);
-    const old_content = document.querySelector('#messages').innerHTML
-    document.querySelector('#messages').innerHTML = content + old_content;
-
-    showMessageFiles(message);
-}
-
-

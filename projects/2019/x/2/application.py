@@ -118,11 +118,12 @@ class Channel(Receiver):
 
 
     def remove(self):
-        # Remove channel
+        # Emit event
         data = self.to_dict()
         room = 'channels'
         socketio.emit('remove channel', data, room)
 
+        # Remove channel
         try:
             Channel.channels.remove(self)
         except:
@@ -401,6 +402,21 @@ class Message:
 
 
     def remove(self):
+
+        # Emit events
+        data = self.to_dict()
+
+        room = f'messages sent by user {self.sender.id}'
+        socketio.emit('remove message', data, room)
+
+        if is_channel(self.receiver):
+            room = f'messages received by channel {self.receiver.id}'
+            socketio.emit('remove message', data, room)
+            
+        elif is_user(self.receiver):
+            room = f'messages received by user {self.receiver.id}'
+            socketio.emit('remove message', data, room)
+
         # Remove files
         for file in self.files:
             file.remove()
@@ -876,10 +892,9 @@ def message_to_channel(id):
         message = message_to_any(receiver)
 
         # Emit event
-PAREI AQUI
         data = message.to_dict()
-        room = 'users'
-        socketio.emit('register', data, room)
+        room = f'messages received by channel {message.receiver.id}'
+        socketio.emit('send message', data, room)
 
         # Redirect user to channel messages page
         return redirect(url_for('channel_messages', id=channel.id))
@@ -910,7 +925,12 @@ def message_to_user(id):
 
         # Get and send message to receiver
         receiver = user
-        message_to_any(receiver)
+        message = message_to_any(receiver)
+
+        # Emit event
+        data = message.to_dict()
+        room = f'messages received by user {message.receiver.id}'
+        socketio.emit('send message', data, room)
 
         # Redirect to user messages page
         return redirect(url_for('user_messages_sent', id=session["user_id"]))
@@ -950,6 +970,11 @@ def message_to_any(receiver):
     user_id = session.get("user_id")
     sender = User.get_by_id(user_id)
     message = Message(sender, receiver, text, files_obj)
+
+    # Emit event
+    data = message.to_dict()
+    room = f'messages sent by user {message.sender.id}'
+    socketio.emit('send message', data, room)
 
     return message
 

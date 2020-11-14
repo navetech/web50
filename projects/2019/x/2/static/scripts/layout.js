@@ -32,7 +32,7 @@ function joinRoom(page_, idCommunicator_) {
     }
 
     let room_;
-    if (idCommunicator_) {
+    if ((idCommunicator_ != null) && (idCommunicator_ != undefined) && (idCommunicator_ >= 0)) {
         room_ = `${page_} ${idCommunicator_}`;
     }
     else {

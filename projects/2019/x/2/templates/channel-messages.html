@@ -5,7 +5,9 @@
         {% raw -%}
             <li class="list-group-item ln-container01 ln-h03">
                 <span class="ln-highlight">{{ channel.name }}</span>
-                created on
+                created by
+                <a class="ln-highlight" href="/message-to-user/{{ channel.creator.id }}">{{ channel.creator.name }}</a>
+                on
                 <span class="ln-highlight">{{ channel.timestamp }}</span>
             </li>
         {%- endraw %}
