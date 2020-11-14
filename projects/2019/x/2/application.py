@@ -83,9 +83,6 @@ class Channel(Receiver):
     def remove_by_list(to_remove):
         for channel in to_remove:
             channel.remove()
-            data = channel.to_dict()
-            room = 'channels'
-            socketio.emit('remove channel', data, room)
 
 
     @staticmethod
@@ -122,6 +119,10 @@ class Channel(Receiver):
 
     def remove(self):
         # Remove channel
+        data = self.to_dict()
+        room = 'channels'
+        socketio.emit('remove channel', data, room)
+
         try:
             Channel.channels.remove(self)
         except:
@@ -872,7 +873,13 @@ def message_to_channel(id):
 
         # Get and send message to receiver
         receiver = channel
-        message_to_any(receiver)
+        message = message_to_any(receiver)
+
+        # Emit event
+PAREI AQUI
+        data = message.to_dict()
+        room = 'users'
+        socketio.emit('register', data, room)
 
         # Redirect user to channel messages page
         return redirect(url_for('channel_messages', id=channel.id))

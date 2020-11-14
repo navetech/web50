@@ -13,26 +13,28 @@
 
     <script id="channel-message" type="text/x-handlebars-template">
         {% raw -%}
-            <div class="ln-group-divider"></div>
-            <ul class="list-group pt-4">
-                <li class="list-group-item ln-container01">
-                    from
-                    <a class="ln-highlight" href="/message-to-user/{{ message.sender.id }}">{{ message.sender.name }}</a>
-                    to channel
-                    <span class="ln-highlight">{{ message.receiver.name }}</span>
-                    on
-                    <span class="ln-highlight">{{ message.timestamp }}</span>
-                    {{#if user_is_sender }}
-                        <a class="btn btn-dark" role="button" href="/message-delete/{{ message.id }}">Delete</a>
-                    {{/if}}
-                </li>
+            <div id="message{{ message.id }}" class="message-item {{ item_show_hide }}">
+                <div class="ln-group-divider"></div>
+                <ul class="list-group pt-4">
+                    <li class="list-group-item ln-container01">
+                        from
+                        <a class="ln-highlight" href="/message-to-user/{{ message.sender.id }}">{{ message.sender.name }}</a>
+                        to channel
+                        <span class="ln-highlight">{{ message.receiver.name }}</span>
+                        on
+                        <span class="ln-highlight">{{ message.timestamp }}</span>
+                        {{#if user_is_sender }}
+                            <a class="btn btn-dark" role="button" href="/message-delete/{{ message.id }}">Delete</a>
+                        {{/if}}
+                    </li>
 
-                <div id="message{{ message.id }}-files"></div>
+                    <div id="message{{ message.id }}-files"></div>
 
-                <li class="list-group-item ln-container01">
-                    <textarea readonly class="message-text-out" rows="{{ rows_number }}">{{ message.text }}</textarea>
-                </li>
-            </ul>
+                    <li class="list-group-item ln-container01">
+                        <textarea readonly class="message-text-out" rows="{{ rows_number }}">{{ message.text }}</textarea>
+                    </li>
+                </ul>
+            </div>
         {%- endraw %}
     </script>
 

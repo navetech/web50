@@ -10,9 +10,6 @@ document.addEventListener('DOMContentLoaded', () => {
     template_item = Handlebars.compile(document.querySelector('#channel').innerHTML);
     template_item_none = Handlebars.compile(document.querySelector('#channel-none').innerHTML);
     
-    // Connect to websocket
-    //let socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
-    
     // Initialize new request
     const request = new XMLHttpRequest();
     request.open('GET', '/api/channels');
