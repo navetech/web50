@@ -7,9 +7,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize new request
     const elem = document.querySelector('#user-id');
-    const id = elem.dataset.id;
+    const idCommunicator = elem.dataset.id;
     const request = new XMLHttpRequest();
-    request.open('GET', `/api/user-messages-sent/${id}`);
+    request.open('GET', `/api/user-messages-sent/${idCommunicator}`);
 
     // Callback function for when request completes
     request.onload = () => {
@@ -18,6 +18,10 @@ document.addEventListener('DOMContentLoaded', () => {
         session_user_id = data.session_user_id;
         showUser(data.user);
         showUserMessagesSent(data.messages);
+
+        // Join room for real-time communication with server
+        page = 'messages sent user';
+        joinRoom(page, idCommunicator);
     }
     // Send request
     request.send();

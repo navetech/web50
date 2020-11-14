@@ -3,7 +3,6 @@ let session_user_id;
 const socket = connectToServer();
 
 let room = null;
-let roomJoin = null;
 let page = null;
 let idCommunicator = null;
 
@@ -19,57 +18,17 @@ function convertToLocaleString(timestamp) {
 
 
 function connectToServer() {
-    let s = localStorage.getItem('socket');
-    console.log(localStorage.getItem('socket'));
-
-    if (!s || s.disconnected) {
-        // Connect to websocket
-//        const url = location.protocol + '//' + document.domain + ':' + location.port;
-        console.log(url);
-        const url2 = window.location;
-        console.log(url2);
-        s = io.connect(url);
-
-        localStorage.setItem('socket', s);
-        console.log(localStorage.getItem('socket'));
-    }
+    // Connect to websocket
+    const url = location.protocol + '//' + document.domain + ':' + location.port;
+    const url2 = window.location;
+    s = io.connect(url);
     return s;
-}
-
-
-function getRoom() {
-    return localStorage.getItem('room');
-}
-
-
-function setRoom(room_) {
-    room = room_;
-    localStorage.setItem('room', room);
-}
-
-
-function changeRoom(page, idCommunicator) {
-    room = getRoom()
-    if (room) {
-        leaveRoom(room);
-    }
-    else {
-        roomJoin = joinRoom(page, idCommunicator);
-    }
-}
-
-
-function leaveRoom(room_) {
-    if (room_) {
-        const data = {'room': room_};
-        socket.emit('leave', data);
-    }
 }
 
 
 function joinRoom(page_, idCommunicator_) {
     if (!page_) {
-        return null;
+        return;
     }
 
     let room_;
@@ -81,21 +40,14 @@ function joinRoom(page_, idCommunicator_) {
     }
     const data = {'room': room_};
     socket.emit('join', data);
-    return room_;
 }
 
 
 socket.on('connect', () => {
-    setRoom(null);
+    room = null;
 });
 
 
-socket.on('left', () => {
-    setRoom(null);
-    roomJoin = joinRoom(page, idCommunicator);
-});
-
-
-socket.on('joined', () => {
-    setRoom(roomJoin);
+socket.on('joined', data => {
+    room = data['room'];
 });

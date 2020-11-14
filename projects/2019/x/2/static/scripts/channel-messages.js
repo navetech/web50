@@ -20,9 +20,9 @@ document.addEventListener('DOMContentLoaded', () => {
         showChannel(data.channel);
         showChannelMessages(data.messages);
 
-        // Change room for real-time communication with server
-        page = 'channel-messages'
-        changeRoom(idCommunicator);
+        // Join room for real-time communication with server
+        page = 'messages channel';
+        joinRoom(page, idCommunicator);
     }
     // Send request
     request.send();

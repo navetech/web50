@@ -23,13 +23,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = JSON.parse(request.responseText);
         session_user_id = data.session_user_id;
         showChannels(data.channels);
+
+        // Join room for real-time communication with server
+        page = 'channels';
+        idCommunicator = null;
+        joinRoom(page, idCommunicator);
     }
     // Send request
     request.send();
 
 
     // When a channel is created, add channel
-    socket.on('announce create channel', channel => {
+    socket.on('create channel', channel => {
         const item_show_hide = 'item-show';
         addChannel(channel, item_show_hide);
 
@@ -57,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // When a channel is removed, remove channel
-    socket.on('announce remove channel', channel => {
+    socket.on('remove channel', channel => {
         const id_elem_remove = `#channel${channel.id}`;
         const elem_remove = document.querySelector(id_elem_remove);
 

@@ -25,13 +25,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = JSON.parse(request.responseText);
         session_user_id = data.session_user_id;
         showUsers(data.users);
+
+        // Join room for real-time communication with server
+        page = 'users';
+        idCommunicator = null;
+        joinRoom(page, idCommunicator);
     }
     // Send request
     request.send();
 
 
     // When a user is registered, add user
-    socket.on('announce register', user => {
+    socket.on('register', user => {
         const item_show_hide = 'item-show';
         addUser(user, item_show_hide);
 
@@ -59,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // When a user is unregistered, remove user
-    socket.on('announce unregister', user => {
+    socket.on('unregister', user => {
         const id_elem_remove = `#user${user.id}`;
         const elem_remove = document.querySelector(id_elem_remove);
 
@@ -96,13 +101,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // When a user login, update user
-    socket.on('announce login', user => {
+    socket.on('login', user => {
         setUserContent(user);
     });
 
 
     // When a user logout, update user
-    socket.on('announce logout', user => {
+    socket.on('logout', user => {
         setUserContent(user);
     });
 });

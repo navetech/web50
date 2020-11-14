@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from flask import Flask, redirect, request, render_template, session, flash, jsonify, url_for
 from flask import send_from_directory
 #from flask_session import Session
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO, join_room, leave_room
 from werkzeug.utils import secure_filename
 
 import my_application
@@ -84,7 +84,8 @@ class Channel(Receiver):
         for channel in to_remove:
             channel.remove()
             data = channel.to_dict()
-            socketio.emit('announce remove channel', data)
+            room = 'channels'
+            socketio.emit('remove channel', data, room)
 
 
     @staticmethod
@@ -651,7 +652,8 @@ def register():
 
         # Emit event
         data = user.to_dict()
-        socketio.emit('announce register', data)
+        room = 'users'
+        socketio.emit('register', data, room)
 
         # Redirect to home page
         return redirect("/users")
@@ -702,7 +704,8 @@ def login():
 
         # Emit event
         data = user.to_dict()
-        socketio.emit('announce login', data)
+        room = 'users'
+        socketio.emit('login', data, room)
 
         # Redirect to home page
         return redirect("/home")
@@ -722,7 +725,8 @@ def logout():
 
         # Emit event
         data = user.to_dict()
-        socketio.emit('announce logout', data)
+        room = 'users'
+        socketio.emit('logout', data, room)
 
     # Redirect to initial page
     return redirect("/")
@@ -753,7 +757,8 @@ def unregister():
             user = User.get_by_id(session.get("user_id"))
             if user is not None:
                 data = user.to_dict()
-                socketio.emit('announce unregister', data)
+                room = 'users'
+                socketio.emit('unregister', data, room)
                 user.remove()
                 session.clear()
 
@@ -823,7 +828,8 @@ def channels_():
 
         # Emit event
         data = channel.to_dict()
-        socketio.emit('announce create channel', data)
+        room = 'channels'
+        socketio.emit('create channel', data, room)
 
         return render_template("channels.html")
 
@@ -1100,3 +1106,17 @@ def uploaded_file(file_id, filename):
 
     return send_from_directory(app.config['UPLOAD_FOLDER'],
                                file.name_unique)
+
+
+@socketio.on('join')
+def on_join(data):
+    room = data['room']
+    join_room(room)
+    socketio.emit('joined', data, request.sid)
+
+
+@socketio.on('leave')
+def on_leave(data):
+    room = data['room']
+    leave_room(room)
+    socketio.emit('left', data, request.sid)
