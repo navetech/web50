@@ -1,16 +1,9 @@
 {% extends "layout.html" %}
 
 {% block scripts %}
-    <script id="user-loggedin" type="text/x-handlebars-template">
+    <script id="user" type="text/x-handlebars-template">
         {% raw -%}
-            <li id="user-loggedin{{ user.current_logins.[0].id }}" class="list-group-item ln-container01 user-item {{ item_show_hide }}">
-            </li>
-        {%- endraw %}
-    </script>
-
-    <script id="user-loggedout" type="text/x-handlebars-template">
-        {% raw -%}
-            <li id="user-loggedout{{ user.current_logout.id }}" class="list-group-item ln-container01 user-item {{ item_show_hide }}">
+            <li id="user{{ user.id }}" class="list-group-item ln-container01 user-item {{ item_show_hide }}">
             </li>
         {%- endraw %}
     </script>
@@ -44,8 +37,5 @@
 
 {% block main %}
     <ul id="users" class="list-group ln-group-width-auto">
-        <div id="users-loggedin"></div>
-        <div id="users-loggedout"></div>
-        <div id="no-users"></div>
     </ul>
 {% endblock %}
