@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Get session user
         session_user_id = data.session_user_id;
 
-        // Show user on page
+        // Show users on page
         showUsers(data.users);
 
         // Join room for real-time communication with server
@@ -45,17 +45,18 @@ function showUsers(users) {
     // Zero number of users on page
     users_count = 0;
 
-    // If no users (no logged in and no logged out)
-        // Add no users info on page section
-    // Else
-        // Clear no users section on page 
-        // Show logged in and logged out users
+    // If there are no users (no logged in and no logged out)
     if ((users.loggedin.length <= 0) && (users.loggedout.length <= 0)) {
+        // Add no users info on page
         const item_show_hide = 'item-hide';
         addNoUsersInfo(item_show_hide);
     }
+    // If there are users
     else {
+        // Clear no users section on page 
         document.querySelector('#no-users').innerHTML = '';
+
+        // Show logged in and logged out users
         showUsersLoggedIn(users.loggedin)
         showUsersLoggedOut(users.loggedout)
     }
@@ -69,7 +70,7 @@ function addNoUsersInfo(item_show_hide) {
     }
     const content = template_user_none(context);
 
-    // Add HTML to page section
+    // Add HTML to page
     document.querySelector('#no-users').innerHTML = content;
 }
 
@@ -78,7 +79,7 @@ function showUsersLoggedIn(users) {
     // Clear page section
     document.querySelector('#users-loggedin').innerHTML = '';
 
-    // Add each user on page
+    // Add each user to page
     const item_show_hide = 'item-hide';
     users.reverse().forEach(user => {
         addUserLoggedIn(user, item_show_hide);
@@ -90,7 +91,7 @@ function showUsersLoggedOut(users) {
     // Clear page section
     document.querySelector('#users-loggedout').innerHTML = '';
 
-    // Add each user on page
+    // Add each user to page
     const item_show_hide = 'item-hide';
     users.reverse().forEach(user => {
         addUserLoggedOut(user, item_show_hide);
@@ -196,39 +197,27 @@ function setUserLoggedOutContent(user) {
 }
 
 
-// On event register
+// On event: register
 socket.on('register', user => {
     // Add user to page
     const item_show_hide = 'item-show';
     addUserLoggedIn(user, item_show_hide);
 
-    // Show animation for adding the user
+    // Show animation for creating the user
     const id_elem_add = `#user-loggedin${user.current_logins[0].id}`
-    const elem_add = document.querySelector(id_elem_add);
-    elem_add.addEventListener('animationend', () =>  {
-        elem_add.style.animationPlayState = 'paused';
-        let class_old = elem_add.getAttribute("class");
-        let class_new = class_old.replace("item-show", "item-hide");
-        elem_add.setAttribute("class", class_new);
-
-        // Show animation for removing the no users info, if it exists
-        const id_elem_remove = `#user-null`;
-        const elem_remove = document.querySelector(id_elem_remove);
-        if (elem_remove) {
-            elem_remove.addEventListener('animationend', () =>  {
-                elem_remove.remove();
-            });
-            elem_remove.style.animationPlayState = 'running';
-        }
-    });
-    elem_add.style.animationPlayState = 'running';
+    const id_elem_remove = `#user-null`;
+    showAnimationCreateItem(id_elem_add, id_elem_remove);
 });
 
 
-// On event unregister
+// On event: unregister
 socket.on('unregister', user => {
     // Remove user from page
     const id_elem_remove = `#user-loggedin${user.current_logins[0].id}`
+    const id_elem_item_null = '#user-null';
+    removeItem(id_elem_remove, users_count, id_elem_item_null);
+});
+
     const elem_remove = document.querySelector(id_elem_remove);
 
     // Show animation for removing the user

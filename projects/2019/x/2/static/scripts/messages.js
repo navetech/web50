@@ -1,10 +1,10 @@
 let template_message_file;
-let template_item_none;
+let template_message_none;
 
 
 function setTemplatesMessages() {
     template_message_file = Handlebars.compile(document.querySelector('#message-file').innerHTML);
-    template_item_none = Handlebars.compile(document.querySelector('#message-none').innerHTML);
+    template_message_none = Handlebars.compile(document.querySelector('#message-none').innerHTML);
 }
 
 
@@ -22,7 +22,7 @@ function showMessages(messages) {
         const context = {
             item_show_hide: item_show_hide
         }
-        const content = template_item_none(context);
+        const content = template_message_none(context);
         document.querySelector('#messages').innerHTML = content;
     }
 }
@@ -142,7 +142,7 @@ socket.on('remove message', message => {
                 const context = {
                     item_show_hide: 'item-show'
                 }
-                const content = template_item_none(context);
+                const content = template_message_none(context);
                 const old_content = document.querySelector('#messages').innerHTML;
                 document.querySelector('#messages').innerHTML = content + old_content;
         
