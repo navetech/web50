@@ -214,39 +214,10 @@ socket.on('register', user => {
 socket.on('unregister', user => {
     // Remove user from page
     const id_elem_remove = `#user-loggedin${user.current_logins[0].id}`
+    const items_count = users_count;
     const id_elem_item_null = '#user-null';
-    removeItem(id_elem_remove, users_count, id_elem_item_null);
-});
-
-    const elem_remove = document.querySelector(id_elem_remove);
-
-    // Show animation for removing the user
-    if (elem_remove) {
-        elem_remove.addEventListener('animationend', () =>  {
-            elem_remove.remove();
-            users_count--;
-
-            // If no more users
-            if ((users_count < 1) &&
-                (document.querySelector(`#user-null`) == null)) {
-                // Add no users info on page section
-                const item_show_hide = 'item-show';
-                addNoUsersInfo(item_show_hide);
-        
-                // Show animation for adding the no users info
-                const id_elem_add = '#user-null';
-                const elem_add = document.querySelector(id_elem_add);
-                elem_add.addEventListener('animationend', () =>  {
-                    elem_add.style.animationPlayState = 'paused';
-                    let class_old = elem_add.getAttribute("class");
-                    let class_new = class_old.replace("item-show", "item-hide");
-                    elem_add.setAttribute("class", class_new);
-                });
-                elem_add.style.animationPlayState = 'running';
-            }
-        });
-        elem_remove.style.animationPlayState = 'running';
-    }
+    const addNoItemsInfo = addNoUsersInfo;
+    users_count = removeItem(id_elem_remove, items_count, id_elem_item_null, addNoItemsInfo);
 });
 
 

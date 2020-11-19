@@ -1,5 +1,17 @@
+// Number of channels on page
+let channels_count = 0;
+
+// Templates
+let template_channel;
+let template_channel_none;
+
+
 // On page loaded
 document.addEventListener('DOMContentLoaded', () => {
+    // Set templates
+    template_channel = Handlebars.compile(document.querySelector('#channel').innerHTML);
+    template_channel_none = Handlebars.compile(document.querySelector('#channel-none').innerHTML);
+    
     // Initialize new request
     const request = new XMLHttpRequest();
     request.open('GET', '/api/channels');
@@ -12,18 +24,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Get session user
         session_user_id = data.session_user_id;
 
-        // Set channels list element id
-        const elemIdItems = '#channels';
-
-        // Set templates
-        const template_channel = Handlebars.compile(document.querySelector('#channel').innerHTML);
-        const template_channel_none = Handlebars.compile(document.querySelector('#channel-none').innerHTML);
-
-        // Instatiate channel page object
-        const pageItems = new PageItemsChannel(elemIdItems, template_channel, template_channel_none);
-
         // Show channels on page
-        pageItems.show(data.channels);
+        showChannels(data.channels);
 
         // Join room for real-time communication with server
         page = 'channels';
@@ -33,19 +35,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Send request
     request.send();
 });
-
-
-// Class for channel on page
-class PageItemsChannel extends PageItems {
-    constructor(elemIdItems, template_item, template_item_none) {
-        super(elemIdItems, template_item, template_item_none);
-
-        // Attributes
-
-        // Methods
-        this.show = showChannels;
-    }
-}
 
 
 function showChannels(channels) {
