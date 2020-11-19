@@ -12,15 +12,16 @@ document.addEventListener('DOMContentLoaded', () => {
         // Get session user
         session_user_id = data.session_user_id;
 
-        // Set channels list element id
-        const elemIdItems = '#channels';
+        // Set elements selectors
+        const itemsElemSelector = '#channels';
+        const noItemsElemSelector = '#channels';
 
         // Set templates
         const template_channel = Handlebars.compile(document.querySelector('#channel').innerHTML);
         const template_channel_none = Handlebars.compile(document.querySelector('#channel-none').innerHTML);
 
-        // Instatiate channel page object
-        const pageItems = new PageItemsChannel(elemIdItems, template_channel, template_channel_none);
+        // Instatiate page items object
+        const pageItems = new ChannelPageItems(itemsElemSelector, template_channel, noItemsElemSelector, template_channel_none);
 
         // Show channels on page
         pageItems.show(data.channels);
@@ -35,10 +36,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-// Class for channel on page
-class PageItemsChannel extends PageItems {
-    constructor(elemIdItems, template_item, template_item_none) {
-        super(elemIdItems, template_item, template_item_none);
+// Class for channel items on a page
+class ChannelPageItems extends PageItems {
+    constructor(itemsElemSelector, template_item, noItemsElemSelector, template_item_none) {
+        super(itemsElemSelector, template_item, noItemsElemSelector, template_item_none);
 
         // Attributes
 
@@ -49,38 +50,20 @@ class PageItemsChannel extends PageItems {
 
 
 function showChannels(channels) {
-    // Clear page section
-    document.querySelector('#channels').innerHTML = '';
-
     // Zero number of channels on page
-    channels_count = 0;
+    items_count = 0;
 
     // If there are no channels
     if (channels.length <= 0) {
-        // Add no channels info on page
+        // Put no channels info on page
         const item_show_hide = 'item-hide';
-        addNoChannelsInfo(item_show_hide);
+        this.putNoItems(item_show_hide);
     }
     // If there are channels
     else {
-        // Add each channel to page
-        const item_show_hide = 'item-hide';
-        channels.reverse().forEach(channel => {
-            addChannel(channel, item_show_hide);
-        });
+        // Show channels items
+        super.show(channels);
     }
-}
-
-
-function addNoChannelsInfo(item_show_hide) {
-    // Generate HTML from template
-    const context = {
-        item_show_hide: item_show_hide
-    }
-    const content = template_channel_none(context);
- 
-    // Add HTML to page section
-    document.querySelector('#channels').innerHTML = content;
 }
 
 

@@ -56,9 +56,11 @@ socket.on('joined', data => {
 
 // Parent class for items (users, channels, messages) on a page
 class PageItems {
-    constructor(elemIdItems, template_item, template_item_none) {
+    constructor(itemsElemSelector, template_item, noItemsElemSelector, template_item_none) {
         // Attributes
+        this.itemsElemSelector = itemsElemSelector;
         this.template_item = template_item;
+        this.noItemsElemSelector = noItemsElemSelector;
         this.template_item_none = template_item_none;
 
         this.items_count = 0;
@@ -70,26 +72,25 @@ class PageItems {
 
 
 function showItems(items) {
-    // Clear list of items on page
-    document.querySelector(this.elemIdItems).innerHTML = '';
+    // Clear page section
+    document.querySelector(this.itemsElemSelector).innerHTML = '';
 
-    // Zero number of items on page
-    this.items_count = 0;
+    // Add each user to page
+    const item_show_hide = 'item-hide';
+    items.reverse().forEach(item => {
+        this.appendItem(item, item_show_hide);
+    });
+}
 
-    // If there are no items
-    if (items.length <= 0) {
-        // Put no items info on page
-        const item_show_hide = 'item-hide';
-        this.putNoItemsInfo(item_show_hide);
+function putNoItems(item_show_hide) {
+    // Generate HTML from template
+    const context = {
+        item_show_hide: item_show_hide
     }
-    // If there are items
-    else {
-        // Append each item to page
-        const item_show_hide = 'item-hide';
-        items.reverse().forEach(items => {
-            appendItem(item, item_show_hide);
-        });
-    }
+    const content = this.template_item_none(context);
+ 
+    // Add HTML to page section
+    document.querySelector(this.noItemsElemSelector).innerHTML = content;
 }
 
 
