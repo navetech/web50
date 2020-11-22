@@ -45,19 +45,17 @@ class ChannelPageItems extends PageItems {
 
         // Methods
         this.show = showChannels;
+        this.append = appendChannelItem;
     }
 }
 
 
 function showChannels(channels) {
-    // Zero number of channels on page
-    items_count = 0;
-
     // If there are no channels
     if (channels.length <= 0) {
         // Put no channels info on page
         const item_show_hide = 'item-hide';
-        this.putNoItems(item_show_hide);
+        this.putNo(item_show_hide);
     }
     // If there are channels
     else {
@@ -67,7 +65,7 @@ function showChannels(channels) {
 }
 
 
-function addChannel(channel, item_show_hide) {
+function appendChannelItem(channel, item_show_hide) {
     // Convert time info to local time
     channel.timestamp = convertToLocaleString(channel.timestamp);
 
@@ -76,14 +74,9 @@ function addChannel(channel, item_show_hide) {
         channel: channel,
         item_show_hide: item_show_hide
     }
-    const content = template_channel(context);
 
-    // Add HTML to page section
-    const old_content = document.querySelector('#channels').innerHTML
-    document.querySelector('#channels').innerHTML = content + old_content;
-
-    // Increment number of channels on page
-    channels_count++;
+    // Append channel item
+    super.append(context);
 }
 
 
@@ -91,7 +84,7 @@ function addChannel(channel, item_show_hide) {
 socket.on('create channel', channel => {
     // Add channel to page
     const item_show_hide = 'item-show';
-    addChannel(channel, item_show_hide);
+    pageItems.append(channel, item_show_hide);
 
     // Show animation for creating the channel
     const id_elem_add = `#channel${channel.id}`;
@@ -99,70 +92,11 @@ socket.on('create channel', channel => {
     showAnimationCreateItem(id_elem_add, id_elem_remove);
 });
 
-function showAnimationCreateItem(id_elem_add, id_elem_remove) {
-    // Show animation for adding the item
-    const elem_add = document.querySelector(id_elem_add);
-    elem_add.addEventListener('animationend', () =>  {
-        elem_add.style.animationPlayState = 'paused';
-        let class_old = elem_add.getAttribute("class");
-        let class_new = class_old.replace("item-show", "item-hide");
-        elem_add.setAttribute("class", class_new);
-
-        // Show animation for removing the no items info, if it exists
-        const elem_remove = document.querySelector(id_elem_remove);
-        if (elem_remove) {
-            elem_remove.addEventListener('animationend', () =>  {
-                elem_remove.remove();
-            });
-            elem_remove.style.animationPlayState = 'running';
-        }
-    });
-    elem_add.style.animationPlayState = 'running';
-}
-
 
 // On event: remove channel
 socket.on('remove channel', channel => {
     // Remove channel from page
     const id_elem_remove = `#channel${channel.id}`;
-    const items_count = channels_count;
     const id_elem_item_null = '#channel-null';
-    const addNoItemsInfo = addNoChannelsInfo;
-    channels_count =  removeItem(id_elem_remove, items_count, id_elem_item_null, addNoItemsInfo);
+    pageItems.remove(id_elem_remove, id_elem_item_null);
 });
-
-
-function removeItem(id_elem_remove, items_count, id_elem_item_null, addNoItemsInfo) {
-    // Remove item from page
-    const elem_remove = document.querySelector(id_elem_remove);
-
-    // Show animation for removing the item
-    if (elem_remove) {
-        elem_remove.addEventListener('animationend', () =>  {
-            elem_remove.remove();
-            items_count--;
-
-            // If no more items on page
-            if ((items_count < 1) &&
-                (document.querySelector(id_elem_item_null) == null)) {
-                
-                // Add no items info on page
-                const item_show_hide = 'item-show';
-                addNoItemsInfo(item_show_hide);
-
-                // Show animation for adding the no items info
-                const id_elem_add = id_elem_item_null;
-                const elem_add = document.querySelector(id_elem_add);
-                elem_add.addEventListener('animationend', () =>  {
-                    elem_add.style.animationPlayState = 'paused';
-                    let class_old = elem_add.getAttribute("class");
-                    let class_new = class_old.replace("item-show", "item-hide");
-                    elem_add.setAttribute("class", class_new);
-                });
-                elem_add.style.animationPlayState = 'running';
-            }
-        });
-        elem_remove.style.animationPlayState = 'running';
-    }
-    return items_count;
-}

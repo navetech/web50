@@ -67,20 +67,27 @@ class PageItems {
 
         // Methods
         this.show = showItems;
+        this.putNo = putNoItems;
+        this.append = appendItem;
+        this.remove = removeItem;
     }
 }
 
 
 function showItems(items) {
+    // Zero number of items on page
+    this.items_count = 0;
+
     // Clear page section
     document.querySelector(this.itemsElemSelector).innerHTML = '';
 
     // Add each user to page
     const item_show_hide = 'item-hide';
     items.reverse().forEach(item => {
-        this.appendItem(item, item_show_hide);
+        this.append(item, item_show_hide);
     });
 }
+
 
 function putNoItems(item_show_hide) {
     // Generate HTML from template
@@ -91,6 +98,79 @@ function putNoItems(item_show_hide) {
  
     // Add HTML to page section
     document.querySelector(this.noItemsElemSelector).innerHTML = content;
+
+    // Zero number of items on page
+    this.items_count = 0;
+}
+
+
+function appendItem(context) {
+    // Generate HTML from template
+    const content = this.template_item(context);
+
+    // Add HTML to page section
+    const old_content = document.querySelector(this.itemsElemSelector).innerHTML
+    document.querySelector(itemsElemSelector).innerHTML = content + old_content;
+
+    // Increment number of items on page
+    this.items_count++;
+}
+
+
+function removeItem(id_elem_remove, id_elem_item_null) {
+    // Remove item from page
+    const elem_remove = document.querySelector(id_elem_remove);
+
+    // Show animation for removing the item
+    if (elem_remove) {
+        elem_remove.addEventListener('animationend', () =>  {
+            elem_remove.remove();
+            this.items_count--;
+
+            // If no more items on page
+            if ((this.items_count < 1) &&
+                (document.querySelector(id_elem_item_null) == null)) {
+                
+                // Add no items info on page
+                const item_show_hide = 'item-show';
+                this.putNo(item_show_hide);
+
+                // Show animation for adding the no items info
+                const id_elem_add = id_elem_item_null;
+                const elem_add = document.querySelector(id_elem_add);
+                elem_add.addEventListener('animationend', () =>  {
+                    elem_add.style.animationPlayState = 'paused';
+                    let class_old = elem_add.getAttribute("class");
+                    let class_new = class_old.replace("item-show", "item-hide");
+                    elem_add.setAttribute("class", class_new);
+                });
+                elem_add.style.animationPlayState = 'running';
+            }
+        });
+        elem_remove.style.animationPlayState = 'running';
+    }
+}
+
+
+function showAnimationCreateItem(id_elem_add, id_elem_remove) {
+    // Show animation for adding the item
+    const elem_add = document.querySelector(id_elem_add);
+    elem_add.addEventListener('animationend', () =>  {
+        elem_add.style.animationPlayState = 'paused';
+        let class_old = elem_add.getAttribute("class");
+        let class_new = class_old.replace("item-show", "item-hide");
+        elem_add.setAttribute("class", class_new);
+
+        // Show animation for removing the no items info, if it exists
+        const elem_remove = document.querySelector(id_elem_remove);
+        if (elem_remove) {
+            elem_remove.addEventListener('animationend', () =>  {
+                elem_remove.remove();
+            });
+            elem_remove.style.animationPlayState = 'running';
+        }
+    });
+    elem_add.style.animationPlayState = 'running';
 }
 
 

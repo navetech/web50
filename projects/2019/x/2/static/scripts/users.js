@@ -13,17 +13,18 @@ document.addEventListener('DOMContentLoaded', () => {
         session_user_id = data.session_user_id;
 
         // Set elements selectors
-        const itemsElemSelector = '#channels';
+        const itemsElemSelector = null;
         const noItemsElemSelector = '#no-users';
 
         // Set templates
+        const template_user = null;
         const template_user_loggedin = Handlebars.compile(document.querySelector('#user-loggedin').innerHTML);
         const template_user_loggedout = Handlebars.compile(document.querySelector('#user-loggedout').innerHTML);
         const template_user_content = Handlebars.compile(document.querySelector('#user-content').innerHTML);
         const template_user_none = Handlebars.compile(document.querySelector('#user-none').innerHTML);
 
         // Instatiate page items object
-        const pageItems = new UserPageItems(itemsElemSelector, template_channel, noItemsElemSelector, template_channel_none);
+        const pageItems = new UserPageItems(itemsElemSelector, template_user, template_user_content, noItemsElemSelector, template_user_none);
 
         // Show channels on page
         pageItems.show(data.users);
@@ -38,10 +39,35 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-function showUsers(users) {
-    // Zero number of users on page
-    users_count = 0;
+// Class for user items on a page
+class UserPageItems extends PageItems {
+    constructor(itemsElemSelector, template_user, template_user_content, noItemsElemSelector, template_user_none) {
+        super(itemsElemSelector, template_item, noItemsElemSelector, template_item_none);
 
+        // Set elements selectors and templates for users logged in/out
+        const noItemsElemSelector = null;
+        const template_item_none = null;
+
+        // Set elements selectors and templates for users logged in
+        const userLoggedInElemSelector = '#users-loggedin';
+        const template_user_loggedin = Handlebars.compile(document.querySelector('#user-loggedin').innerHTML);
+
+        // Set elements selectors and templates for users logged out
+        const userLoggedOutElemSelector = '#users-loggedout';
+        const template_user_loggedout = Handlebars.compile(document.querySelector('#user-loggedout').innerHTML);
+
+        // Attributes
+        this.template_user_content = template_user_content;
+        this.loggedInUsers = new PageItems(userLoggedInElemSelector, template_user_loggedin, noItemsElemSelector, template_item_none)
+        this.loggedOutUsers = new PageItems(userLoggedOutElemSelector, template_user_loggedout, noItemsElemSelector, template_item_none)
+
+        // Methods
+        this.show = showUsers;
+    }
+}
+
+
+function showUsers(users) {
     // If there are no users (no logged in and no logged out)
     if ((users.loggedin.length <= 0) && (users.loggedout.length <= 0)) {
         // Put no users info on page
@@ -56,31 +82,8 @@ function showUsers(users) {
         // Show logged in and logged out users items
         this.loggedIn.show(users.loggedin)
         this.loggedOut.show(users.loggedout)
+        this.items_count = this.loggedIn.items_count + this.loggedOut.items_count;
     }
-}
-
-
-function showUsersLoggedIn(users) {
-    // Clear page section
-    document.querySelector('#users-loggedin').innerHTML = '';
-
-    // Add each user to page
-    const item_show_hide = 'item-hide';
-    users.reverse().forEach(user => {
-        addUserLoggedIn(user, item_show_hide);
-    });
-}
-
-
-function showUsersLoggedOut(users) {
-    // Clear page section
-    document.querySelector('#users-loggedout').innerHTML = '';
-
-    // Add each user to page
-    const item_show_hide = 'item-hide';
-    users.reverse().forEach(user => {
-        addUserLoggedOut(user, item_show_hide);
-    });
 }
 
 
