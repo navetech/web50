@@ -41,28 +41,69 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Class for user items on a page
 class UserPageItems extends PageItems {
-    constructor(itemsElemSelector, template_user, template_user_content, noItemsElemSelector, template_user_none) {
-        super(itemsElemSelector, template_item, noItemsElemSelector, template_item_none);
+    constructor(itemsElemSelector, template_item, template_item_content, noItemsElemSelector, template_item_none) {
+        super(itemsElemSelector, template_item, template_item_content, noItemsElemSelector, template_item_none);
 
         // Set elements selectors and templates for users logged in/out
         const noItemsElemSelector = null;
         const template_item_none = null;
 
         // Set elements selectors and templates for users logged in
-        const userLoggedInElemSelector = '#users-loggedin';
-        const template_user_loggedin = Handlebars.compile(document.querySelector('#user-loggedin').innerHTML);
+        const loggedInElemSelector = '#users-loggedin';
+        const template_loggedin = Handlebars.compile(document.querySelector('#user-loggedin').innerHTML);
 
         // Set elements selectors and templates for users logged out
-        const userLoggedOutElemSelector = '#users-loggedout';
-        const template_user_loggedout = Handlebars.compile(document.querySelector('#user-loggedout').innerHTML);
+        const loggedOutElemSelector = '#users-loggedout';
+        const template_loggedout = Handlebars.compile(document.querySelector('#user-loggedout').innerHTML);
 
         // Attributes
-        this.template_user_content = template_user_content;
-        this.loggedInUsers = new PageItems(userLoggedInElemSelector, template_user_loggedin, noItemsElemSelector, template_item_none)
-        this.loggedOutUsers = new PageItems(userLoggedOutElemSelector, template_user_loggedout, noItemsElemSelector, template_item_none)
+        this.loggedIn = new LoggedInPageItems(this, loggedInElemSelector, template_user_loggedin, template_item_content, noItemsElemSelector, template_item_none)
+        this.loggedOut = new LoggedOutPageItems(this, loggedOutElemSelector, template_user_loggedout, template_item_content, noItemsElemSelector, template_item_none)
 
         // Methods
         this.show = showUsers;
+    }
+}
+
+
+// Parent class for logged in/out user items on a page
+class LoggedPageItems extends PageItems {
+    constructor(user, itemsElemSelector, template_item,  template_item_content, noItemsElemSelector, template_item_none) {
+        super(itemsElemSelector, template_item, template_item_content, noItemsElemSelector, template_item_none);
+
+        // Attributes
+        this.user = user;
+
+        // Methods
+        this.append = appendLogged;
+    }
+}
+
+
+// Class for logged in user items on a page
+class LoggedInPageItems extends LoggedPageItems {
+    constructor(user, itemsElemSelector, template_item,  template_item_content, noItemsElemSelector, template_item_none) {
+        super(itemsElemSelector, template_item, template_item_content, noItemsElemSelector, template_item_none);
+
+        // Attributes
+        this.user = user;
+
+        // Methods
+        this.putContent = putLoggedInContent;
+    }
+}
+
+
+// Class for logged out user items on a page
+class LoggedOutPageItems extends LoggedPageItems {
+    constructor(user, itemsElemSelector, template_item,  template_item_content, noItemsElemSelector, template_item_none) {
+        super(itemsElemSelector, template_item, template_item_content, noItemsElemSelector, template_item_none);
+
+        // Attributes
+        this.user = user;
+
+        // Methods
+        this.putContent = putLoggedOutContent;
     }
 }
 
@@ -72,7 +113,7 @@ function showUsers(users) {
     if ((users.loggedin.length <= 0) && (users.loggedout.length <= 0)) {
         // Put no users info on page
         const item_show_hide = 'item-hide';
-        this.putNoItems(item_show_hide);
+        this.putNo(item_show_hide);
     }
     // If there are users
     else {
@@ -87,23 +128,18 @@ function showUsers(users) {
 }
 
 
-function addUserLoggedIn(user, item_show_hide) {
+function appendLogged(user, item_show_hide) {
     // Generate HTML from template
     const context = {
         user: user,
         item_show_hide: item_show_hide
     };
-    const content = template_user_loggedin(context);
 
-    // Add HTML to page section
-    const old_content = document.querySelector('#users-loggedin').innerHTML;
-    document.querySelector('#users-loggedin').innerHTML = content + old_content;
+    // Append logged in item
+    super.append(context);
 
-    // Set user data contents
-    setUserLoggedInContent(user);
-
-    // Increment number of users on page
-    users_count++;
+    // Put user data contents
+    this.putContent(user);
 }
 
 
@@ -128,27 +164,7 @@ function insertUserLoggedIn(insertionAt, user, item_show_hide) {
 }
 
 
-function addUserLoggedOut(user, item_show_hide) {
-    // Generate HTML from template
-    const context = {
-        user: user,
-        item_show_hide: item_show_hide
-    };
-    const content = template_user_loggedout(context);
-
-    // Add HTML to page section
-    const old_content = document.querySelector('#users-loggedout').innerHTML;
-    document.querySelector('#users-loggedout').innerHTML = content + old_content;
-
-    // Set user data contents
-    setUserLoggedOutContent(user);
-
-    // Increment number of users on page
-    users_count++;
-}
-
-
-function setUserLoggedInContent(user) {
+function putLoggedInContent(user) {
     // Convert time info to local time
     user.timestamp = convertToLocaleString(user.timestamp);
     user.current_logins.forEach(login => {
@@ -167,7 +183,7 @@ function setUserLoggedInContent(user) {
     element.innerHTML = content
 }
 
-function setUserLoggedOutContent(user) {
+function putLoggedInContent(user) {
     // Convert time info to local time
     user.timestamp = convertToLocaleString(user.timestamp);
     user.current_logout.timestamp = convertToLocaleString(user.current_logout.timestamp);

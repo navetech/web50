@@ -39,13 +39,17 @@ document.addEventListener('DOMContentLoaded', () => {
 // Class for channel items on a page
 class ChannelPageItems extends PageItems {
     constructor(itemsElemSelector, template_item, noItemsElemSelector, template_item_none) {
-        super(itemsElemSelector, template_item, noItemsElemSelector, template_item_none);
+        // Clear template for items contents
+        //   because, for channels, it is included in template for items
+        const template_item_content = null;
+        
+        super(itemsElemSelector, template_item, template_item_content, noItemsElemSelector, template_item_none);
 
         // Attributes
 
         // Methods
         this.show = showChannels;
-        this.append = appendChannelItem;
+        this.append = appendChannel;
     }
 }
 
@@ -65,7 +69,7 @@ function showChannels(channels) {
 }
 
 
-function appendChannelItem(channel, item_show_hide) {
+function appendChannel(channel, item_show_hide) {
     // Convert time info to local time
     channel.timestamp = convertToLocaleString(channel.timestamp);
 

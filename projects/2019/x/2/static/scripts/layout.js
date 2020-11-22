@@ -56,10 +56,11 @@ socket.on('joined', data => {
 
 // Parent class for items (users, channels, messages) on a page
 class PageItems {
-    constructor(itemsElemSelector, template_item, noItemsElemSelector, template_item_none) {
+    constructor(itemsElemSelector, template_item, template_item_content, noItemsElemSelector, template_item_none) {
         // Attributes
         this.itemsElemSelector = itemsElemSelector;
         this.template_item = template_item;
+        this.template_item_content = template_item_content;
         this.noItemsElemSelector = noItemsElemSelector;
         this.template_item_none = template_item_none;
 
