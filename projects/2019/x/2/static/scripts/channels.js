@@ -1,3 +1,11 @@
+// Session user
+let sessionUserId;
+
+// Items (channels) on page
+let pageItems;
+
+
+
 // On page loaded
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize new request
@@ -10,25 +18,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = JSON.parse(request.responseText);
 
         // Get session user
-        session_user_id = data.session_user_id;
-
-        // Set elements selectors
-        const itemsElemSelector = '#channels';
-        const noItemsElemSelector = '#channels';
-
-        // Set templates
-        const template_channel = Handlebars.compile(document.querySelector('#channel').innerHTML);
-        const template_channel_none = Handlebars.compile(document.querySelector('#channel-none').innerHTML);
+        sessionUserId = data.session_user_id;
 
         // Instatiate page items object
-        const pageItems = new ChannelsPageItems(itemsElemSelector, template_channel, noItemsElemSelector, template_channel_none);
+        pageItems = new ChannelsItems();
 
-        // Show channels on page
-        pageItems.show(data.channels);
+        // Put channels on page
+        pageItems.putItems(data.channels);
 
         // Join room for real-time communication with server
-        page = 'channels';
-        idCommunicator = null;
+        const page = 'channels';
+        const idCommunicator = null;
         joinRoom(page, idCommunicator);
     }
     // Send request
@@ -37,70 +37,78 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // Class for channel items on a page
-class ChannelsPageItems extends PageItems {
-    constructor(itemsElemSelector, template_item, noItemsElemSelector, template_item_none) {
-        // Clear template for items contents
-        //   because, for channels, it is included in template for items
-        const template_item_content = null;
+class ChannelsItems extends PageSectionItems {
+    constructor() {
+        // Set elements selectors
+        const channelsSelector = '#channels';
+        const noChannelsSelector = '#channels';
+
+        // Set templates
+        const templateChannel = Handlebars.compile(document.querySelector('#channel').innerHTML);
+        const templateChannelNone = Handlebars.compile(document.querySelector('#channel-none').innerHTML);
+
+        // Clear template for item contents
+        //   because, for channels, it is included in template for item
+        const templateChannelContent = null;
         
-        super(itemsElemSelector, template_item, template_item_content, noItemsElemSelector, template_item_none);
+        super(channelsSelector, templateChannel, templateChannelContent, noChannelsSelector, templateChannelNone);
 
         // Attributes
 
         // Methods
-        this.show = showChannels;
-        this.append = appendChannel;
+        this.putItems = putChannels;
+        this.appendItem = appendChannel;
     }
 }
 
 
-function showChannels(channels) {
+function putChannels(channels) {
     // If there are no channels
     if (channels.length <= 0) {
         // Put no channels info on page
-        const item_show_hide = 'item-hide';
-        this.putNo(item_show_hide);
+        const itemShowHide = 'item-hide';
+        this.putNoItems(itemShowHide);
     }
     // If there are channels
     else {
         // Show channels items
-        super.show(channels);
+        super.putItems(channels);
     }
 }
 
 
-function appendChannel(channel, item_show_hide) {
+function appendChannel(channel, itemShowHide) {
     // Convert time info to local time
     channel.timestamp = convertToLocaleString(channel.timestamp);
 
     // Generate HTML from template
     const context = {
         channel: channel,
-        item_show_hide: item_show_hide
+        item_show_hide: itemShowHide
     }
 
     // Append channel item
-    super.append(context);
+    super.appendItem(context);
 }
 
 
 // On event: create channel
 socket.on('create channel', channel => {
     // Add channel to page
-    const item_show_hide = 'item-show';
-    pageItems.append(channel, item_show_hide);
+    const itemShowHide = 'item-show';
+    pageItems.appendItem(channel, itemShowHide);
 
     // Show animation for creating the channel
-    const id_elem_add = `#channel${channel.id}`;
-    const id_elem_remove = `#channel-null`;
-    showAnimationCreateItem(id_elem_add, id_elem_remove);
+    const itemAddSelector = `#channel${channel.id}`;
+    const itemRemoveSelector = `#channel-null`;
+    showAnimationCreateItem(itemAddSelector, itemRemoveSelector);
 });
 
 
 // On event: remove channel
 socket.on('remove channel', channel => {
     // Remove channel from page
-    const id_elem_remove = `#channel${channel.id}`;
-    const id_elem_item_null = '#channel-null';
-    pageItems.remove(id_elem_remove, id_elem_item_null);
+    const itemRemoveSelector = `#channel${channel.id}`;
+    const itemNullSelector = '#channel-null';
+    pageItems.removeItem(itemRemoveSelector, itemNullSelector);
 });

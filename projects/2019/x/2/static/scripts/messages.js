@@ -18,38 +18,69 @@ function showCommunicator(context) {
 }
 
 
+// Class for messages items on a page
+class MessagesPageItems extends PageItems {
+    constructor(itemsElemSelector, template_message, noItemsElemSelector, template_item_none) {
+        const itemsElemSelector = '#messages';
+        const noItemsElemSelector = '#messages';
+        const template_message_file = Handlebars.compile(document.querySelector('#message-file').innerHTML);
+        const template_message_none = Handlebars.compile(document.querySelector('#message-none').innerHTML);
+        
+        // Clear template for items contents
+        //   because, for messages, it is included in template for items
+        const template_item_content = null;
+        
+        super(itemsElemSelector, template_message, template_item_content, noItemsElemSelector, template_message_none);
 
-let template_message_file;
-let template_message_none;
+        // Attributes
+        this.files = new FilesPageItems(template_message_file);
+
+        // Methods
+        this.show = showMessages;
+        this.append = appendMessage;
+    }
+}
 
 
-function setTemplatesMessages() {
-    template_message_file = Handlebars.compile(document.querySelector('#message-file').innerHTML);
-    template_message_none = Handlebars.compile(document.querySelector('#message-none').innerHTML);
+// Class for files items on a page
+class FilesPageItems extends PageItems {
+    constructor(itemsElemSelector, template_message, noItemsElemSelector, template_item_none) {
+        const itemsElemSelector = '#messages';
+        const noItemsElemSelector = '#messages';
+        const template_message_file = Handlebars.compile(document.querySelector('#message-file').innerHTML);
+        const template_message_none = Handlebars.compile(document.querySelector('#message-none').innerHTML);
+        
+        // Clear template for items contents
+        //   because, for messages, it is included in template for items
+        const template_item_content = null;
+        
+        super(itemsElemSelector, template_message, template_item_content, noItemsElemSelector, template_message_none);
+
+        // Attributes
+
+        // Methods
+        this.append = appendFile;
+    }
 }
 
 
 function showMessages(messages) {
-    items_count = 0;
-    document.querySelector('#messages').innerHTML = '';
-
-    const item_show_hide = 'item-hide';
-    if (messages.length > 0) {
-        messages.reverse().forEach(message => {
-            addMessage(message, item_show_hide);
-        });
+    // If there are no messages
+    if (messages.length <= 0) {
+        // Put no messages info on page
+        const item_show_hide = 'item-hide';
+        this.putNo(item_show_hide);
     }
+    // If there are messages
     else {
-        const context = {
-            item_show_hide: item_show_hide
-        }
-        const content = template_message_none(context);
-        document.querySelector('#messages').innerHTML = content;
+        // Show messages items
+        super.show(messages);
     }
 }
 
 
-function addMessage(message, item_show_hide) {
+function appendMessage(message, item_show_hide) {
+    // Generate HTML from template
     let user_is_sender = false;
     if (message.sender.id === session_user_id) {
         user_is_sender = true;
@@ -77,13 +108,12 @@ function addMessage(message, item_show_hide) {
         item_show_hide: item_show_hide
     }
 
-    const content = template_item(context);
-    const old_content = document.querySelector('#messages').innerHTML
-    document.querySelector('#messages').innerHTML = content + old_content;
+    // Append logged in item
+    super.append(context);
 
-    showMessageFiles(message);
-
-    items_count++;
+    // Put message files
+    this.files.itemsElemSelector = `#message${message.id}-files`;
+    this.files.show(message.files);
 }
 
 
@@ -96,27 +126,17 @@ function calculateRowsNumber(text) {
 }
 
 
-function showMessageFiles(message) {
-    const id_elem = `#message${message.id}-files`;
-    document.querySelector(id_elem).innerHTML = '';
-
-    message.files.reverse().forEach(file => {
-        addMessageFile(message, file);
-    });
-}
-
-
-function addMessageFile(message, file) {
+function appendFile(file, item_show_hide) {
+    // Convert time info to local time
     file.timestamp = convertToLocaleString(file.timestamp);
 
+    // Generate HTML from template
     const context = {
         file: file
     }
 
-    const content = template_message_file(context);
-    const id_elem = `#message${message.id}-files`;
-    const old_content = document.querySelector(id_elem).innerHTML
-    document.querySelector(id_elem).innerHTML = content + old_content;
+    // Append file item
+    super.append(context);
 }
 
 
