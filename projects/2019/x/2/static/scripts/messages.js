@@ -1,3 +1,24 @@
+// Parent class for communicator (user, channel) item on a page
+class CommunicatorItem {
+    constructor(template_item, itemsElemSelector) {
+        // Attributes
+        this.template_item = template_item;
+        this.itemsElemSelector = itemsElemSelector;
+
+
+        // Methods
+        this.show = showCommunicator;
+    }
+}
+
+
+function showCommunicator(context) {
+    const content = this.template_item(context);
+    document.querySelector(this.itemsElemSelector).innerHTML = content;
+}
+
+
+
 let template_message_file;
 let template_message_none;
 

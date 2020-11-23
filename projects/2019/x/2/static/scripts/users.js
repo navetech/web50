@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const template_user_none = Handlebars.compile(document.querySelector('#user-none').innerHTML);
 
         // Instatiate page items object
-        const pageItems = new UserPageItems(itemsElemSelector, template_user, template_user_content, noItemsElemSelector, template_user_none);
+        const pageItems = new UsersPageItems(itemsElemSelector, template_user, template_user_content, noItemsElemSelector, template_user_none);
 
         // Show channels on page
         pageItems.show(data.users);
@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // Class for user items on a page
-class UserPageItems extends PageItems {
+class UsersPageItems extends PageItems {
     constructor(itemsElemSelector, template_item, template_item_content, noItemsElemSelector, template_item_none) {
         super(itemsElemSelector, template_item, template_item_content, noItemsElemSelector, template_item_none);
 
@@ -55,8 +55,8 @@ class UserPageItems extends PageItems {
         const template_loggedout = Handlebars.compile(document.querySelector('#user-loggedout').innerHTML);
 
         // Attributes
-        this.loggedIn = new LoggedInPageItems(this, loggedInElemSelector, template_loggedin, template_item_content, noItemsElemSelector, template_item_none)
-        this.loggedOut = new LoggedOutPageItems(this, loggedOutElemSelector, template_loggedout, template_item_content, noItemsElemSelector, template_item_none)
+        this.loggedIn = new LoggedInsPageItems(this, loggedInElemSelector, template_loggedin, template_item_content, noItemsElemSelector, template_item_none)
+        this.loggedOut = new LoggedOutsPageItems(this, loggedOutElemSelector, template_loggedout, template_item_content, noItemsElemSelector, template_item_none)
 
         // Methods
         this.show = showUsers;
@@ -65,7 +65,7 @@ class UserPageItems extends PageItems {
 
 
 // Parent class for logged in/out user items on a page
-class LoggedPageItems extends PageItems {
+class LoggedsPageItems extends PageItems {
     constructor(user, itemsElemSelector, template_item,  template_item_content, noItemsElemSelector, template_item_none) {
         super(itemsElemSelector, template_item, template_item_content, noItemsElemSelector, template_item_none);
 
@@ -79,7 +79,7 @@ class LoggedPageItems extends PageItems {
 
 
 // Class for logged in user items on a page
-class LoggedInPageItems extends LoggedPageItems {
+class LoggedInsPageItems extends LoggedsPageItems {
     constructor(user, itemsElemSelector, template_item,  template_item_content, noItemsElemSelector, template_item_none) {
         super(user, itemsElemSelector, template_item, template_item_content, noItemsElemSelector, template_item_none);
 
@@ -93,7 +93,7 @@ class LoggedInPageItems extends LoggedPageItems {
 
 
 // Class for logged out user items on a page
-class LoggedOutPageItems extends LoggedPageItems {
+class LoggedOutsPageItems extends LoggedsPageItems {
     constructor(user, itemsElemSelector, template_item,  template_item_content, noItemsElemSelector, template_item_none) {
         super(user, itemsElemSelector, template_item, template_item_content, noItemsElemSelector, template_item_none);
 

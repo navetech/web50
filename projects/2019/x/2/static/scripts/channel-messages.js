@@ -1,16 +1,5 @@
-let items_count = 0;
-
-let template_channel;
-let template_item;
-
-
+// On page loaded
 document.addEventListener('DOMContentLoaded', () => {
-    items_count = document.querySelectorAll(".message-item").length;
-
-    template_channel = Handlebars.compile(document.querySelector('#channel').innerHTML);
-    template_item = Handlebars.compile(document.querySelector('#channel-message').innerHTML);
-    setTemplatesMessages();
-
     // Initialize new request
     const elem = document.querySelector('#channel-id');
     idCommunicator = elem.dataset.id;
@@ -21,9 +10,22 @@ document.addEventListener('DOMContentLoaded', () => {
     request.onload = () => {
         // Extract JSON data from request
         const data = JSON.parse(request.responseText);
+
+        // Get session user
         session_user_id = data.session_user_id;
-        showChannel(data.channel);
-        showMessages(data.messages);
+
+        // Set elements selectors
+
+        // Set templates
+        const template_channel_message = Handlebars.compile(document.querySelector('#channel-message').innerHTML);
+
+        // Instatiate page items objects
+        const channelItem = new ChannelItem();
+        const messagesItems = new MessagesPageItems(template_channel_message);
+
+        // Show items on page
+        channelItem.show(data.channel);
+        messagesItems.show(data.messages);
 
         // Join room for real-time communication with server
         page = 'messages received by channel';
@@ -34,18 +36,38 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
+// Class for channel item on a page
+class ChannelItem extends CommunicatorItem {
+    constructor() {
+        const template_channel = Handlebars.compile(document.querySelector('#channel').innerHTML);
+        const channelElemSelector = '#channel-id';
+        
+        super(template_channel, channelElemSelector);
+
+        // Attributes
+
+
+        // Methods
+        this.show = showChannel;
+    }
+}
+
+
 function showChannel(channel) {
-    document.querySelector('#channel-id').innerHTML = '';
+    // Clear page section
+    document.querySelector(this.itemsElemSelector).innerHTML = '';
 
     if (channel) {
+        // Convert time info to local time
         channel.timestamp = convertToLocaleString(channel.timestamp);
     
+        // Generate HTML from template
         const context = {
             channel: channel
         }
-    
-        const content = template_channel(context);
-        document.querySelector('#channel-id').innerHTML = content;
+
+        // show channel item
+        super.show(context);
     }
 }
 

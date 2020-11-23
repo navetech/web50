@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const template_channel_none = Handlebars.compile(document.querySelector('#channel-none').innerHTML);
 
         // Instatiate page items object
-        const pageItems = new ChannelPageItems(itemsElemSelector, template_channel, noItemsElemSelector, template_channel_none);
+        const pageItems = new ChannelsPageItems(itemsElemSelector, template_channel, noItemsElemSelector, template_channel_none);
 
         // Show channels on page
         pageItems.show(data.channels);
@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // Class for channel items on a page
-class ChannelPageItems extends PageItems {
+class ChannelsPageItems extends PageItems {
     constructor(itemsElemSelector, template_item, noItemsElemSelector, template_item_none) {
         // Clear template for items contents
         //   because, for channels, it is included in template for items
