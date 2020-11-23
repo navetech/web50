@@ -18,8 +18,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Set templates
         const template_user = null;
-        const template_user_loggedin = Handlebars.compile(document.querySelector('#user-loggedin').innerHTML);
-        const template_user_loggedout = Handlebars.compile(document.querySelector('#user-loggedout').innerHTML);
         const template_user_content = Handlebars.compile(document.querySelector('#user-content').innerHTML);
         const template_user_none = Handlebars.compile(document.querySelector('#user-none').innerHTML);
 
@@ -57,8 +55,8 @@ class UserPageItems extends PageItems {
         const template_loggedout = Handlebars.compile(document.querySelector('#user-loggedout').innerHTML);
 
         // Attributes
-        this.loggedIn = new LoggedInPageItems(this, loggedInElemSelector, template_user_loggedin, template_item_content, noItemsElemSelector, template_item_none)
-        this.loggedOut = new LoggedOutPageItems(this, loggedOutElemSelector, template_user_loggedout, template_item_content, noItemsElemSelector, template_item_none)
+        this.loggedIn = new LoggedInPageItems(this, loggedInElemSelector, template_loggedin, template_item_content, noItemsElemSelector, template_item_none)
+        this.loggedOut = new LoggedOutPageItems(this, loggedOutElemSelector, template_loggedout, template_item_content, noItemsElemSelector, template_item_none)
 
         // Methods
         this.show = showUsers;
@@ -83,13 +81,13 @@ class LoggedPageItems extends PageItems {
 // Class for logged in user items on a page
 class LoggedInPageItems extends LoggedPageItems {
     constructor(user, itemsElemSelector, template_item,  template_item_content, noItemsElemSelector, template_item_none) {
-        super(itemsElemSelector, template_item, template_item_content, noItemsElemSelector, template_item_none);
+        super(user, itemsElemSelector, template_item, template_item_content, noItemsElemSelector, template_item_none);
 
         // Attributes
-        this.user = user;
 
         // Methods
         this.putContent = putLoggedInContent;
+        this.insert = insertLoggedIn;
     }
 }
 
@@ -97,10 +95,9 @@ class LoggedInPageItems extends LoggedPageItems {
 // Class for logged out user items on a page
 class LoggedOutPageItems extends LoggedPageItems {
     constructor(user, itemsElemSelector, template_item,  template_item_content, noItemsElemSelector, template_item_none) {
-        super(itemsElemSelector, template_item, template_item_content, noItemsElemSelector, template_item_none);
+        super(user, itemsElemSelector, template_item, template_item_content, noItemsElemSelector, template_item_none);
 
         // Attributes
-        this.user = user;
 
         // Methods
         this.putContent = putLoggedOutContent;
@@ -143,24 +140,24 @@ function appendLogged(user, item_show_hide) {
 }
 
 
-function insertUserLoggedIn(insertionAt, user, item_show_hide) {
+function insertLoggedIn(insertionAt, user, item_show_hide) {
     // Generate HTML from template
     const context = {
         user: user,
         item_show_hide: item_show_hide
     };
-    const content = template_user_loggedin(context);
+    const content = template_item(context);
 
     // Insert HTML at the insertion point of the page section
     const id_elem = `#user-loggedin${insertionAt.current_logins[0].id}`
     const elem = document.querySelector(id_elem);
     elem.insertAdjacentHTML("afterend", content);
 
-    // Set user data contents
-    setUserLoggedInContent(user);
+    // Put user data contents
+    this.putContent(user);
 
-    // Increment number of users on page
-    users_count++;
+    // Increment number of logged in users on page
+    this.items_count++;
 }
 
 
@@ -175,7 +172,7 @@ function putLoggedInContent(user) {
     const context = {
         user: user
     }
-    const content = template_user_content(context);
+    const content = template_item_content(context);
 
     // Add HTML to page section
     const id = `#user-loggedin${user.current_logins[0].id}`
@@ -183,7 +180,7 @@ function putLoggedInContent(user) {
     element.innerHTML = content
 }
 
-function putLoggedInContent(user) {
+function putLoggedOutContent(user) {
     // Convert time info to local time
     user.timestamp = convertToLocaleString(user.timestamp);
     user.current_logout.timestamp = convertToLocaleString(user.current_logout.timestamp);
@@ -192,7 +189,7 @@ function putLoggedInContent(user) {
     const context = {
         user: user
     }
-    const content = template_user_content(context);
+    const content = template_item_content(context);
 
     // Add HTML to page section
     const id = `#user-loggedout${user.current_logout.id}`
@@ -203,9 +200,10 @@ function putLoggedInContent(user) {
 
 // On event: register
 socket.on('register', user => {
-    // Add user to page
+    // Add logged in user to page
     const item_show_hide = 'item-show';
-    addUserLoggedIn(user, item_show_hide);
+    pageItems.loggedIn.append(user, item_show_hide);
+    pageItems.items_count++;
 
     // Show animation for creating the user
     const id_elem_add = `#user-loggedin${user.current_logins[0].id}`
@@ -216,12 +214,11 @@ socket.on('register', user => {
 
 // On event: unregister
 socket.on('unregister', user => {
-    // Remove user from page
+    // Remove logged in user from page
     const id_elem_remove = `#user-loggedin${user.current_logins[0].id}`
-    const items_count = users_count;
     const id_elem_item_null = '#user-null';
-    const addNoItemsInfo = addNoUsersInfo;
-    users_count = removeItem(id_elem_remove, items_count, id_elem_item_null, addNoItemsInfo);
+    pageItems.loggedIn.remove(id_elem_remove, id_elem_item_null);
+    pageItems.items_count--;
 });
 
 
@@ -229,11 +226,18 @@ socket.on('unregister', user => {
 socket.on('login', user => {
     // Remove user from page section corresponding to if it was logged in or logged out
     let id_elem_remove;
+    let loggedItems;
     if (user.current_logins.length > 1) {
         id_elem_remove = `#user-loggedin${user.current_logins[1].id}`
+        loggedItems = pageItems.loggedIn;
+    }
+    else if (user.current_logins.length === 1) {
+        id_elem_remove = `#user-loggedout${user.current_logout.id}`
+        loggedItems = pageItems.loggedOut;
     }
     else {
-        id_elem_remove = `#user-loggedout${user.current_logout.id}`
+        id_elem_remove = null;
+        loggedItems = null;
     }
     const elem_remove = document.querySelector(id_elem_remove);
 
@@ -241,11 +245,11 @@ socket.on('login', user => {
     if (elem_remove) {
         elem_remove.addEventListener('animationend', () =>  {
             elem_remove.remove();
-            users_count--;
+            loggedItems.items_count--;
 
-            // Add user to page
+            // Add logged in user to page
             const item_show_hide = 'item-show';
-            addUserLoggedIn(user, item_show_hide);
+            pageItems.loggedIn.append(user, item_show_hide);
     
             // Show animation for adding the user
             const id_elem_add = `#user-loggedin${user.current_logins[0].id}`
@@ -282,7 +286,7 @@ socket.on('logout', data => {
     if (elem_remove) {
         elem_remove.addEventListener('animationend', () =>  {
             elem_remove.remove();
-            users_count--;
+            pageItems.loggedIn.items_count--;
 
             // If user still logged in
             const item_show_hide = 'item-show';
@@ -290,20 +294,21 @@ socket.on('logout', data => {
             if (user.current_logins.length > 0) {
                 // If users is the most recently logged in
                 if (!insertionAt) {
-                    // Add user at the top of the page
-                    addUserLoggedIn(user, item_show_hide);
+                    // Append user to the page
+                    pageItems.loggedIn.append(user, item_show_hide);
                 }
                 // If user is NOT the most recently logged in
                 else {
                     // Insert user in the middle of the page
-                    insertUserLoggedIn(insertionAt, user, item_show_hide);
+                    pageItems.loggedIn.insert(insertionAt, user, item_show_hide);
                 }
                 id_elem_add = `#user-loggedin${user.current_logins[0].id}`
             }
             // If user is now logged out
             else {
                     // Add user at the logged out section of the page
-                    addUserLoggedOut(user, item_show_hide);
+                    pageItems.loggedOut.append(user, item_show_hide);
+
                     id_elem_add = `#user-loggedout${user.current_logout.id}`
             }
             // Show animation for adding the user
