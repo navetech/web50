@@ -2,7 +2,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Initialize new request
     const elem = document.querySelector('#channel-id');
-    idCommunicator = elem.dataset.id;
+    const idCommunicator = elem.dataset.id;
     const request = new XMLHttpRequest();
     request.open('GET', `/api/channel-messages/${idCommunicator}`);
 
@@ -12,20 +12,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = JSON.parse(request.responseText);
 
         // Get session user
-        session_user_id = data.session_user_id;
+        sessionUserId = data.session_user_id;
 
         // Set elements selectors
 
         // Set templates
-        const template_channel_message = Handlebars.compile(document.querySelector('#channel-message').innerHTML);
+        const templateChannelMessage = Handlebars.compile(document.querySelector('#channel-message').innerHTML);
 
         // Instatiate page items objects
         const channelItem = new ChannelItem();
-        const messagesItems = new MessagesPageItems(template_channel_message);
+        pageItems = new MessagesItems(templateChannelMessage);
 
         // Show items on page
-        channelItem.show(data.channel);
-        messagesItems.show(data.messages);
+        channelItem.putItem(data.channel);
+        pageItems.putItems(data.messages);
 
         // Join room for real-time communication with server
         page = 'messages received by channel';
@@ -39,23 +39,23 @@ document.addEventListener('DOMContentLoaded', () => {
 // Class for channel item on a page
 class ChannelItem extends CommunicatorItem {
     constructor() {
-        const template_channel = Handlebars.compile(document.querySelector('#channel').innerHTML);
-        const channelElemSelector = '#channel-id';
+        const channelSelector = '#channel-id';
+        const templateChannel = Handlebars.compile(document.querySelector('#channel').innerHTML);
         
-        super(template_channel, channelElemSelector);
+        super(channelSelector, templateChannel);
 
         // Attributes
 
 
         // Methods
-        this.show = showChannel;
+        this.putItem = putChannel;
     }
 }
 
 
-function showChannel(channel) {
+function putChannel(channel) {
     // Clear page section
-    document.querySelector(this.itemsElemSelector).innerHTML = '';
+    document.querySelector(this.itemSelector).innerHTML = '';
 
     if (channel) {
         // Convert time info to local time
@@ -67,7 +67,7 @@ function showChannel(channel) {
         }
 
         // show channel item
-        super.show(context);
+        super.putItem(context);
     }
 }
 

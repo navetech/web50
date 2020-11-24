@@ -1,98 +1,82 @@
+// Items (messages) on page
+let pageItems;
+
+
+
 // Parent class for communicator (user, channel) item on a page
 class CommunicatorItem {
-    constructor(template_item, itemsElemSelector) {
+    constructor(itemSelector, templateItem) {
         // Attributes
-        this.template_item = template_item;
-        this.itemsElemSelector = itemsElemSelector;
+        this.itemSelector = itemSelector;
+        this.templateItem = templateItem;
 
 
         // Methods
-        this.show = showCommunicator;
+        this.putItem = putCommunicator;
     }
 }
 
 
-function showCommunicator(context) {
-    const content = this.template_item(context);
-    document.querySelector(this.itemsElemSelector).innerHTML = content;
+function putCommunicator(context) {
+    const content = this.templateItem(context);
+    document.querySelector(this.itemSelector).innerHTML = content;
 }
 
 
 // Class for messages items on a page
-class MessagesPageItems extends PageItems {
-    constructor(itemsElemSelector, template_message, noItemsElemSelector, template_item_none) {
-        const itemsElemSelector = '#messages';
-        const noItemsElemSelector = '#messages';
-        const template_message_file = Handlebars.compile(document.querySelector('#message-file').innerHTML);
-        const template_message_none = Handlebars.compile(document.querySelector('#message-none').innerHTML);
-        
-        // Clear template for items contents
-        //   because, for messages, it is included in template for items
-        const template_item_content = null;
-        
-        super(itemsElemSelector, template_message, template_item_content, noItemsElemSelector, template_message_none);
+class MessagesItems extends PageSectionItems {
+    constructor(templateMessage) {
+        // Set elements selectors
+        const messagesSelector = '#messages';
+        const noMessagesSelector = '#messages';
 
-        // Attributes
-        this.files = new FilesPageItems(template_message_file);
+        // Set templates
+        const templateMessageNone = Handlebars.compile(document.querySelector('#message-none').innerHTML);
 
-        // Methods
-        this.show = showMessages;
-        this.append = appendMessage;
-    }
-}
-
-
-// Class for files items on a page
-class FilesPageItems extends PageItems {
-    constructor(itemsElemSelector, template_message, noItemsElemSelector, template_item_none) {
-        const itemsElemSelector = '#messages';
-        const noItemsElemSelector = '#messages';
-        const template_message_file = Handlebars.compile(document.querySelector('#message-file').innerHTML);
-        const template_message_none = Handlebars.compile(document.querySelector('#message-none').innerHTML);
+        // Clear template for item contents
+        //   because, for messages, it is included in template for item
+        const templateMessageContent = null;
         
-        // Clear template for items contents
-        //   because, for messages, it is included in template for items
-        const template_item_content = null;
-        
-        super(itemsElemSelector, template_message, template_item_content, noItemsElemSelector, template_message_none);
+        super(messagesSelector, templateMessage, templateMessageContent, noMessagesSelector, templateMessageNone);
 
         // Attributes
 
         // Methods
-        this.append = appendFile;
+        this.putItems = putMessages;
+        this.appendItem = appendMessage;
     }
 }
 
 
-function showMessages(messages) {
+function putMessages(messages) {
     // If there are no messages
     if (messages.length <= 0) {
         // Put no messages info on page
-        const item_show_hide = 'item-hide';
-        this.putNo(item_show_hide);
+        const itemShowHide = 'item-hide';
+        this.putNoItems(itemShowHide);
     }
     // If there are messages
     else {
         // Show messages items
-        super.show(messages);
+        super.putItems(messages);
     }
 }
 
 
-function appendMessage(message, item_show_hide) {
+function appendMessage(message, itemShowHide) {
     // Generate HTML from template
-    let user_is_sender = false;
-    if (message.sender.id === session_user_id) {
-        user_is_sender = true;
+    let userIsSender = false;
+    if (message.sender.id === sessionUserId) {
+        userIsSender = true;
     }
 
-    let receiver_is_channel = false;
-    let receiver_is_user = false;
+    let receiverIsChannel = false;
+    let receiverIsUser = false;
     if (message.receiver.type === 'channel') {
-        receiver_is_channel = true;
+        receiverIsChannel = true;
     }
     else if (message.receiver.type === 'user') {
-        receiver_is_user = true;
+        receiverIsUser = true;
     }
 
     const rows_number = calculateRowsNumber(message.text);
@@ -101,19 +85,21 @@ function appendMessage(message, item_show_hide) {
 
     const context = {
         message: message,
-        user_is_sender: user_is_sender,
-        receiver_is_channel: receiver_is_channel,
-        receiver_is_user: receiver_is_user,
+        user_is_sender: userIsSender,
+        receiver_is_channel: receiverIsChannel,
+        receiver_is_user: receiverIsUser,
         rows_number: rows_number,
-        item_show_hide: item_show_hide
+        item_show_hide: itemShowHide
     }
 
     // Append logged in item
-    super.append(context);
+    super.appendItem(context);
 
     // Put message files
-    this.files.itemsElemSelector = `#message${message.id}-files`;
-    this.files.show(message.files);
+    const filesSelector = `#message${message.id}-files`;
+    const templateFile = Handlebars.compile(document.querySelector('#message-file').innerHTML);
+    this.files = new FilesItems(filesSelector, templateFile);
+    this.files.putItems(message.files);
 }
 
 
@@ -126,7 +112,30 @@ function calculateRowsNumber(text) {
 }
 
 
-function appendFile(file, item_show_hide) {
+// Class for files items on a page section
+class FilesItems extends PageSectionItems {
+    constructor(filesSelector, templateFile) {
+        // Set elements selectors
+        const noFilesSelector = null;
+
+        // Set templates
+        const templateFileNone = null;
+
+        // Clear template for item contents
+        //   because, for files, it is included in template for item
+        const templateFileContent = null;
+        
+        super(filesSelector, templateFile, templateFileContent, noFilesSelector, templateFileNone);
+
+        // Attributes
+
+        // Methods
+        this.appendItem = appendFile;
+    }
+}
+
+
+function appendFile(file, itemShowHide) {
     // Convert time info to local time
     file.timestamp = convertToLocaleString(file.timestamp);
 
@@ -140,65 +149,23 @@ function appendFile(file, item_show_hide) {
 }
 
 
-// When a message is sent to a channel, add message
+// On event: send message
 socket.on('send message', message => {
-    const item_show_hide = 'item-show';
-    addMessage(message, item_show_hide);
+    // Add message to page
+    const itemShowHide = 'item-show';
+    pageItems.appendItem(message, itemShowHide);
 
-    const id_elem_add = `#message${message.id}`;
-    const elem_add = document.querySelector(id_elem_add);
-
-    elem_add.addEventListener('animationend', () =>  {
-        elem_add.style.animationPlayState = 'paused';
-        let class_old = elem_add.getAttribute("class");
-        let class_new = class_old.replace("item-show", "item-hide");
-        elem_add.setAttribute("class", class_new);
-
-        const id_elem_remove = `#message-null`;
-        const elem_remove = document.querySelector(id_elem_remove);
-
-        if (elem_remove) {
-            elem_remove.addEventListener('animationend', () =>  {
-                elem_remove.remove();
-            });
-            elem_remove.style.animationPlayState = 'running';
-        }
-    });
-    elem_add.style.animationPlayState = 'running';
+    // Show animation for creating the message
+    const itemAddSelector = `#message${message.id}`;
+    const itemRemoveSelector = `#message-null`;
+    showAnimationCreateItem(itemAddSelector, itemRemoveSelector);
 });
 
 
-// When a channel is removed, remove channel
+// On event: remove message
 socket.on('remove message', message => {
-    const id_elem_remove = `#message${message.id}`;
-    const elem_remove = document.querySelector(id_elem_remove);
-
-    if (elem_remove) {
-        elem_remove.addEventListener('animationend', () =>  {
-            elem_remove.remove();
-
-            items_count--;
-            if ((items_count < 1) &&
-                (document.querySelector(`#message-null`) == null)) {
-                const context = {
-                    item_show_hide: 'item-show'
-                }
-                const content = template_message_none(context);
-                const old_content = document.querySelector('#messages').innerHTML;
-                document.querySelector('#messages').innerHTML = content + old_content;
-        
-                const id_elem_add = '#message-null';
-                const elem_add = document.querySelector(id_elem_add);
-        
-                elem_add.addEventListener('animationend', () =>  {
-                    elem_add.style.animationPlayState = 'paused';
-                    let class_old = elem_add.getAttribute("class");
-                    let class_new = class_old.replace("item-show", "item-hide");
-                    elem_add.setAttribute("class", class_new);
-                });
-                elem_add.style.animationPlayState = 'running';
-            }
-        });
-        elem_remove.style.animationPlayState = 'running';
-    }
+    // Remove message from page
+    const itemRemoveSelector = `#message${message.id}`;
+    const itemNullSelector = '#message-null';
+    pageItems.removeItem(itemRemoveSelector, itemNullSelector);
 });

@@ -12,20 +12,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = JSON.parse(request.responseText);
 
         // Get session user
-        session_user_id = data.session_user_id;
+        sessionUserId = data.session_user_id;
 
         // Set elements selectors
 
         // Set templates
-        const template_user_message_sent = Handlebars.compile(document.querySelector('#user-message-sent').innerHTML);
+        const templateUserMessageSent = Handlebars.compile(document.querySelector('#user-message-sent').innerHTML);
     
         // Instatiate page items objects
         const userItem = new UserItem();
-        const messagesItems = new MessagesPageItems(template_user_message_sent);
+        pageItems = new MessagesItems(templateUserMessageSent);
 
         // Show items on page
-        userItem.show(data.user);
-        messagesItems.show(data.messages);
+        userItem.putItem(data.user);
+        pageItems.putItems(data.messages);
 
         // Join room for real-time communication with server
         page = 'messages sent by user';

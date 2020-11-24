@@ -1,3 +1,6 @@
+// Session user
+let sessionUserId;
+
 // Variables for real-time communication with server
 const socket = connectToServer();
 let room = null;
@@ -81,7 +84,7 @@ function putItems(items) {
     // Add each item to page
     const itemShowHide = 'item-hide';
     items.reverse().forEach(item => {
-        this.append(item, itemShowHide);
+        this.appendItem(item, itemShowHide);
     });
 }
 

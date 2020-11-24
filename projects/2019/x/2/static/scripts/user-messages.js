@@ -1,22 +1,22 @@
 // Class for user item on a page
 class UserItem extends CommunicatorItem {
     constructor() {
-        const template_user = Handlebars.compile(document.querySelector('#user').innerHTML);
-        const userElemSelector = '#user-id';
+        const userSelector = '#user-id';
+        const templateUser = Handlebars.compile(document.querySelector('#user').innerHTML);
         
-        super(template_user, userElemSelector);
+        super(userSelector, templateUser);
 
         // Attributes
 
 
         // Methods
-        this.show = showUser;
+        this.putItem = putUser;
     }
 }
 
-function showUser(user) {
+function putUser(user) {
     // Clear page section
-    document.querySelector(this.itemsElemSelector).innerHTML = '';
+    document.querySelector(this.itemSelector).innerHTML = '';
 
     if (user) {
         // Convert time info to local time
@@ -32,7 +32,7 @@ function showUser(user) {
         }
 
         // show user item
-        super.show(context);
+        super.putItem(context);
     }
 }
 

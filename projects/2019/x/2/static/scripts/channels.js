@@ -1,6 +1,3 @@
-// Session user
-let sessionUserId;
-
 // Items (channels) on page
 let pageItems;
 
