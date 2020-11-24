@@ -153,7 +153,7 @@ function insertLogIn(insertionAt, user, itemShowHide) {
     const content = templateItem(context);
 
     // Insert HTML at the insertion point of the page section
-    const itemSelector = `#user-loggedin${insertionAt.current_logins[0].id}`
+    const itemSelector = `#user-loggedin${insertionAt.id}`
     const elem = document.querySelector(itemSelector);
     elem.insertAdjacentHTML("afterend", content);
 
@@ -273,13 +273,12 @@ socket.on('login', user => {
 
 
 // On event logot
-socket.on('logout', data => {
-    const user = data.user;
-    const insertionAt = data.insertion_at;
+socket.on('logout', user => {
     const fromLogin = user.current_logout.from_login;
+    const insertionAt = user.current_logout.insertion_at;
 
     // Check if logout was from the most recent login previously done
-    if (fromLogin.index_in_current_logins != 0 ) {
+    if (user.current_logout.index_in_current_logins != 0 ) {
         return;
     }
 

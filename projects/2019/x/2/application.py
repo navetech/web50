@@ -141,6 +141,8 @@ class Channel(Receiver):
 
 class User(Sender, Receiver):
     users = []
+    users_loggedin = []
+    users_loggedout = []
 
 
     @staticmethod
@@ -169,29 +171,64 @@ class User(Sender, Receiver):
 
 
     def login(self):
-        if self.current_logout is not None :
-            self.current_logout.remove_from_currents()
-        self.current_logout = None
+        if len(self.current_logins) > 0:
+            User.users_loggedin.remove(self)
+
+        elif self.current_logout is not None:
+            User.users_loggedout.remove(self)
 
         login = Login(self)
         self.current_logins.insert(0, login)
-
+        User.users_loggedin.insert(0, self)
+        
         return login
 
 
-    def logout(self, login_id):
-        login = Log.get_by_id(login_id)
-        if login is not None:
-            login.remove_from_currents()
+    def logout(self, from_login_id):
+        from_login = Log.get_by_id(from_login_id)
+        insertion_at = None
+        index_in_current_logins = -1
+
+        if (from_login is not None) and (self.current_logins[0] > 0):
+            index_in_current_logins = -1
+            for l in self.current_logins:
+                if from_login == l:
+                    index_in_current_logins = self.current_logins.index(l)
+                    break
+
+            if index_in_current_logins == 0:
+                User.users_loggedin.remove(self)
+
+                if len(self.current_logins) > 1:
+                    to_login = self.current_logins[1]
+                    to_login_timestamp = to_login.timestamp
+
+                    for u in User.users_loggedin:
+                        t = u.current_logins[0].timestamp
+
+                        if to_login_timestamp > t:
+                            i = User.users_loggedin.index(u)
+                            User.users.loggedin_insert(i, self)
+
+                            if i > 0:
+                                insertion_at = User.users_loggedin[i - 1].current_logins[0]
+                            else:
+                                insertion_at = None
+
+                            break
             try:
-                self.current_logins.remove(login)
+                self.current_logins.remove(from_login)
             except:
                 raise RuntimeError("remove(): User's current login does not exist")
 
-        if self.current_logout is not None :
-            self.current_logout.remove_from_currents()
+        elif self.current_logout is not None :
+            User.users_loggedout.remove(self)
 
-        logout = Logout(self)
+        logout = Logout(self, from_login, index_in_current_logins, insertion_at)
+        self.current_logout = logout
+
+        if len(self.current_logins) < 1:
+            User.users_loggedout.insert(0, self)
 
         return logout
 
@@ -201,17 +238,13 @@ class User(Sender, Receiver):
         Channel.remove_by_creator(self)
 
         # Remove logs
-        Login.remove_by_user(self)
-        self.current_logins = []
-
-        Logout.remove_by_user(self)
-        self.current_logout = None
-
         Log.remove_by_user(self)
 
         # Remove user
         try:
             User.users.remove(self)
+            User.users_loggedin.remove(self)
+            User.users_loggedout.remove(self)
         except:
             raise RuntimeError("remove(): User does not exist")
 
@@ -285,58 +318,42 @@ class Log:
 
 
 class Login(Log):
-    currents = []
-
-
-    @staticmethod
-    def remove_by_user(user):
-        to_remove = []
-        for log in Login.currents:
-            if log.user == user:
-                to_remove.append(log)
-        for log in to_remove:
-            Login.currents.remove(log)
-
 
     def __init__(self, user):
         super().__init__(user)
-        Login.currents.insert(0, self)
-
-
-    def remove_from_currents(self):
-        # Remove login
-        try:
-            Login.currents.remove(self)
-        except:
-            raise RuntimeError("remove(): Login from currents does not exist")
 
 
 
 class Logout(Log):
-    currents = []
 
-
-    @staticmethod
-    def remove_by_user(user):
-        to_remove = []
-        for log in Logout.currents:
-            if log.user == user:
-                to_remove.append(log)
-        for log in to_remove:
-            Logout.currents.remove(log)
-
-
-    def __init__(self, user):
+    def __init__(self, user, from_login, index_in_current_logins, insertion_at):
         super().__init__(user)
-        Logout.currents.insert(0, self)
+
+        self.from_login = from_login
+        self.index_in_current_logins = index_in_current_logins
+        self.insertion_at = insertion_at
 
 
-    def remove_from_currents(self):
-        # Remove logout
-        try:
-            Logout.currents.remove(self)
-        except:
-            raise RuntimeError("remove(): Logout from currents does not exist")
+    def to_dict(self):
+        from_login = self.from_login
+        insertion_at = self.insertion_at
+
+        r = super().to_dict()
+
+        if from_login is not None:
+            r['from_login'] = from_login.to_dict()
+        else:
+            r['from_login'] = None
+
+        r['index_in_current_logins'] = self.index_in_current_logins
+
+        if insertion_at is not None:
+            r['insertion_at'] = insertion_at.to_dict()
+        else:
+            r['insertion_at'] = None
+
+        return r
+
 
 
 
@@ -806,9 +823,17 @@ def api_users():
         return jsonify('')
 
     # Get users
-    u = []
-    for user in User.users:
-        u.append(user.to_dict())
+    li = []
+    for user in User.users_loggedin:
+        li.append(user.to_dict())
+
+    lo = []
+    for user in User.users_loggedout:
+        lo.append(user.to_dict())
+
+    u = {'loggedin': li,
+         'loggedout': lo
+        }
 
     data = {'users': u, 'session_user_id': session_user_id}
     return jsonify(data)
