@@ -278,7 +278,7 @@ socket.on('logout', user => {
     const insertionAt = user.current_logout.insertion_at;
 
     // Check if logout was from the most recent login previously done
-    if (user.current_logout.index_in_current_logins != 0 ) {
+    if (fromLogin.index_in_current_logins != 0 ) {
         return;
     }
 

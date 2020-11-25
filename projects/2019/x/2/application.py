@@ -161,6 +161,27 @@ class User(Sender, Receiver):
         return None
 
 
+    @staticmethod
+    def insert_user_loggedin(user, to):
+        to_timestamp = to.timestamp
+        insertion_at = None
+
+        for u in User.users_loggedin:
+            t = u.current_logins[0].timestamp
+
+            if to_timestamp > t:
+                i = User.users_loggedin.index(u)
+                User.users_loggedin.insert(i, user)
+
+                if i > 0:
+                    insertion_at = User.users_loggedin[i - 1]
+                else:
+                    insertion_at = None
+
+                break
+        return insertion_at
+
+
     def __init__(self, name):
         super().__init__(name)
 
@@ -170,15 +191,30 @@ class User(Sender, Receiver):
         User.users.insert(0, self)
 
 
+
     def login(self):
         if len(self.current_logins) > 0:
-            User.users_loggedin.remove(self)
+            # Remove user from loggedins
+            try:
+                User.users_loggedin.remove(self)
+            except:
+                raise RuntimeError("login(): Loggedin user does not exist")
 
         elif self.current_logout is not None:
-            User.users_loggedout.remove(self)
+            # Remove user from loggedouts
+            try:
+                User.users_loggedout.remove(self)
+            except:
+                raise RuntimeError("login(): Loggedout user does not exist")
 
         login = Login(self)
+
         self.current_logins.insert(0, login)
+
+        for i in range(0, len(self.current_logins)):
+            l = self.current_logins[i]
+            l.index_in_current_logins = i
+
         User.users_loggedin.insert(0, self)
         
         return login
@@ -187,50 +223,46 @@ class User(Sender, Receiver):
     def logout(self, from_login_id):
         from_login = Log.get_by_id(from_login_id)
         insertion_at = None
-        index_in_current_logins = -1
 
         if (from_login is not None) and (self.current_logins[0] > 0):
-            index_in_current_logins = -1
-            for l in self.current_logins:
-                if from_login == l:
-                    index_in_current_logins = self.current_logins.index(l)
-                    break
-
-            if index_in_current_logins == 0:
-                User.users_loggedin.remove(self)
+            if from_login.index_in_current_logins == 0:
+                # Remove user from loggedins
+                try:
+                    User.users_loggedin.remove(self)
+                except:
+                    raise RuntimeError("login(): Loggedin user does not exist")
 
                 if len(self.current_logins) > 1:
-                    to_login = self.current_logins[1]
-                    to_login_timestamp = to_login.timestamp
+                    to = self.current_logins[1]
+                    insertion_at = User.insert_user_loggedin(self, to)
 
-                    for u in User.users_loggedin:
-                        t = u.current_logins[0].timestamp
-
-                        if to_login_timestamp > t:
-                            i = User.users_loggedin.index(u)
-                            User.users.loggedin_insert(i, self)
-
-                            if i > 0:
-                                insertion_at = User.users_loggedin[i - 1].current_logins[0]
-                            else:
-                                insertion_at = None
-
-                            break
             try:
                 self.current_logins.remove(from_login)
+
+                from_login.index_in_current_logins = -1
+                for i in range(0, len(self.current_logins)):
+                    l = self.current_logins[i]
+                    l.index_in_current_logins = i
+
             except:
-                raise RuntimeError("remove(): User's current login does not exist")
+                raise RuntimeError("logout(): User's current login does not exist")
 
         elif self.current_logout is not None :
-            User.users_loggedout.remove(self)
+            # Remove user from loggedouts
+            try:
+                User.users_loggedout.remove(self)
+            except:
+                raise RuntimeError("logout(): Loggedout user does not exist")
 
-        logout = Logout(self, from_login, index_in_current_logins, insertion_at)
+        logout = Logout(self, from_login)
         self.current_logout = logout
 
         if len(self.current_logins) < 1:
             User.users_loggedout.insert(0, self)
 
-        return logout
+        return {"logout": logout,
+                "insertion_at" : insertion_at
+               } 
 
     
     def remove(self):
@@ -322,15 +354,24 @@ class Login(Log):
     def __init__(self, user):
         super().__init__(user)
 
+    self.index_in_current_logins = -1
+
+
+    def to_dict(self):
+        r = super().to_dict()
+
+        r['index_in_current_logins'] = self.index_in_current_logins
+
+        return r
+
 
 
 class Logout(Log):
 
-    def __init__(self, user, from_login, index_in_current_logins, insertion_at):
+    def __init__(self, user, from_login, insertion_at):
         super().__init__(user)
 
         self.from_login = from_login
-        self.index_in_current_logins = index_in_current_logins
         self.insertion_at = insertion_at
 
 
@@ -344,8 +385,6 @@ class Logout(Log):
             r['from_login'] = from_login.to_dict()
         else:
             r['from_login'] = None
-
-        r['index_in_current_logins'] = self.index_in_current_logins
 
         if insertion_at is not None:
             r['insertion_at'] = insertion_at.to_dict()
@@ -753,14 +792,26 @@ def logout():
 
     # Log out
     user = User.get_by_id(session.get("user_id"))
+    ret = None
     if user is not None:
-        user.logout(session.get("login_id"))
+        ret = user.logout(session.get("login_id"))
         session.clear()
 
+        u = user_to_dict()
+
         # Emit event
-        data = user.to_dict()
-        room = 'users'
-        socketio.emit('logout', data, room)
+        if ret is not None:
+            insertion_at = ret.insertion_at
+
+            a = None
+            if (insertion_at is not None:
+                a = ret.insertion_at.to_dict()
+
+            data = {'user': u,
+                    'insertion_at': a
+                   }   
+            room = 'users'
+            socketio.emit('logout', data, room)
 
     # Redirect to initial page
     return redirect("/")
