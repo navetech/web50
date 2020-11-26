@@ -12,14 +12,13 @@ class CommunicatorItem {
 
 
         // Methods
-        this.putItem = putCommunicator;
     }
-}
 
 
-function putCommunicator(context) {
-    const content = this.templateItem(context);
-    document.querySelector(this.itemSelector).innerHTML = content;
+    putItem(context) {
+        const content = this.templateItem(context);
+        document.querySelector(this.itemSelector).innerHTML = content;
+    }
 }
 
 
@@ -42,65 +41,63 @@ class MessagesItems extends PageSectionItems {
         // Attributes
 
         // Methods
-        this.putItems = putMessages;
-        this.appendItem = appendMessage;
-    }
-}
-
-
-function putMessages(messages) {
-    // If there are no messages
-    if (messages.length <= 0) {
-        // Put no messages info on page
-        const itemShowHide = 'item-hide';
-        this.putNoItems(itemShowHide);
-    }
-    // If there are messages
-    else {
-        // Show messages items
-        super.putItems(messages);
-    }
-}
-
-
-function appendMessage(message, itemShowHide) {
-    // Generate HTML from template
-    let userIsSender = false;
-    if (message.sender.id === sessionUserId) {
-        userIsSender = true;
     }
 
-    let receiverIsChannel = false;
-    let receiverIsUser = false;
-    if (message.receiver.type === 'channel') {
-        receiverIsChannel = true;
-    }
-    else if (message.receiver.type === 'user') {
-        receiverIsUser = true;
-    }
 
-    const rows_number = calculateRowsNumber(message.text);
-
-    message.timestamp = convertToLocaleString(message.timestamp);
-
-    const context = {
-        message: message,
-        user_is_sender: userIsSender,
-        receiver_is_channel: receiverIsChannel,
-        receiver_is_user: receiverIsUser,
-        rows_number: rows_number,
-        item_show_hide: itemShowHide
+    putItems(messages) {
+        // If there are no messages
+        if (messages.length <= 0) {
+            // Put no messages info on page
+            const itemShowHide = 'item-hide';
+            this.putNoItems(itemShowHide);
+        }
+        // If there are messages
+        else {
+            // Show messages items
+            super.putItems(messages);
+        }
     }
 
-    // Append logged in item
-    super.appendItem(context);
 
-    // Put message files
-    const filesSelector = `#message${message.id}-files`;
-    const templateFile = Handlebars.compile(document.querySelector('#message-file').innerHTML);
-    this.files = new FilesItems(filesSelector, templateFile);
-    this.files.putItems(message.files);
-}
+    appendItem(message, itemShowHide) {
+        // Generate HTML from template
+        let userIsSender = false;
+        if (message.sender.id === sessionUserId) {
+            userIsSender = true;
+        }
+    
+        let receiverIsChannel = false;
+        let receiverIsUser = false;
+        if (message.receiver.type === 'channel') {
+            receiverIsChannel = true;
+        }
+        else if (message.receiver.type === 'user') {
+            receiverIsUser = true;
+        }
+    
+        const rows_number = calculateRowsNumber(message.text);
+    
+        message.timestamp = convertToLocaleString(message.timestamp);
+    
+        const context = {
+            message: message,
+            user_is_sender: userIsSender,
+            receiver_is_channel: receiverIsChannel,
+            receiver_is_user: receiverIsUser,
+            rows_number: rows_number,
+            item_show_hide: itemShowHide
+        }
+    
+        // Append logged in item
+        super.putContext(context);
+    
+        // Put message files
+        const filesSelector = `#message${message.id}-files`;
+        const templateFile = Handlebars.compile(document.querySelector('#message-file').innerHTML);
+        this.files = new FilesItems(filesSelector, templateFile);
+        this.files.putItems(message.files);
+    }
+    }
 
 
 function calculateRowsNumber(text) {
@@ -130,23 +127,22 @@ class FilesItems extends PageSectionItems {
         // Attributes
 
         // Methods
-        this.appendItem = appendFile;
-    }
-}
-
-
-function appendFile(file, itemShowHide) {
-    // Convert time info to local time
-    file.timestamp = convertToLocaleString(file.timestamp);
-
-    // Generate HTML from template
-    const context = {
-        file: file
     }
 
-    // Append file item
-    super.append(context);
-}
+
+    appendItem(file, itemShowHide) {
+        // Convert time info to local time
+        file.timestamp = convertToLocaleString(file.timestamp);
+    
+        // Generate HTML from template
+        const context = {
+            file: file
+        }
+    
+        // Append file item
+        super.putContext(context);
+    }
+    }
 
 
 // On event: send message

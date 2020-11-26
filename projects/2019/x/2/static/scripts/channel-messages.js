@@ -48,26 +48,25 @@ class ChannelItem extends CommunicatorItem {
 
 
         // Methods
-        this.putItem = putChannel;
     }
-}
 
 
-function putChannel(channel) {
-    // Clear page section
-    document.querySelector(this.itemSelector).innerHTML = '';
-
-    if (channel) {
-        // Convert time info to local time
-        channel.timestamp = convertToLocaleString(channel.timestamp);
+    putItem(channel) {
+        // Clear page section
+        document.querySelector(this.itemSelector).innerHTML = '';
     
-        // Generate HTML from template
-        const context = {
-            channel: channel
+        if (channel) {
+            // Convert time info to local time
+            channel.timestamp = convertToLocaleString(channel.timestamp);
+        
+            // Generate HTML from template
+            const context = {
+                channel: channel
+            }
+    
+            // show channel item
+            super.putItem(context);
         }
-
-        // show channel item
-        super.putItem(context);
     }
 }
 

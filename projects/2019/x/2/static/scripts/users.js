@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     request.onload = () => {
         // Extract JSON data from request
         const data = JSON.parse(request.responseText);
+        console.log(data);
 
         // Get session user
         sessionUserId = data.session_user_id;
@@ -77,7 +78,23 @@ class LogsItems extends PageSectionItems {
         // Attributes
 
         // Methods
-        this.appendItem = appendLog;
+//        this.appendLog = appendLog;
+    }
+
+
+    appendItem(user, itemShowHide) {
+        // Generate HTML from template
+        const context = {
+            user: user,
+            item_show_hide: itemShowHide
+        };
+
+        // Append logged in/out item
+        console.log(user);
+        super.putContext(context);
+
+        // Put user data contents
+        this.putItemContent(user);
     }
 }
 
@@ -129,21 +146,6 @@ function putUsers(users) {
 }
 
 
-function appendLog(user, itemShowHide) {
-    // Generate HTML from template
-    const context = {
-        user: user,
-        item_show_hide: itemShowHide
-    };
-
-    // Append logged in/out item
-    super.appendItem(context);
-
-    // Put user data contents
-    this.putItemContent(user);
-}
-
-
 function insertLogIn(insertionAt, user, itemShowHide) {
     // Generate HTML from template
     const context = {
@@ -153,7 +155,7 @@ function insertLogIn(insertionAt, user, itemShowHide) {
     const content = templateItem(context);
 
     // Insert HTML at the insertion point of the page section
-    const itemSelector = `#user-loggedin${insertionAt.id}`
+    const itemSelector = `#user-loggedin${insertionAt.current_login[0].id}`
     const elem = document.querySelector(itemSelector);
     elem.insertAdjacentHTML("afterend", content);
 
@@ -176,7 +178,7 @@ function putLogInContent(user) {
     const context = {
         user: user
     }
-    const content = templateItemContent(context);
+    const content = this.templateItemContent(context);
 
     // Add HTML to page section
     const itemSelector = `#user-loggedin${user.current_logins[0].id}`
@@ -194,7 +196,7 @@ function putLogOutContent(user) {
     const context = {
         user: user
     }
-    const content = templateItemContent(context);
+    const content = this.templateItemContent(context);
 
     // Add HTML to page section
     const itemSelector = `#user-loggedout${user.current_logout.id}`
@@ -222,7 +224,7 @@ socket.on('unregister', user => {
     // Remove logged in user from page
     const itemRemoveSelector = `#user-loggedin${user.current_logins[0].id}`
     const itemNullSelector = '#user-null';
-    pageItems.logIns.remove(itemRemoveSelector, itemNullSelector);
+    pageItems.logIns.removeItem(itemRemoveSelector, itemNullSelector);
     pageItems.itemCount--;
 });
 
@@ -254,7 +256,7 @@ socket.on('login', user => {
 
             // Add logged in user to page
             const itemShowHide = 'item-show';
-            pageItems.logIns.append(user, itemShowHide);
+            pageItems.logIns.appendItem(user, itemShowHide);
     
             // Show animation for adding the user
             const itemAddSelector = `#user-loggedin${user.current_logins[0].id}`
@@ -273,9 +275,11 @@ socket.on('login', user => {
 
 
 // On event logot
-socket.on('logout', user => {
+socket.on('logout', data => {
+    const user = data.user;
     const fromLogin = user.current_logout.from_login;
-    const insertionAt = user.current_logout.insertion_at;
+    const insertionAt = data.insertion_at;
+    console.log(fromLogin)
 
     // Check if logout was from the most recent login previously done
     if (fromLogin.index_in_current_logins != 0 ) {
@@ -299,7 +303,7 @@ socket.on('logout', user => {
                 // If users is the most recently logged in
                 if (!insertionAt) {
                     // Append user to the page
-                    pageItems.logIns.append(user, itemShowHide);
+                    pageItems.logIns.appendItem(user, itemShowHide);
                 }
                 // If user is NOT the most recently logged in
                 else {

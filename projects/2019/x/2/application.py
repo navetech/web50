@@ -224,7 +224,7 @@ class User(Sender, Receiver):
         from_login = Log.get_by_id(from_login_id)
         insertion_at = None
 
-        if (from_login is not None) and (self.current_logins[0] > 0):
+        if (from_login is not None) and (len(self.current_logins) > 0):
             if from_login.index_in_current_logins == 0:
                 # Remove user from loggedins
                 try:
@@ -239,7 +239,6 @@ class User(Sender, Receiver):
             try:
                 self.current_logins.remove(from_login)
 
-                from_login.index_in_current_logins = -1
                 for i in range(0, len(self.current_logins)):
                     l = self.current_logins[i]
                     l.index_in_current_logins = i
@@ -260,9 +259,7 @@ class User(Sender, Receiver):
         if len(self.current_logins) < 1:
             User.users_loggedout.insert(0, self)
 
-        return {"logout": logout,
-                "insertion_at" : insertion_at
-               } 
+        return {"logout": logout, "insertion_at" : insertion_at} 
 
     
     def remove(self):
@@ -275,8 +272,13 @@ class User(Sender, Receiver):
         # Remove user
         try:
             User.users.remove(self)
-            User.users_loggedin.remove(self)
-            User.users_loggedout.remove(self)
+
+            if self in User.users_loggedin:
+                User.users_loggedin.remove(self)
+
+            if self in User.users_loggedout:
+                User.users_loggedout.remove(self)
+                
         except:
             raise RuntimeError("remove(): User does not exist")
 
@@ -354,7 +356,7 @@ class Login(Log):
     def __init__(self, user):
         super().__init__(user)
 
-    self.index_in_current_logins = -1
+        self.index_in_current_logins = -1
 
 
     def to_dict(self):
@@ -368,16 +370,14 @@ class Login(Log):
 
 class Logout(Log):
 
-    def __init__(self, user, from_login, insertion_at):
+    def __init__(self, user, from_login):
         super().__init__(user)
 
         self.from_login = from_login
-        self.insertion_at = insertion_at
 
 
     def to_dict(self):
         from_login = self.from_login
-        insertion_at = self.insertion_at
 
         r = super().to_dict()
 
@@ -385,11 +385,6 @@ class Logout(Log):
             r['from_login'] = from_login.to_dict()
         else:
             r['from_login'] = None
-
-        if insertion_at is not None:
-            r['insertion_at'] = insertion_at.to_dict()
-        else:
-            r['insertion_at'] = None
 
         return r
 
@@ -797,15 +792,15 @@ def logout():
         ret = user.logout(session.get("login_id"))
         session.clear()
 
-        u = user_to_dict()
+        u = user.to_dict()
 
         # Emit event
         if ret is not None:
-            insertion_at = ret.insertion_at
+            insertion_at = ret['insertion_at']
 
             a = None
-            if (insertion_at is not None:
-                a = ret.insertion_at.to_dict()
+            if insertion_at is not None:
+                a = insertion_at.to_dict()
 
             data = {'user': u,
                     'insertion_at': a

@@ -53,40 +53,38 @@ class ChannelsItems extends PageSectionItems {
         // Attributes
 
         // Methods
-        this.putItems = putChannels;
-        this.appendItem = appendChannel;
-    }
-}
-
-
-function putChannels(channels) {
-    // If there are no channels
-    if (channels.length <= 0) {
-        // Put no channels info on page
-        const itemShowHide = 'item-hide';
-        this.putNoItems(itemShowHide);
-    }
-    // If there are channels
-    else {
-        // Show channels items
-        super.putItems(channels);
-    }
-}
-
-
-function appendChannel(channel, itemShowHide) {
-    // Convert time info to local time
-    channel.timestamp = convertToLocaleString(channel.timestamp);
-
-    // Generate HTML from template
-    const context = {
-        channel: channel,
-        item_show_hide: itemShowHide
     }
 
-    // Append channel item
-    super.appendItem(context);
-}
+
+    appendItem(channel, itemShowHide) {
+        // Convert time info to local time
+        channel.timestamp = convertToLocaleString(channel.timestamp);
+    
+        // Generate HTML from template
+        const context = {
+            channel: channel,
+            item_show_hide: itemShowHide
+        }
+    
+        // Append channel item
+        super.putContext(context);
+    }
+
+
+    putItems(channels) {
+        // If there are no channels
+        if (channels.length <= 0) {
+            // Put no channels info on page
+            const itemShowHide = 'item-hide';
+            this.putNoItems(itemShowHide);
+        }
+        // If there are channels
+        else {
+            // Show channels items
+            super.putItems(channels);
+        }
+    }
+    }
 
 
 // On event: create channel

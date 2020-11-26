@@ -10,29 +10,29 @@ class UserItem extends CommunicatorItem {
 
 
         // Methods
-        this.putItem = putUser;
     }
-}
 
-function putUser(user) {
-    // Clear page section
-    document.querySelector(this.itemSelector).innerHTML = '';
-
-    if (user) {
-        // Convert time info to local time
-        user.timestamp = convertToLocaleString(user.timestamp);
     
-        user.current_logins.forEach(login => {
-            login.timestamp = convertToLocaleString(login.timestamp);
-        });
-
-        // Generate HTML from template
-        const context = {
-            user: user
+    putItem(user) {
+        // Clear page section
+        document.querySelector(this.itemSelector).innerHTML = '';
+    
+        if (user) {
+            // Convert time info to local time
+            user.timestamp = convertToLocaleString(user.timestamp);
+        
+            user.current_logins.forEach(login => {
+                login.timestamp = convertToLocaleString(login.timestamp);
+            });
+    
+            // Generate HTML from template
+            const context = {
+                user: user
+            }
+    
+            // show user item
+            super.putItem(context);
         }
-
-        // show user item
-        super.putItem(context);
     }
 }
 

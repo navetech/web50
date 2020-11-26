@@ -68,9 +68,22 @@ class PageSectionItems {
         // Methods
         this.putItems = putItems;
         this.putNoItems = putNoItems;
-        this.appendItem = appendItem;
         this.removeItem = removeItem;
     }
+
+
+    putContext(context) {
+        // Generate HTML from template
+        const content = this.templateItem(context);
+    
+        // Add HTML to page section
+        const oldContent = document.querySelector(this.itemsSelector).innerHTML
+        document.querySelector(this.itemsSelector).innerHTML = content + oldContent;
+    
+        // Increment number of items on page
+        this.itemsCount++;
+    }
+   
 }
 
 
@@ -94,26 +107,13 @@ function putNoItems(itemShowHide) {
     const context = {
         item_show_hide: itemShowHide
     }
-    const content = this.template_item_none(context);
+    const content = this.templateItemNone(context);
  
     // Add HTML to page section
     document.querySelector(this.noItemsSelector).innerHTML = content;
 
     // Zero number of items on page
     this.itemsCount = 0;
-}
-
-
-function appendItem(context) {
-    // Generate HTML from template
-    const content = this.template_item(context);
-
-    // Add HTML to page section
-    const oldContent = document.querySelector(this.itemsSelector).innerHTML
-    document.querySelector(itemsSelector).innerHTML = content + oldContent;
-
-    // Increment number of items on page
-    this.itemsCount++;
 }
 
 
@@ -133,7 +133,7 @@ function removeItem(itemRemoveSelector, itemNullSelector) {
                 
                 // Add no items info on page
                 const itemShowHide = 'item-show';
-                this.putNoItem(itemShowHide);
+                this.putNoItems(itemShowHide);
 
                 // Show animation for adding the no items info
                 const itemAddSelector = itemNullSelector;
