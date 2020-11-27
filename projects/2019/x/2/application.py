@@ -166,19 +166,21 @@ class User(Sender, Receiver):
         to_timestamp = to.timestamp
         insertion_at = None
 
+        to_index = len(User.users_loggedin)
         for u in User.users_loggedin:
             t = u.current_logins[0].timestamp
 
             if to_timestamp > t:
-                i = User.users_loggedin.index(u)
-                User.users_loggedin.insert(i, user)
-
-                if i > 0:
-                    insertion_at = User.users_loggedin[i - 1]
-                else:
-                    insertion_at = None
-
+                to_index = User.users_loggedin.index(u)
                 break
+
+        User.users_loggedin.insert(to_index, user)
+
+        if to_index > 0:
+            insertion_at = User.users_loggedin[to_index - 1]
+        else:
+            insertion_at = None
+
         return insertion_at
 
 
@@ -238,13 +240,12 @@ class User(Sender, Receiver):
 
             try:
                 self.current_logins.remove(from_login)
-
-                for i in range(0, len(self.current_logins)):
-                    l = self.current_logins[i]
-                    l.index_in_current_logins = i
-
             except:
                 raise RuntimeError("logout(): User's current login does not exist")
+
+            for i in range(0, len(self.current_logins)):
+                l = self.current_logins[i]
+                l.index_in_current_logins = i
 
         elif self.current_logout is not None :
             # Remove user from loggedouts

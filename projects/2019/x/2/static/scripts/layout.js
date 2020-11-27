@@ -66,11 +66,26 @@ class PageSectionItems {
         this.itemsCount = 0;
 
         // Methods
-        this.putItems = putItems;
         this.putNoItems = putNoItems;
         this.removeItem = removeItem;
     }
 
+
+    putItems(items) {
+        console.log('putItems layout');
+        // Zero number of items on page
+        this.itemsCount = 0;
+    
+        // Clear page section
+        document.querySelector(this.itemsSelector).innerHTML = '';
+    
+        // Add each item to page
+        const itemShowHide = 'item-hide';
+        items.reverse().forEach(item => {
+            this.appendItem(item, itemShowHide);
+        });
+    }
+    
 
     putContext(context) {
         // Generate HTML from template
@@ -84,21 +99,6 @@ class PageSectionItems {
         this.itemsCount++;
     }
    
-}
-
-
-function putItems(items) {
-    // Zero number of items on page
-    this.itemsCount = 0;
-
-    // Clear page section
-    document.querySelector(this.itemsSelector).innerHTML = '';
-
-    // Add each item to page
-    const itemShowHide = 'item-hide';
-    items.reverse().forEach(item => {
-        this.appendItem(item, itemShowHide);
-    });
 }
 
 
