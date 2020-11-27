@@ -5,14 +5,14 @@
         {% raw -%}
             <li class="list-group-item ln-container01 ln-h03">
                 <a class="ln-highlight" href="/message-to-user/{{ user.id }}">{{ user.name }}</a>
+                {{#if user.current_logins }}
+                <span class="status-on">online</span> on
+                <span class="ln-highlight">{{ user.current_logins.[0].timestamp }}</span>
+            {{else}}
+            <span class="status-off">offline</span>
+            {{/if}}
                 registered on
                 <span class="ln-highlight">{{ user.timestamp }}</span>
-                {{#if user.current_logins }}
-                    online
-                    <span class="ln-highlight">{{ user.current_logins.[0].timestamp }}</span>
-                {{else}}
-                    offline
-                {{/if}}
             </li>
         {%- endraw %}
     </script>

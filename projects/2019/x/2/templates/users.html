@@ -18,14 +18,14 @@
     <script id="user-content" type="text/x-handlebars-template">
         {% raw -%}
             <a class="ln-highlight" href="/message-to-user/{{ user.id }}">{{ user.name }}</a>
-            registered on
-            <span class="ln-highlight">{{ user.timestamp }}</span>
             {{#if user.current_logins }}
-                online on
+                <span class="status-on">online</span> on
                 <span class="ln-highlight">{{ user.current_logins.[0].timestamp }}</span>
             {{else}}
-                offline
+            <span class="status-off">offline</span>
             {{/if}}
+            registered on
+            <span class="ln-highlight">{{ user.timestamp }}</span>
         {%- endraw %}
     </script>
 

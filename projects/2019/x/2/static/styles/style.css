@@ -117,3 +117,18 @@ main form label
     animation-fill-mode: forwards;
     animation-play-state: paused;
 }
+
+
+.status-on {
+    font-size: medium;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: green;
+}
+
+.status-off {
+    font-size: medium;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: red;
+}
