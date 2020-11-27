@@ -68,6 +68,7 @@ class PageSectionItems {
         // Methods
         this.putNoItems = putNoItems;
         this.removeItem = removeItem;
+        this.showAnimationAddNoItems = showAnimationAddNoItems;
     }
 
 
@@ -127,27 +128,33 @@ function removeItem(itemRemoveSelector, itemNullSelector) {
             elemRemove.remove();
             this.itemsCount--;
 
-            // If no more items on page
-            if ((this.itemsCount < 1) &&
-                (document.querySelector(itemNullSelector) == null)) {
-                
-                // Add no items info on page
-                const itemShowHide = 'item-show';
-                this.putNoItems(itemShowHide);
-
-                // Show animation for adding the no items info
-                const itemAddSelector = itemNullSelector;
-                const elemAdd = document.querySelector(itemAddSelector);
-                elemAdd.addEventListener('animationend', () =>  {
-                    elemAdd.style.animationPlayState = 'paused';
-                    const classOld = elemAdd.getAttribute("class");
-                    const classNew = classOld.replace("item-show", "item-hide");
-                    elemAdd.setAttribute("class", classNew);
-                });
-                elemAdd.style.animationPlayState = 'running';
-            }
+            this.showAnimationAddNoItems(itemNullSelector);
         });
         elemRemove.style.animationPlayState = 'running';
+    }
+}
+
+
+function showAnimationAddNoItems(itemNullSelector) {
+    // If no more items on page
+    if ((this.itemsCount < 1) &&
+        (itemNullSelector != null) && (itemNullSelector != undefined) &&
+        (document.querySelector(itemNullSelector) == null)) {
+                
+        // Add no items info on page
+        const itemShowHide = 'item-show';
+        this.putNoItems(itemShowHide);
+
+        // Show animation for adding the no items info
+        const itemAddSelector = itemNullSelector;
+        const elemAdd = document.querySelector(itemAddSelector);
+        elemAdd.addEventListener('animationend', () =>  {
+            elemAdd.style.animationPlayState = 'paused';
+            const classOld = elemAdd.getAttribute("class");
+            const classNew = classOld.replace("item-show", "item-hide");
+            elemAdd.setAttribute("class", classNew);
+        });
+        elemAdd.style.animationPlayState = 'running';
     }
 }
 

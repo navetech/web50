@@ -66,6 +66,7 @@ class UsersItems extends PageSectionItems {
 
         // Methods
         this.putItems = putUsers;
+        this.removeItem = removeUser;
     }
 }
 
@@ -78,7 +79,6 @@ class LogsItems extends PageSectionItems {
         // Attributes
 
         // Methods
-//        this.appendLog = appendLog;
     }
 
 
@@ -143,6 +143,18 @@ function putUsers(users) {
         this.logOuts.putItems(users.loggedout)
         this.itemsCount = this.logIns.itemsCount + this.logOuts.itemsCount;
     }
+}
+
+
+function removeUser(user, itemNullSelector) {
+    // Remove logged in user from page
+    const itemRemoveSelector = `#user-loggedin${user.current_logins[0].id}`
+    const itemNullLogInSelector = null;
+    this.logIns.removeItem(itemRemoveSelector, itemNullLogInSelector);
+    
+    this.itemCount--;
+
+    this.showAnimationAddNoItems(itemNullSelector);
 }
 
 
@@ -221,11 +233,9 @@ socket.on('register', user => {
 
 // On event: unregister
 socket.on('unregister', user => {
-    // Remove logged in user from page
-    const itemRemoveSelector = `#user-loggedin${user.current_logins[0].id}`
+    // Remove user from page
     const itemNullSelector = '#user-null';
-    pageItems.logIns.removeItem(itemRemoveSelector, itemNullSelector);
-    pageItems.itemCount--;
+    pageItems.removeItem(user, itemNullSelector);
 });
 
 
