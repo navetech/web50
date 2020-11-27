@@ -13,7 +13,6 @@ document.addEventListener('DOMContentLoaded', () => {
     request.onload = () => {
         // Extract JSON data from request
         const data = JSON.parse(request.responseText);
-        console.log(data);
 
         // Get session user
         sessionUserId = data.session_user_id;
@@ -67,6 +66,7 @@ class UsersItems extends PageSectionItems {
         // Methods
         this.putItems = putUsers;
         this.removeItem = removeUser;
+        this.appendItem = appendUser;
     }
 }
 
@@ -90,7 +90,6 @@ class LogsItems extends PageSectionItems {
         };
 
         // Append logged in/out item
-        console.log(user);
         super.putContext(context);
 
         // Put user data contents
@@ -146,15 +145,37 @@ function putUsers(users) {
 }
 
 
-function removeUser(user, itemNullSelector) {
-    // Remove logged in user from page
-    const itemRemoveSelector = `#user-loggedin${user.current_logins[0].id}`
-    const itemNullLogInSelector = null;
-    this.logIns.removeItem(itemRemoveSelector, itemNullLogInSelector);
-    
-    this.itemCount--;
+function appendUser(user) {
+    // Add logged in user to page
+    const itemShowHide = 'item-show';
+    this.logIns.appendItem(user, itemShowHide);
 
-    this.showAnimationAddNoItems(itemNullSelector);
+    this.itemsCount++;
+
+    // Show animation for creating the user
+    const itemAddSelector = `#user-loggedin${user.current_logins[0].id}`
+    const itemRemoveSelector = `#user-null`;
+    createItemElement(itemAddSelector, itemRemoveSelector);
+}
+
+
+function removeUser(user) {
+    // Remove logged in user from page
+    const itemRemoveSelector = `#user-loggedin${user.current_logins[0].id}`;
+    let itemNullSelector;
+
+    this.itemsCount--;
+    if (this.itemsCount > 0) {
+        itemNullSelector = null;
+        this.logIns.noItemsSelector = null;
+        this.logIns.templateItemNone = null;
+    }
+    else {
+        itemNullSelector = '#user-null';
+        this.logIns.noItemsSelector = '#no-users';
+        this.logIns.templateItemNone = Handlebars.compile(document.querySelector('#user-none').innerHTML);
+    }
+    this.logIns.removeItem(itemRemoveSelector, itemNullSelector);
 }
 
 
@@ -175,7 +196,7 @@ function insertLogIn(insertionAt, user, itemShowHide) {
     this.putItemContent(user);
 
     // Increment number of logged in users on page
-    this.itemCount++;
+    this.itemsCount++;
 }
 
 
@@ -219,23 +240,15 @@ function putLogOutContent(user) {
 
 // On event: register
 socket.on('register', user => {
-    // Add logged in user to page
-    const itemShowHide = 'item-show';
-    pageItems.logIns.appendItem(user, itemShowHide);
-    pageItems.itemCount++;
-
-    // Show animation for creating the user
-    const itemAddSelector = `#user-loggedin${user.current_logins[0].id}`
-    const itemRemoveSelector = `#user-null`;
-    showAnimationCreateItem(itemAddSelector, itemRemoveSelector);
+    // Add user to page
+    pageItems.appendItem(user);
 });
 
 
 // On event: unregister
 socket.on('unregister', user => {
     // Remove user from page
-    const itemNullSelector = '#user-null';
-    pageItems.removeItem(user, itemNullSelector);
+    pageItems.removeItem(user);
 });
 
 
@@ -262,7 +275,7 @@ socket.on('login', user => {
     if (elemRemove) {
         elemRemove.addEventListener('animationend', () =>  {
             elemRemove.remove();
-            logItems.itemCount--;
+            logItems.itemsCount--;
 
             // Add logged in user to page
             const itemShowHide = 'item-show';
@@ -270,14 +283,7 @@ socket.on('login', user => {
     
             // Show animation for adding the user
             const itemAddSelector = `#user-loggedin${user.current_logins[0].id}`
-            const elemAdd = document.querySelector(itemAddSelector);
-            elemAdd.addEventListener('animationend', () =>  {
-                elemAdd.style.animationPlayState = 'paused';
-                const classOld = elemAdd.getAttribute("class");
-                const classNew = classOld.replace("item-show", "item-hide");
-                elemAdd.setAttribute("class", classNew);
-            });
-            elemAdd.style.animationPlayState = 'running';
+            addItemElement(itemAddSelector);
         });
         elemRemove.style.animationPlayState = 'running';
     }
@@ -289,7 +295,6 @@ socket.on('logout', data => {
     const user = data.user;
     const fromLogin = user.current_logout.from_login;
     const insertionAt = data.insertion_at;
-    console.log(fromLogin)
 
     // Check if logout was from the most recent login previously done
     if (fromLogin.index_in_current_logins != 0 ) {
@@ -304,7 +309,7 @@ socket.on('logout', data => {
     if (elemRemove) {
         elemRemove.addEventListener('animationend', () =>  {
             elemRemove.remove();
-            pageItems.logIns.itemCount--;
+            pageItems.logIns.itemsCount--;
 
             // If user still logged in
             const itemShowHide = 'item-show';
@@ -330,14 +335,7 @@ socket.on('logout', data => {
                     itemAddSelector = `#user-loggedout${user.current_logout.id}`
             }
             // Show animation for adding the user
-            const elemAdd = document.querySelector(itemAddSelector);
-            elemAdd.addEventListener('animationend', () =>  {
-                elemAdd.style.animationPlayState = 'paused';
-                const classOld = elemAdd.getAttribute("class");
-                const classNew = classOld.replace("item-show", "item-hide");
-                elemAdd.setAttribute("class", classNew);
-            });
-            elemAdd.style.animationPlayState = 'running';
+            addItemElement(itemAddSelector);
         });
         elemRemove.style.animationPlayState = 'running';
     }

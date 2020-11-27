@@ -21,7 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
         pageItems = new ChannelsItems();
 
         // Put channels on page
-        console.log('call putItems channels');
         pageItems.putItems(data.channels);
 
         // Join room for real-time communication with server
@@ -73,8 +72,6 @@ class ChannelsItems extends PageSectionItems {
 
 
     putItems(channels) {
-        console.log("put Items Channels");
-        console.log(channels);
         // If there are no channels
         if (channels.length <= 0) {
             // Put no channels info on page
@@ -99,7 +96,7 @@ socket.on('create channel', channel => {
     // Show animation for creating the channel
     const itemAddSelector = `#channel${channel.id}`;
     const itemRemoveSelector = `#channel-null`;
-    showAnimationCreateItem(itemAddSelector, itemRemoveSelector);
+    createItemElement(itemAddSelector, itemRemoveSelector);
 });
 
 

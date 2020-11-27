@@ -154,7 +154,7 @@ socket.on('send message', message => {
     // Show animation for creating the message
     const itemAddSelector = `#message${message.id}`;
     const itemRemoveSelector = `#message-null`;
-    showAnimationCreateItem(itemAddSelector, itemRemoveSelector);
+    createItemElement(itemAddSelector, itemRemoveSelector);
 });
 
 

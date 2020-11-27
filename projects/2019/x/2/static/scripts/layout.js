@@ -68,12 +68,10 @@ class PageSectionItems {
         // Methods
         this.putNoItems = putNoItems;
         this.removeItem = removeItem;
-        this.showAnimationAddNoItems = showAnimationAddNoItems;
     }
 
 
     putItems(items) {
-        console.log('putItems layout');
         // Zero number of items on page
         this.itemsCount = 0;
     
@@ -128,26 +126,50 @@ function removeItem(itemRemoveSelector, itemNullSelector) {
             elemRemove.remove();
             this.itemsCount--;
 
-            this.showAnimationAddNoItems(itemNullSelector);
+            // If no more items on page
+            if ((this.itemsCount < 1) &&
+                itemNullSelector && (document.querySelector(itemNullSelector) == null)) {
+                // Add no items info on page
+                const itemShowHide = 'item-show';
+                this.putNoItems(itemShowHide);
+
+                // Show animation for adding the no items info
+                const itemAddSelector = itemNullSelector;
+                addItemElement(itemAddSelector);
+            }
         });
         elemRemove.style.animationPlayState = 'running';
     }
 }
 
 
-function showAnimationAddNoItems(itemNullSelector) {
-    // If no more items on page
-    if ((this.itemsCount < 1) &&
-        (itemNullSelector != null) && (itemNullSelector != undefined) &&
-        (document.querySelector(itemNullSelector) == null)) {
-                
-        // Add no items info on page
-        const itemShowHide = 'item-show';
-        this.putNoItems(itemShowHide);
+function createItemElement(itemAddSelector, itemRemoveSelector) {
+    // Show animation for adding the item
+    const elemAdd = document.querySelector(itemAddSelector);
+    if (elemAdd) {
+        elemAdd.addEventListener('animationend', () =>  {
+            elemAdd.style.animationPlayState = 'paused';
+            const classOld = elemAdd.getAttribute("class");
+            const classNew = classOld.replace("item-show", "item-hide");
+            elemAdd.setAttribute("class", classNew);
 
-        // Show animation for adding the no items info
-        const itemAddSelector = itemNullSelector;
-        const elemAdd = document.querySelector(itemAddSelector);
+            // Show animation for removing the no items info, if it exists
+            const elemRemove = document.querySelector(itemRemoveSelector);
+            if (elemRemove) {
+                elemRemove.addEventListener('animationend', () =>  {
+                    elemRemove.remove();
+                });
+                elemRemove.style.animationPlayState = 'running';
+            }
+        });
+        elemAdd.style.animationPlayState = 'running';
+    }
+}
+
+
+function addItemElement(itemAddSelector) {
+    const elemAdd = document.querySelector(itemAddSelector);
+    if (elemAdd) {
         elemAdd.addEventListener('animationend', () =>  {
             elemAdd.style.animationPlayState = 'paused';
             const classOld = elemAdd.getAttribute("class");
@@ -159,25 +181,5 @@ function showAnimationAddNoItems(itemNullSelector) {
 }
 
 
-function showAnimationCreateItem(itemAddSelector, itemRemoveSelector) {
-    // Show animation for adding the item
-    const elemAdd = document.querySelector(itemAddSelector);
-    elemAdd.addEventListener('animationend', () =>  {
-        elemAdd.style.animationPlayState = 'paused';
-        const classOld = elemAdd.getAttribute("class");
-        const classNew = classOld.replace("item-show", "item-hide");
-        elemAdd.setAttribute("class", classNew);
-
-        // Show animation for removing the no items info, if it exists
-        const elemRemove = document.querySelector(itemRemoveSelector);
-        if (elemRemove) {
-            elemRemove.addEventListener('animationend', () =>  {
-                elemRemove.remove();
-            });
-            elemRemove.style.animationPlayState = 'running';
-        }
-    });
-    elemAdd.style.animationPlayState = 'running';
-}
 
 
