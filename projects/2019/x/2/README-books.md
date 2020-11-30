@@ -47,9 +47,9 @@ This project has the following main features:
 
 <br>
 
-### **Usings**<br>
+### **Tools**<br>
 
-This project makes use mainly of the following resources:
+Mainly, this project makes use of the following tools:
 
 - **SQL:** The project uses *raw SQL commands* (as via *[SQLAlchemy](https://www.sqlalchemy.org/)'s execute method*) in order to make database queries.
 
@@ -60,3 +60,14 @@ This project makes use mainly of the following resources:
 - **[Flask](https://palletsprojects.com/p/flask/):** A lightweight WSGI web application framework.
 
 - **[Goodreads API](https://www.goodreads.com/api):** Goodreads is a popular book review website, and this project uses their API to get access to their review data for individual books.
+
+- **HTML5**
+
+- **CSS3**
+
+- **[Bootstrap 4](https://getbootstrap.com/docs/4.0/getting-started/introduction/):** Bootstrap is a popular front-end open source toolkit for building responsive sites.
+
+- **[Sass](https://sass-lang.com/):** Sass is a stylesheet language that is compiled to CSS.
+
+- **JavaScript**
+

@@ -27,19 +27,19 @@ This project has the following main features:
 
 <br>
 
-### **Usings**<br>
+### **Tools**<br>
 
-This project makes use mainly of the following resources:
+Mainly, this project makes use of the following tools:
 
-- **HTML5:** HTML is the standard markup language for Web pages.
+- **HTML5**
 
-- **CSS3:** CSS is the language we use to style an HTML document.
+- **CSS3**
 
 - **[Bootstrap 4](https://getbootstrap.com/docs/4.0/getting-started/introduction/):** Bootstrap is a popular front-end open source toolkit for building responsive sites.
 
 - **[Sass](https://sass-lang.com/):** Sass is a stylesheet language that is compiled to CSS.
 
-- **JavaScript:** JavaScript is the programming language of the Web.
+- **JavaScript**
 
 
 
